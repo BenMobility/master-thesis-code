@@ -196,7 +196,7 @@ if start_alns:
 if start_alns:
     picked_solution = helpers.pick_best_solution(set_solutions)
     # test pour github
-    b = 6
+    b = 2
     a = 3
     # todo: Store the solution to viriato
     print('end of algorithm  \n total running time in [sec] : see profiler')
