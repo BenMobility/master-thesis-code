@@ -20,7 +20,14 @@ np.random.seed(42)  # Random seed for the main code
 
 # %% filter, alns
 filter_passengers = True
-start_alns = True
+start_alns = False
+debug_mode_passenger = True
+debug_mode_train = True
+
+if debug_mode_passenger:
+    print('\nDebug mode for passenger is on.')
+if debug_mode_train:
+    print('\nDebug mode for train is on.')
 
 # %% Parameters initialization
 
@@ -127,7 +134,7 @@ parameters = helpers.Parameters(infra_graph, time_window, close_track_ids, list_
 
 # %% Original timetable graph
 print('\nCreate the trains timetable.')
-trains_timetable = timetable_graph.get_trains_timetable(time_window, sbb_nodes, parameters)
+trains_timetable = timetable_graph.get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train)
 print('Trains timetable done!')
 
 # Timetable with waiting edges and transfer edges
@@ -172,8 +179,12 @@ parameters.station_candidates = station_candidates
 parameters.zone_candidates = zone_candidates
 parameters.odt_by_origin = odt_by_origin
 parameters.odt_by_destination = odt_by_dest
-parameters.odt_as_list = odt_list
 parameters.origin_name_desired_dep_time = origin_name_desired_dep_time
+
+# In order to have a little computational time
+if debug_mode_passenger:
+    odt_list = odt_list[0:1000]
+parameters.odt_as_list = odt_list
 
 # Filter the passengers
 if filter_passengers:
@@ -195,9 +206,6 @@ if start_alns:
 # %% Print the results
 if start_alns:
     picked_solution = helpers.pick_best_solution(set_solutions)
-    # test pour github
-    b = 2
-    a = 3
     # todo: Store the solution to viriato
     print('end of algorithm  \n total running time in [sec] : see profiler')
     # todo: I want to make sure the code follow each steps. and to compute time effort for each one of them

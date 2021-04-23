@@ -185,6 +185,19 @@ with algorithm_interface.create(base_url) as algorithm_interface:
 
         return code_id_dictionary, id_code_dictionary
 
+    def send_status_message(message):
+        """
+        Method that update a status message to Viriato
+        :param message: str type
+        """
+
+        algorithm_interface.show_status_message(message)
+
+    def send_status_log_message(message):
+        algorithm_interface.show_status_message(message, message)
+
+    def notify_users(title, message):
+        algorithm_interface.notify_user(title, description=message)
 
     def get_trains_cut_time_range_driving_any_node(time_window, node_ids):
         """

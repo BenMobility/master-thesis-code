@@ -15,9 +15,10 @@ import pickle
 import copy
 
 
-def get_trains_timetable(time_window, sbb_nodes, parameters):
+def get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train):
     """
     function that get the timetable with all the trains inside the time window and the area of interest.
+    :param debug_mode_train: boolean value
     :param time_window: time window of the study. (type: a viriato object)
     :param sbb_nodes: a list of nodes/stations in the area of interest. (type: recarray)
     :param parameters: a class with all the recorded parameters for this study. (type: class)
@@ -28,6 +29,11 @@ def get_trains_timetable(time_window, sbb_nodes, parameters):
         viriato_interface.get_trains_cut_time_range_driving_any_node(time_window,
                                                                      list(sbb_nodes.Code[
                                                                               sbb_nodes.Visited == True]))
+
+    # If debug mode is one, only keep the ten first trains
+    if debug_mode_train:
+        trains_timetable = trains_timetable[0:10]
+
     print(f'Number of trains in the time window is: {len(trains_timetable)}')
 
     # Second, we want to keep only trains in the area of interest
@@ -138,6 +144,10 @@ def get_trains_timetable(time_window, sbb_nodes, parameters):
         viriato_interface.get_trains_cut_time_range_driving_any_node(time_window,
                                                                      list(sbb_nodes.Code[
                                                                               sbb_nodes.Visited == True]))
+
+    # If debug mode is one, only keep the ten first trains
+    if debug_mode_train:
+        trains_timetable_2 = trains_timetable_2[0:10]
     print(f'Number of trains in the time window and in the area of interest is: {len(trains_timetable_2)}')
 
     return trains_timetable_2
