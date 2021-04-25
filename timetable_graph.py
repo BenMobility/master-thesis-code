@@ -32,7 +32,7 @@ def get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train):
 
     # If debug mode is one, only keep the ten first trains
     if debug_mode_train:
-        trains_timetable = trains_timetable[0:10]
+        trains_timetable = trains_timetable[265:275]
 
     print(f'Number of trains in the time window is: {len(trains_timetable)}')
 
@@ -147,7 +147,7 @@ def get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train):
 
     # If debug mode is one, only keep the ten first trains
     if debug_mode_train:
-        trains_timetable_2 = trains_timetable_2[0:10]
+        trains_timetable_2 = trains_timetable_2[265:275]
     print(f'Number of trains in the time window and in the area of interest is: {len(trains_timetable_2)}')
 
     return trains_timetable_2

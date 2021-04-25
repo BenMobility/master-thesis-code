@@ -22,7 +22,7 @@ np.random.seed(42)  # Random seed for the main code
 filter_passengers = True
 start_alns = False
 debug_mode_passenger = True
-debug_mode_train = True
+debug_mode_train = False
 
 if debug_mode_passenger:
     print('\nDebug mode for passenger is on.')

@@ -87,6 +87,7 @@ def find_path_for_all_passengers_and_remove_unserved_demand(timetable_graph, odt
     odt_list_with_path = []
     odt_with_path_by_origin = {}
     odt_with_path_by_dest = {}
+    odt_list_group_size = {}
     origin_name_desired_dep_time_with_path = {}
 
     # Check all the od pairs and see if there is a path
@@ -106,11 +107,20 @@ def find_path_for_all_passengers_and_remove_unserved_demand(timetable_graph, odt
             origin_name_desired_dep_time_with_path[(source, target)] = origin_name_desired_dep_time[
                 (source, target)].copy()
 
+            # To compute after the total travel time for the initial timetable
+            odt_list_group_size[(source, target)] = group_size
+
     # Save the parameters in the class parameters
     parameters.odt_by_origin = odt_with_path_by_origin
     parameters.odt_by_destination = odt_with_path_by_dest
     parameters.odt_as_list = odt_list_with_path
     parameters.origin_name_desired_dep_time = origin_name_desired_dep_time_with_path
+
+    # Save the total initial travel time
+    initial_total_travel_time = 0
+    for source_target, number_passengers_in_group in odt_list_group_size.items():
+        initial_total_travel_time = initial_total_travel_time + length[source_target] * number_passengers_in_group
+    parameters.initial_total_travel_time = initial_total_travel_time
 
 
 def find_sp_for_all_sources_full_graph(timetable_graph, parameters, cutoff=None):

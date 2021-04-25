@@ -25,13 +25,12 @@ base_url = 'http://localhost:8080'  # Viriato localhost
 np.random.seed(42)  # Random seed of the whole program
 
 # %% Read pickle files for alns
-
-
 timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_alns.pkl', allow_pickle=True)
 infra_graph = np.load('output/pickle/infra_graph_for_alns.pkl', allow_pickle=True)
 trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_pickle=True)
 parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
 parameters.number_iteration = 10
+
 # %% Start ALNS
 set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
@@ -225,3 +224,20 @@ set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains
 # datetime.datetime(2005, 5, 10, 5, 46, 17)
 # train_path_node_section[0].train_path_nodes[17].arrival_time
 # datetime.datetime(2005, 5, 10, 5, 46, 12)
+
+# Get the index of the trains that are on the closed tracks [90, 95, 267, 268, 269, 270, 271, 272, 273, 283, 284,
+# 285, 286, 287, 288, 289]
+# import alns_platform
+# track_info = alns_platform.TrackInformation(trains_timetable, closed_section_track_ids)
+# import viriato_interface
+# possessions = viriato_interface.get_section_track_closures(parameters.time_window)
+# infra_graph, closed_section_track_ids = alns_platform.increase_weight_on_closed_tracks(infra_graph, possessions,
+# parameters)
+# track_info = alns_platform.TrackInformation(trains_timetable, closed_section_track_ids)
+# i = 0
+# index = []
+# for train in trains_timetable:
+#     for train_on_closed_track in track_info.trains_on_closed_tracks:
+#         if train.id == train_on_closed_track:
+#             index.append(i)
+#     i +=1
