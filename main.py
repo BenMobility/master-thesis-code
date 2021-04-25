@@ -21,7 +21,7 @@ np.random.seed(42)  # Random seed for the main code
 # %% filter, alns
 filter_passengers = True
 start_alns = False
-debug_mode_passenger = True
+debug_mode_passenger = False
 debug_mode_train = False
 
 if debug_mode_passenger:
@@ -123,19 +123,28 @@ print('\nMain code is running.')
 print(f'Random seed used is: {list_parameters[31]}')
 time_window = viriato_interface.get_time_window()
 print(f'The time window for this experiment is: {time_window.from_time} to {time_window.to_time}.')
-close_track_ids = viriato_interface.get_section_track_closure_ids(time_window)
-# todo: insert an input of the cancel trains
+closed_track_ids = viriato_interface.get_section_track_closure_ids(time_window)
 
 # %% Infrastructure graph and load parameters
 print('\nBuilding the infrastructure graph.')
 infra_graph, sbb_nodes, nodes_code, id_nodes = infrastructure_graph.build_infrastructure_graph(time_window, save_pickle)
 print('Infrastructure graph done!')
-parameters = helpers.Parameters(infra_graph, time_window, close_track_ids, list_parameters)
+parameters = helpers.Parameters(infra_graph, time_window, closed_track_ids, list_parameters)
 
 # %% Original timetable graph
 print('\nCreate the trains timetable.')
 trains_timetable = timetable_graph.get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train)
 print('Trains timetable done!')
+
+# Get all the path nodes on the closed track for the passenger assignments
+print('keep track of the path nodes on the closed tracks.')
+track_info = alns_platform.TrackInformation(trains_timetable, closed_track_ids)
+path_nodes_on_closed_track = []
+for train_on_closed_track in track_info.trains_on_closed_tracks:
+    for node in train_on_closed_track.train_path_nodes:
+        if any([node.section_track_id == c for c in closed_track_ids]):
+            path_nodes_on_closed_track.append((node.node_id, node.arrival_time.strftime("%Y-%m-%dT%H:%M:%S"), node.id,
+                                               'a'))
 
 # Timetable with waiting edges and transfer edges
 print('\nCreate timetable with waiting edges and transfer edges.')
@@ -180,6 +189,7 @@ parameters.zone_candidates = zone_candidates
 parameters.odt_by_origin = odt_by_origin
 parameters.odt_by_destination = odt_by_dest
 parameters.origin_name_desired_dep_time = origin_name_desired_dep_time
+parameters.path_nodes_on_closed_track = path_nodes_on_closed_track
 
 # In order to have a little computational time
 if debug_mode_passenger:

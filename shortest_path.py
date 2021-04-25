@@ -15,6 +15,7 @@ from itertools import count
 import datetime
 import timetable_graph
 import copy
+import numpy as np
 
 
 def scipy_dijkstra_full_od_list(timetable_graph, odt_list):
@@ -121,6 +122,15 @@ def find_path_for_all_passengers_and_remove_unserved_demand(timetable_graph, odt
     for source_target, number_passengers_in_group in odt_list_group_size.items():
         initial_total_travel_time = initial_total_travel_time + length[source_target] * number_passengers_in_group
     parameters.initial_total_travel_time = initial_total_travel_time
+
+    # Get the odt on the closed tracks
+    odt_closed_track = []
+    for node_closed_track in parameters.path_nodes_on_closed_track:
+        for key, values in path.items():
+            if not isinstance(values, np.int32) and values is not None:
+                if any([node_closed_track == c for c in values]):
+                    odt_closed_track.append(key)
+    parameters.odt_closed_track = odt_closed_track
 
 
 def find_sp_for_all_sources_full_graph(timetable_graph, parameters, cutoff=None):
