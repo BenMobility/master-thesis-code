@@ -210,17 +210,24 @@ def used_tracks_single_train(closed_section_track_ids, nr_usage_tracks, train_pa
         # Create the track sequence of train path node list/dict
         to_node = node.node_id
 
+        # This train has probably been cut to time window & AoI, leaves area and enters again the same node later
         if from_node == to_node:
-            # This train has probably been cut to time window & AoI, leaves area and enters again the same node later
-            train_path_node_information[node.id] = {
-                'ArrivalTime': node.arrival_time,
-                'DepartureTime': node.departure_time,
-                'RunTime': None, 'fromNode': None, 'toNode': node.node_id, 'SectionTrack': None,
-                'nextTPN_ID': train.train_path_nodes[train_path_node_node_index + 1].id, 'TrainID': train.id}
-
-            # Get the next section track and node id
-            next_train_path_node_section_track = train.train_path_nodes[train_path_node_node_index + 1].section_track_id
-            next_train_path_node_node_id = train.train_path_nodes[train_path_node_node_index + 1].node_id
+            # Double check if the node is the last of the train path node.
+            if node == train.train_path_nodes[-1]:
+                train_path_node_information[node.id] = {
+                    'ArrivalTime': node.arrival_time,
+                    'DepartureTime': node.departure_time,
+                    'RunTime': None, 'fromNode': None, 'toNode': node.node_id, 'SectionTrack': None,
+                    'nextTPN_ID': None, 'TrainID': train.id}
+            else:
+                train_path_node_information[node.id] = {
+                    'ArrivalTime': node.arrival_time,
+                    'DepartureTime': node.departure_time,
+                    'RunTime': None, 'fromNode': None, 'toNode': node.node_id, 'SectionTrack': None,
+                    'nextTPN_ID': train.train_path_nodes[train_path_node_node_index + 1].id, 'TrainID': train.id}
+                next_train_path_node_section_track = train.train_path_nodes[
+                    train_path_node_node_index + 1].section_track_id
+                next_train_path_node_node_id = train.train_path_nodes[train_path_node_node_index + 1].node_id
 
             # Set the tuple key as arrival
             tuple_key = (None, None, node.node_id, 'arrival')
@@ -359,7 +366,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
     # Start the iteration
     print('Start the iteration...')
     while any(t > 0 for t in temp_i) and n_iteration < parameters.number_iteration:
-        print(f'Iteration number: {n_iteration}')
+        print(f'\nIteration number: {n_iteration}')
         # Add an iteration in the count
         n_iteration += 1
         if feasible_timetable_graph:
@@ -1370,6 +1377,8 @@ def get_all_trains_cut_to_time_window_and_area(parameters):
     trains_timetable = viriato_interface.get_trains_driving_any_node(parameters.time_window,
                                                                      parameters.stations_in_area)
     # Keep only the trains that has more than 1 station in the area of interest
-    trains_timetable = viriato_interface.cut_trains_area_of_interest(trains_timetable, parameters.stations_in_area)
+    trains_timetable = viriato_interface.cut_trains_area_interest_time_window(trains_timetable,
+                                                                              parameters.stations_in_area,
+                                                                              parameters.time_window)
 
     return trains_timetable

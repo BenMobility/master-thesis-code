@@ -1548,7 +1548,7 @@ def try_to_reroute_train_via_different_nodes(train, infra_graph, parameters):
     try:
         # With the cutoff of the weight_closed_tracks we make sure the path via this edges is not considered
         path = nx.single_source_dijkstra(infra_graph, reroute_from_node.node_id, reroute_to_node.node_id,
-                                         cutoff=parameters.weight_closed_tracks)
+                                         cutoff=(parameters.weight_closed_tracks-1))
         path_found = True
         train.reroute = True
         train.reroute_path = path
@@ -1781,6 +1781,8 @@ def update_reroute_train_times_feasible_path(rerouted_train, rerouted_train_run_
     train_updated_times = copy.deepcopy(train)
     train_updated_times.viriato_update = \
         viriato_interface.get_list_update_train_times_rerouting(runtime_reroute_train_feasible)
+    train_updated_times = viriato_interface.viriato_update_train_times(train_updated_times.id,
+                                                                       train_updated_times.viriato_update)
 
     # Update the train information
     train_updated_times.cut_indices = train.cut_indices

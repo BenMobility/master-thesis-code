@@ -662,7 +662,7 @@ def cut_trains_area_interest_time_window(trains_timetable, stations_in_area, tim
 
         # Keep the train if there is more than one node in the area of interest
         if len(tpn_in_area) > 1:
-            train.train_path_nodes = tpn_in_area
+            train._AlgorithmTrain__train_path_nodes = tpn_in_area
 
         # If not, check the next train
         else:
