@@ -240,9 +240,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
                     # Reset the departure and arrival nodes
                     del node_name_dep_this
                     del node_name_arr_this
@@ -270,9 +271,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
 
                     # Departure nodes
                     # Combine information of the departure node in one list
@@ -290,9 +292,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     wait_time = (departure_time_this_node - arrival_time_this_node)
                     # Add the waiting time on the waiting edge lists
                     waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': 0,
+                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': [],
                                                                                           'type': 'waiting',
-                                                                                          'train_id': train_id}
+                                                                                          'train_id': train_id,
+                                                                                          'odt_assigned': []}
 
                     # Update the departure node for next iteration
                     departure_node_last_node_name = node_name_dep_this
@@ -343,9 +346,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     driving_edges.append(
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
                     # Reset the departure and arrival nodes
                     del node_name_dep_this
                     del node_name_arr_this
@@ -374,9 +378,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
 
                     # Departure nodes
                     # Combine information of the departure node in one list
@@ -394,9 +399,10 @@ def get_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     wait_time = (departure_time_this_node - arrival_time_this_node)
                     # Add the waiting time on the waiting edge lists
                     waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': 0,
+                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': [],
                                                                                           'type': 'waiting',
-                                                                                          'train_id': train_id}
+                                                                                          'train_id': train_id,
+                                                                                          'odt_assigned': []}
 
                     # Update the departure node for next iteration
                     departure_node_last_node_name = node_name_dep_this
@@ -590,6 +596,7 @@ def connect_home_stations(timetable_waiting_transfer, sbb_nodes, travel_time_sel
         k = parameters.nb_stations_to_connect
 
         # Remove all stations without commercial stop
+        print('Remove all stations without commercial stop')
         sbb_nodes = sbb_nodes[sbb_nodes.commercial_stop == 1]
 
         # Identify zones where trips start
@@ -598,10 +605,12 @@ def connect_home_stations(timetable_waiting_transfer, sbb_nodes, travel_time_sel
         all_destination_zones = list(np.unique(od_departure_time.toZone))
 
         # Get all the k closest euclidean stations to a zone and transform it into a record array
+        print('Get all the closest stations to each zone')
         closest_stations_to_zone = helpers.get_all_k_closest_stations_to_zone(sbb_nodes, selected_zones, k)
         closest_stations_to_zone = helpers.closest_stations_to_zone_transform_record(closest_stations_to_zone)
 
         # Connect all origins of an odt with the departure nodes and create odt list for sp input
+        print('Connect all origins of an odt')
         timetable_with_origin, odt_list, odt_by_origin, odt_by_dest, station_candidates, origin_name_desired_dep_time, \
         origin_name_zone_dict = connect_origins_with_stations_for_all_odt(timetable_waiting_transfer, all_origin_zones,
                                                                           k2, parameters, sbb_nodes, od_departure_time,
@@ -609,6 +618,7 @@ def connect_home_stations(timetable_waiting_transfer, sbb_nodes, travel_time_sel
                                                                           closest_stations_to_zone)
 
         # Connect all destinations of an odt with the arrival nodes and create odt list for sp input
+        print('Connect all destinations of an odt')
         timetable_initial_graph, station_candidates = \
             connect_all_destinations_with_stations(timetable_with_origin, all_destination_zones,
                                                    closest_stations_to_zone, destination_nodes,
@@ -617,6 +627,7 @@ def connect_home_stations(timetable_waiting_transfer, sbb_nodes, travel_time_sel
 
         # Save the output in pickle files
         # Timetable
+        print('Save the output')
         nx.write_gpickle(timetable_initial_graph, filename_timetable)
 
         # odt_list
@@ -908,9 +919,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Driving edge to this node
                 run_time = arrival_time_this_node - departure_time_last_node
                 driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
-                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': 0,
+                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                                'type': 'driving',
-                                                                                               'train_id': train_id}
+                                                                                               'train_id': train_id,
+                                                                                               'odt_assigned': []}
 
                 # Reset the parameters for next iteration
                 del departure_node_last_node
@@ -931,9 +943,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Driving edge between last node and this node
                 run_time = arrival_time_this_node - departure_time_last_node
                 driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
-                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': 0,
+                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                                'type': 'driving',
-                                                                                               'train_id': train_id}
+                                                                                               'train_id': train_id,
+                                                                                               'odt_assigned': []}
 
                 # Departure nodes
                 node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id, 'd')
@@ -946,8 +959,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Waiting edge between last node and this node
                 wait_time = (departure_time_this_node - arrival_time_this_node)
                 waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                waiting_edges_attributes[node_name_arr_this, node_name_dep_this] = {'flow': 0, 'type': 'waiting',
-                                                                                    'train_id': train_id}
+                waiting_edges_attributes[node_name_arr_this, node_name_dep_this] = {'flow': [],
+                                                                                    'type': 'waiting',
+                                                                                    'train_id': train_id,
+                                                                                    'odt_assigned': []}
 
                 # Update the departure node for next iteration
                 departure_node_last_node = departure_node_this_node
@@ -985,9 +1000,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Driving edge to this node
                 run_time = arrival_time_this_node - departure_time_last_node
                 driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
-                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': 0,
+                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                                'type': 'driving',
-                                                                                               'train_id': train_id}
+                                                                                               'train_id': train_id,
+                                                                                               'odt_assigned': []}
 
                 # Reset the parameters for the next iteration
                 del departure_node_last_node
@@ -1007,9 +1023,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Driving edge between last node and this node
                 run_time = arrival_time_this_node - departure_time_last_node
                 driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
-                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': 0,
+                driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                                'type': 'driving',
-                                                                                               'train_id': train_id}
+                                                                                               'train_id': train_id,
+                                                                                               'odt_assigned': []}
 
                 node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id,
                                       'dp')
@@ -1021,8 +1038,10 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                 # Waiting edge between last node and this node
                 wait_time = (departure_time_this_node - arrival_time_this_node)
                 waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                waiting_edges_attributes[node_name_arr_this, node_name_dep_this] = {'flow': 0, 'type': 'waiting',
-                                                                                    'train_id': train_id}
+                waiting_edges_attributes[node_name_arr_this, node_name_dep_this] = {'flow': [],
+                                                                                    'type': 'waiting',
+                                                                                    'train_id': train_id,
+                                                                                    'odt_assigned': []}
 
                 # Update the departure node for next iteration
                 departure_node_last_node = departure_node_this_node
@@ -1300,10 +1319,11 @@ def create_transit_edges_nodes_emergency_bus(bus):
             # Driving edge to this node
             run_time = arrival_time_this_node - departure_time_last_node
             driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
-            driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': 0,
+            driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                            'type': 'driving',
                                                                                            'bus_id': bus.id,
-                                                                                           'bus': True}
+                                                                                           'bus': True,
+                                                                                           'odt_assigned': []}
 
     # Create the nodes and edges dictionary
     nodes_edges_dict = {'arrival_nodes': arrival_nodes,
@@ -1513,9 +1533,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
                     # Reset the departure and arrival nodes
                     del node_name_dep_this
                     del node_name_arr_this
@@ -1543,9 +1564,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
 
                     # Departure nodes
                     # Combine information of the departure node in one list
@@ -1563,9 +1585,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     wait_time = (departure_time_this_node - arrival_time_this_node)
                     # Add the waiting time on the waiting edge lists
                     waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': 0,
+                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': [],
                                                                                           'type': 'waiting',
-                                                                                          'train_id': train_id}
+                                                                                          'train_id': train_id,
+                                                                                          'odt_assigned': []}
 
                     # Update the departure node for next iteration
                     departure_node_last_node_name = node_name_dep_this
@@ -1616,9 +1639,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     driving_edges.append(
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
                     # Reset the departure and arrival nodes
                     del node_name_dep_this
                     del node_name_arr_this
@@ -1647,9 +1671,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                         [departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
                     # Add the attributes of this edge
                     driving_edges_attributes[(departure_node_last_node_name,
-                                              node_name_arr_this)] = {'flow': 0,
+                                              node_name_arr_this)] = {'flow': [],
                                                                       'type': 'driving',
-                                                                      'train_id': train_id}
+                                                                      'train_id': train_id,
+                                                                      'odt_assigned': []}
 
                     # Departure nodes
                     # Combine information of the departure node in one list
@@ -1667,9 +1692,10 @@ def create_timetable_with_waiting_transfer_edges(trains_timetable, parameters):
                     wait_time = (departure_time_this_node - arrival_time_this_node)
                     # Add the waiting time on the waiting edge lists
                     waiting_edges.append([node_name_arr_this, node_name_dep_this, float(wait_time.seconds / 60)])
-                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': 0,
+                    waiting_edges_attributes[(node_name_arr_this, node_name_dep_this)] = {'flow': [],
                                                                                           'type': 'waiting',
-                                                                                          'train_id': train_id}
+                                                                                          'train_id': train_id,
+                                                                                          'odt_assigned': []}
 
                     # Update the departure node for next iteration
                     departure_node_last_node_name = node_name_dep_this

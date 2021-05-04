@@ -29,7 +29,7 @@ timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_aln
 infra_graph = np.load('output/pickle/infra_graph_for_alns.pkl', allow_pickle=True)
 trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_pickle=True)
 parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
-parameters.number_iteration = 10
+parameters.number_iteration = 100
 
 # %% Start ALNS
 set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)

@@ -51,7 +51,7 @@ score_3 = 0  # Score for the ALNS algorithm, rejected solution. [15]
 t_start_op = 10 ** 6  # Starting temperature for Simulated Annealing on the operation objective [16]
 t_start_de = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [17]
 t_start_tt = 10 ** 6  # Starting temperature for Simulated Annealing on the travel time objective [18]
-weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]  todo: change with delete the edge instead
+weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]
 train_capacity = 500  # Number of passenger per train [20]
 bus_capacity = 100  # Number of passenger per bus in Zurich [21]
 penalty_no_path = 9000  # Penalty of no assignment equals duration in minutes [22] todo: define better
@@ -62,15 +62,15 @@ time_discretization = 10  # Time steps for the passenger grouping [26]
 group_size_passenger = 80  # Size of each passenger group (number of passengers) [27]
 
 # Save/Read pickle
-save_pickle = False  # Save the output in a pickle file
-read_pickle = True  # Read the input pickle files
+save_pickle = True  # Save the output in a pickle file
+read_pickle = False  # Read the input pickle files
 
 # Create home connection from scratch
-create_timetable_home_connections_from_scratch = False  # True, if you want to connect stations to homes
+create_timetable_home_connections_from_scratch = True  # True, if you want to connect stations to homes
 
 # Passenger assignment
 full_od_file = False  # True, if you want to read to full od file ~287,000 KB [28]
-read_od_departure_time_file = True  # False, if you want to make it from scratch [29]
+read_od_departure_time_file = False  # False, if you want to make it from scratch [29]
 create_group_passengers = True  # True, if you want to group the passengers for the assignment [30]
 random_seed = 42  # Priority list for passengers [31]
 read_selected_zones_demand_and_travel_time = True  # True, if you want to read csv files of demand and travel time [32]
@@ -194,6 +194,9 @@ parameters.path_nodes_on_closed_track = path_nodes_on_closed_track
 # In order to have a little computational time
 if debug_mode_passenger:
     odt_list = odt_list[0:1000]
+
+# Add the path column in the odt_list
+[x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
 # Filter the passengers

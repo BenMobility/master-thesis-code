@@ -93,7 +93,7 @@ def find_path_for_all_passengers_and_remove_unserved_demand(timetable_graph, odt
 
     # Check all the od pairs and see if there is a path
     for odt in odt_list:
-        source, target, priority, group_size = odt
+        source, target, priority, group_size, odt_path = odt
         if [source, target, group_size] in odt_with_path:
             odt_list_with_path.append(odt)
             zone = origin_name_zone_dict[source]

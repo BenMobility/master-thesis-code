@@ -856,7 +856,6 @@ def non_homo_poisson_simulator(od, start_time, time_interval, parameters):
     :param time_interval: equals the time window of the scenario
     :return: list of starting time for each passenger based on a non homogenous simulator.
     """
-    random.seed(parameters.random_seed)
     trips_per_hour = get_correct_tph(od)
     lambda_t = {}  # passengers per hour
     for key, value in trips_per_hour.items():
