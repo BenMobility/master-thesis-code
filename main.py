@@ -19,7 +19,7 @@ base_url = 'http://localhost:8080'  # Viriato localhost
 np.random.seed(42)  # Random seed for the main code
 
 # %% filter, alns
-filter_passengers = True
+filter_passengers = False
 start_alns = False
 debug_mode_passenger = True
 debug_mode_train = False
@@ -63,14 +63,14 @@ group_size_passenger = 80  # Size of each passenger group (number of passengers)
 
 # Save/Read pickle
 save_pickle = True  # Save the output in a pickle file
-read_pickle = False  # Read the input pickle files
+read_pickle = True  # Read the input pickle files
 
 # Create home connection from scratch
-create_timetable_home_connections_from_scratch = True  # True, if you want to connect stations to homes
+create_timetable_home_connections_from_scratch = False  # True, if you want to connect stations to homes
 
 # Passenger assignment
 full_od_file = False  # True, if you want to read to full od file ~287,000 KB [28]
-read_od_departure_time_file = False  # False, if you want to make it from scratch [29]
+read_od_departure_time_file = True  # False, if you want to make it from scratch [29]
 create_group_passengers = True  # True, if you want to group the passengers for the assignment [30]
 random_seed = 42  # Priority list for passengers [31]
 read_selected_zones_demand_and_travel_time = True  # True, if you want to read csv files of demand and travel time [32]

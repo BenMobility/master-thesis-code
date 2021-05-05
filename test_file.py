@@ -11,6 +11,7 @@ import viriato_interface
 import networkx as nx
 import random
 import numpy as np
+import shortest_path
 import timetable_graph
 import infrastructure_graph
 import alns_platform
@@ -31,8 +32,100 @@ trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_
 parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
 parameters.number_iteration = 100
 
+# %% Passenger assigment
+
+# Get the priority list with all the odt pairs
+odt_priority_list_original = parameters.odt_as_list
+
+# Set the count to zero for the loop
+i = 0
+
+# Assign the passengers based on the priority list
+for odt in odt_priority_list_original:
+    # Break the loop if reached the last odt to avoid index error
+    if i == len(odt_priority_list_original):
+        print('End of the passenger assignment')
+        break
+
+    # Compute the shortest path with dijkstra
+    try:
+        l, p = shortest_path.single_source_dijkstra(timetable_initial_graph, odt[0], odt[1])
+        # Save the path
+        odt_priority_list_original[i][4] = p
+        # Save the length of the path
+        try:
+            odt_priority_list_original[i][5] = round(l, 1)
+        except IndexError:
+            odt_priority_list_original[i].append(round(l, 1))
+    # If there is no path, it raises an error. Record the none path and add the penalty
+    except nx.exception.NetworkXNoPath:
+        odt_priority_list_original[i][4] = None
+        try:
+            odt_priority_list_original[i][5] = parameters.penalty_no_path
+        except IndexError:
+            odt_priority_list_original[i].append(parameters.penalty_no_path)
+
+    # Assign the flow on the timetable graph's edges
+    for i in range(len(p) - 1):
+        try:
+            timetable_initial_graph[p[i]][p[i + 1]]['flow'].append(odt[3])
+            timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'].append(odt[0:4])
+        except KeyError:
+            pass
+    i += 1
+
+for i in range(len(p) - 1):
+    try:
+        if sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
+            try:
+                # Check if the current passenger is already seated in the train
+                if p[i - 1][2] == p[i][2]:
+                    continue
+                else:
+                    if 'odt_facing_capacity_constrain' in locals():
+                        # Record the odt with the last node before capacity constraint. [odt, last node, index, edge, new path, number of trial]
+                        odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
+                        odt_facing_capacity_constrain.append(odt_info)
+                    else:
+                        odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
+
+                    # Done for this odt, do not need to continue to assign further. go to the next one
+                    break
+
+            # It means that the previous edge is home to the first station,
+            # hence the passenger is not seated in the train
+            except IndexError:
+                if 'odt_facing_capacity_constrain' in locals():
+                    # Record the odt with the last node before capacity constraint.
+                    # [odt, last node, index, edge, new path, number of trial]
+                    odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
+                    odt_facing_capacity_constrain.append(odt_info)
+                else:
+                    odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
+
+                # Done for this odt, do not need to continue to assign further. go to the next one
+                break
+        else:
+            timetable_initial_graph[p[i]][p[i + 1]]['flow'].append(odt[3])
+            timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'].append(odt[0:4])
+
+    # If there is a key error, it means it is either a home-station edge, station-destination edge or a transfer,
+    # hence we go check the next node
+    except KeyError:
+        pass
+
+
+if p[i - 1][2] == p[i][2]:
+    j = -1
+    odt_with_lower_importance_name = []
+    odt_with_lower_importance_flow = []
+    while sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
+        if timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j] in timetable_initial_graph[p[i-1]][p[i]]['odt_assigned']:
+            if timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j][2] < odt[2]:
+                odt_with_lower_importance_name.append(timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j])
+                odt_with_lower_importance_flow.append(timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j][3])
 # %% Start ALNS
-set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
+# set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
 
 # %%
