@@ -21,7 +21,7 @@ np.random.seed(42)  # Random seed for the main code
 # %% filter, alns
 filter_passengers = False
 start_alns = False
-debug_mode_passenger = True
+debug_mode_passenger = False
 debug_mode_train = False
 
 if debug_mode_passenger:

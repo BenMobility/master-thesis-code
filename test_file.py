@@ -66,101 +66,235 @@ for odt in odt_priority_list_original:
             odt_priority_list_original[i].append(parameters.penalty_no_path)
 
     # Assign the flow on the timetable graph's edges
-    for i in range(len(p) - 1):
+    for j in range(len(p) - 1):
         try:
-            timetable_initial_graph[p[i]][p[i + 1]]['flow'].append(odt[3])
-            timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'].append(odt[0:4])
+            if sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[3] > parameters.train_capacity:
+                try:
+                    # Check if the current passenger is already seated in the train
+                    if p[j - 1][2] == p[j][2]:
+                        # Initialize the parameters for the capacity constraint checks
+                        k = 1
+                        odt_with_lower_priority_name = []
+                        odt_with_lower_priority_flow = []
+                        odt_with_lower_priority_index = []
+
+                        # Remove assigned odt with lower priority on the edge
+                        while sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[3] > parameters.train_capacity:
+                            try:
+                                # Check if the assigned odt is already seated in the train, if so, go to next assigned
+                                # odt
+                                if timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k] in \
+                                        timetable_initial_graph[p[j - 1]][p[j]]['odt_assigned']:
+                                    k += 1
+                                # If not assigned in the previous edge, hence the assigned passenger must be from
+                                # another train
+                                else:
+                                    # Save the assigned
+                                    odt_with_lower_priority_name.append(
+                                        timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k])
+                                    odt_with_lower_priority_flow.append(
+                                        timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k][3])
+                                    odt_with_lower_priority_index.append(-k)
+
+                                    # Check if removing the assigned odt from the train is enough, if not, need to add
+                                    # another assigned from the list
+                                    if sum(odt_with_lower_priority_flow) >= odt[3]:
+                                        for odt_with_lower_priority in odt_with_lower_priority_name:
+                                            if 'odt_facing_capacity_constrain' in locals():
+                                                # Record the odt with the last node before capacity constraint.
+                                                # [odt, last node, index, edge, new path, number of trial]
+                                                odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                                                odt_facing_capacity_constrain.append(odt_info)
+                                            else:
+                                                odt_facing_capacity_constrain = [
+                                                    [odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+
+                                        # Done with the recording of oft facing capacity constraint
+                                        break
+                                    # Not enough seats released, need at least one more group to leave
+                                    else:
+                                        k += 1
+                            # Not suppose to happen, but it might if there an assignment mistake
+                            except IndexError:
+                                print(
+                                    f'Train is at full capacity and the current odt {odt} is already seated, '
+                                    f'but the algorithm cannot find the assigned odt that is assigned but not seated'
+                                    f' in the train.')
+                                break
+                    else:
+                        if 'odt_facing_capacity_constrain' in locals():
+                            # Record the odt with the last node before capacity constraint.
+                            # [odt, last node, index, edge, new path, number of trial]
+                            odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                            odt_facing_capacity_constrain.append(odt_info)
+                        else:
+                            odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+
+                        # Done for this odt, do not need to continue to assign further. go to the next one
+                        break
+
+                # It means that the previous edge is home to the first station,
+                # hence the passenger is not seated in the train
+                except IndexError:
+                    if 'odt_facing_capacity_constrain' in locals():
+                        # Record the odt with the last node before capacity constraint.
+                        # [odt, last node, index, edge, new path, number of trial]
+                        odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                        odt_facing_capacity_constrain.append(odt_info)
+                    else:
+                        odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+
+                    # Done for this odt, do not need to continue to assign further. go to the next one
+                    break
+            else:
+                timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
+                timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0:4])
+
+        # If there is a key error, it means it is either a home-station edge, station-destination edge or a transfer,
+        # hence we go check the next node
         except KeyError:
             pass
     i += 1
 
-# %% Flow assignment
-for i in range(len(p) - 1):
-    try:
-        if sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
-            try:
-                # Check if the current passenger is already seated in the train
-                if p[i - 1][2] == p[i][2]:
-                    continue
-                else:
-                    if 'odt_facing_capacity_constrain' in locals():
-                        # Record the odt with the last node before capacity constraint.
-                        # [odt, last node, index, edge, new path, number of trial]
-                        odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
-                        odt_facing_capacity_constrain.append(odt_info)
-                    else:
-                        odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
 
-                    # Done for this odt, do not need to continue to assign further. go to the next one
-                    break
+# %% Duplicates in odt_capacity_constraint
 
-            # It means that the previous edge is home to the first station,
-            # hence the passenger is not seated in the train
-            except IndexError:
-                if 'odt_facing_capacity_constrain' in locals():
-                    # Record the odt with the last node before capacity constraint.
-                    # [odt, last node, index, edge, new path, number of trial]
-                    odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
-                    odt_facing_capacity_constrain.append(odt_info)
-                else:
-                    odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
-
-                # Done for this odt, do not need to continue to assign further. go to the next one
-                break
-        else:
-            timetable_initial_graph[p[i]][p[i + 1]]['flow'].append(odt[3])
-            timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'].append(odt[0:4])
-
-    # If there is a key error, it means it is either a home-station edge, station-destination edge or a transfer,
-    # hence we go check the next node
-    except KeyError:
+keep = []
+index = []
+i = 0
+for odt in odt_facing_capacity_constrain:
+    if odt[0][0:2] in keep:
+        datetime.datetime.strptime(odt[1][1], "%Y-%m-%dT%H:%M:%S")
+        i += 1
         pass
-
-# %% full capacity constraint checks
-if p[i - 1][2] == p[i][2]:
-    # Initialize the parameters for the capacity constraint checks
-    j = 1
-    odt_with_lower_importance_name = []
-    odt_with_lower_importance_flow = []
-    odt_with_lower_importance_index = []
-
-    # Until
-    while sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
-        try:
-            # Check if the assigned odt is already seated in the train, if so, go to next assigned odt
-            if timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j] in \
-                    timetable_initial_graph[p[i-1]][p[i]]['odt_assigned']:
-                j += 1
-            # If not assigned in the previous edge, hence the assigned passenger must be from another train
-            else:
-                # Need to check if the level of importance of the assigned is lower than the current odt, if so,
-                # the assigned odt must be reassigned from this path if the size of the group is equal or larger then
-                # the current odt
-                if timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j][2] < odt[2]:
-                    odt_with_lower_importance_name.append(timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j])
-                    odt_with_lower_importance_flow.append(
-                        timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j][3])
-                    odt_with_lower_importance_index.append(j)
-
-                    # Check if removing the assigned odt from the train is enough, if not, need to add another assigned
-                    # from the list
-                    if sum(odt_with_lower_importance_flow) > odt[3]:
-                        for odt_with_lower_importance in odt_with_lower_importance_name:
-                            if 'odt_facing_capacity_constrain' in locals():
-                                # Record the odt with the last node before capacity constraint.
-                                # [odt, last node, index, edge, new path, number of trial]
-                                odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
-                                odt_facing_capacity_constrain.append(odt_info)
-                            else:
-                                odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
-
-
-                        break
-        # Not suppose to happen, but it might if there an assignment mistake
-        except IndexError:
-            print(f'Train is at full capacity and the current odt {odt} is already seated, but the algorithm cannot find'
-                  f' the assigned odt that is assigned but not seated in the train.')
-            break
+    else:
+        keep.append(odt[0][0:2])
+        index.append(i)
+        i += 1
+# %% Flow assignment
+# for j in range(len(p) - 1):
+#     try:
+#         if sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[3] > parameters.train_capacity:
+#             try:
+#                 # Check if the current passenger is already seated in the train
+#                 if p[j - 1][2] == p[j][2]:
+#                     # Initialize the parameters for the capacity constraint checks
+#                     k = 1
+#                     odt_with_lower_priority_name = []
+#                     odt_with_lower_priority_flow = []
+#                     odt_with_lower_priority_index = []
+#
+#                     # Remove assigned odt with lower priority on the edge
+#                     while sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
+#                         try:
+#                             # Check if the assigned odt is already seated in the train, if so, go to next assigned odt
+#                             if timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k] in \
+#                                     timetable_initial_graph[p[j - 1]][p[j]]['odt_assigned']:
+#                                 k += 1
+#                             # If not assigned in the previous edge, hence the assigned passenger must be from another
+#                             # train
+#                             else:
+#                                 # Save the assigned
+#                                 odt_with_lower_priority_name.append(
+#                                     timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k])
+#                                 odt_with_lower_priority_flow.append(
+#                                     timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k][3])
+#                                 odt_with_lower_priority_index.append(k)
+#
+#                                 # Check if removing the assigned odt from the train is enough, if not, need to add
+#                                 # another assigned
+#                                 # from the list
+#                                 if sum(odt_with_lower_priority_flow) > odt[3]:
+#                                     for odt_with_lower_priority in odt_with_lower_priority_name:
+#                                         if 'odt_facing_capacity_constrain' in locals():
+#                                             # Record the odt with the last node before capacity constraint.
+#                                             # [odt, last node, index, edge, new path, number of trial]
+#                                             odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+#                                             odt_facing_capacity_constrain.append(odt_info)
+#                                         else:
+#                                             odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+#
+#                         # Not suppose to happen, but it might if there an assignment mistake
+#                         except IndexError:
+#                             print(
+#                                 f'Train is at full capacity and the current odt {odt} is already seated, '
+#                                 f'but the algorithm cannot find the assigned odt that is assigned but not seated in '
+#                                 f'the train.')
+#                             break
+#                 else:
+#                     if 'odt_facing_capacity_constrain' in locals():
+#                         # Record the odt with the last node before capacity constraint.
+#                         # [odt, last node, index, edge, new path, number of trial]
+#                         odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+#                         odt_facing_capacity_constrain.append(odt_info)
+#                     else:
+#                         odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+#
+#                     # Done for this odt, do not need to continue to assign further. go to the next one
+#                     break
+#
+#             # It means that the previous edge is home to the first station,
+#             # hence the passenger is not seated in the train
+#             except IndexError:
+#                 if 'odt_facing_capacity_constrain' in locals():
+#                     # Record the odt with the last node before capacity constraint.
+#                     # [odt, last node, index, edge, new path, number of trial]
+#                     odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+#                     odt_facing_capacity_constrain.append(odt_info)
+#                 else:
+#                     odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+#
+#                 # Done for this odt, do not need to continue to assign further. go to the next one
+#                 break
+#         else:
+#             timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
+#             timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0:4])
+#
+#     # If there is a key error, it means it is either a home-station edge, station-destination edge or a transfer,
+#     # hence we go check the next node
+#     except KeyError:
+#         pass
+#
+# # %% full capacity constraint checks
+# if p[i - 1][2] == p[i][2]:
+#     # Initialize the parameters for the capacity constraint checks
+#     j = 1
+#     odt_with_lower_priority_name = []
+#     odt_with_lower_priority_flow = []
+#     odt_with_lower_priority_index = []
+#
+#     # Remove assigned odt with lower priority on the edge
+#     while sum(timetable_initial_graph[p[i]][p[i + 1]]['flow']) + odt[3] > parameters.train_capacity:
+#         try:
+#             # Check if the assigned odt is already seated in the train, if so, go to next assigned odt
+#             if timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j] in \
+#                     timetable_initial_graph[p[i-1]][p[i]]['odt_assigned']:
+#                 j += 1
+#             # If not assigned in the previous edge, hence the assigned passenger must be from another train
+#             else:
+#                 # Save the assigned
+#                 odt_with_lower_priority_name.append(timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j])
+#                 odt_with_lower_priority_flow.append(
+#                     timetable_initial_graph[p[i]][p[i + 1]]['odt_assigned'][-j][3])
+#                 odt_with_lower_priority_index.append(j)
+#
+#                 # Check if removing the assigned odt from the train is enough, if not, need to add another assigned
+#                 # from the list
+#                 if sum(odt_with_lower_priority_flow) > odt[3]:
+#                     for odt_with_lower_priority in odt_with_lower_priority_name:
+#                         if 'odt_facing_capacity_constrain' in locals():
+#                             # Record the odt with the last node before capacity constraint.
+#                             # [odt, last node, index, edge, new path, number of trial]
+#                             odt_info = [odt, p[i], i, [p[i], p[i + 1]], [], 1]
+#                             odt_facing_capacity_constrain.append(odt_info)
+#                         else:
+#                             odt_facing_capacity_constrain = [[odt, p[i], i, [p[i], p[i + 1]], [], 1]]
+#
+#         # Not suppose to happen, but it might if there an assignment mistake
+#         except IndexError:
+#             print(f'Train is at full capacity and the current odt {odt} is already seated, but the algorithm cannot find'
+#                   f' the assigned odt that is assigned but not seated in the train.')
+#             break
 # %% Start ALNS
 # set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
