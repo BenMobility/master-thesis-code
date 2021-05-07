@@ -100,6 +100,37 @@ for odt in odt_priority_list_original:
                                     # another assigned from the list
                                     if sum(odt_with_lower_priority_flow) >= odt[3]:
                                         for odt_with_lower_priority in odt_with_lower_priority_name:
+                                            # Extract the odt to get the recorded path from the original priority list
+                                            extract_odt = [item for item in odt_priority_list_original
+                                                           if item[0:2] == odt_with_lower_priority[0:2]]
+
+                                            # Find the index on the original list
+                                            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
+                                            # Get the path from the original list
+                                            extract_odt_path = extract_odt[0][4]
+
+                                            # Get the index of the last node before the full capacity train
+                                            index_last_node_on_path_before_capacity = extract_odt_path.index(p[j])
+
+                                            # Split the path into delete and keep path
+                                            odt_path_to_delete = extract_odt_path[
+                                                                 index_last_node_on_path_before_capacity:]
+                                            odt_path_to_keep = extract_odt_path[
+                                                               :index_last_node_on_path_before_capacity]
+
+                                            # Modify the original path and erase the length, needs to be recomputed
+                                            try:
+                                                odt_priority_list_original[index_in_original_list][4] = odt_path_to_keep
+                                                odt_priority_list_original[index_in_original_list][5] = None
+                                            except ValueError:
+                                                print(f'{odt_priority_list_original[index_in_original_list][0:2]} at '
+                                                      f'index {index_in_original_list} has already a changed value but'
+                                                      f'it was not recorded properly. Please check passenger assignment'
+                                                      f'')
+
+                                            # Delete the flow and the odt_assigned
+                                            
                                             if 'odt_facing_capacity_constrain' in locals():
                                                 # Record the odt with the last node before capacity constraint.
                                                 # [odt, last node, index, edge, new path, number of trial]
@@ -108,7 +139,6 @@ for odt in odt_priority_list_original:
                                             else:
                                                 odt_facing_capacity_constrain = [
                                                     [odt, p[j], j, [p[j], p[j + 1]], [], 1]]
-
                                         # Done with the recording of oft facing capacity constraint
                                         break
                                     # Not enough seats released, need at least one more group to leave
