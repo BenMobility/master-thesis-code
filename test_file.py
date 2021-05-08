@@ -130,15 +130,28 @@ for odt in odt_priority_list_original:
                                                       f'')
 
                                             # Delete the flow and the odt_assigned
-                                            
+                                            for n in range(len(odt_path_to_delete) - 1):
+                                                try:
+                                                    index_to_delete = timetable_initial_graph[odt_path_to_delete[n]][
+                                                        odt_path_to_delete[n + 1]]['odt_assigned'].index(
+                                                        odt_with_lower_priority)
+                                                    del timetable_initial_graph[odt_path_to_delete[n]][
+                                                        odt_path_to_delete[n + 1]]['flow'][index_to_delete]
+                                                    del timetable_initial_graph[odt_path_to_delete[n]][
+                                                        odt_path_to_delete[n + 1]]['odt_assigned'][index_to_delete]
+                                                except KeyError:
+                                                    pass
+
                                             if 'odt_facing_capacity_constrain' in locals():
                                                 # Record the odt with the last node before capacity constraint.
                                                 # [odt, last node, index, edge, new path, number of trial]
-                                                odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                                                odt_info = [odt_with_lower_priority, odt_path_to_keep[-1],
+                                                            odt_path_to_delete[0:2], [], 1]
                                                 odt_facing_capacity_constrain.append(odt_info)
                                             else:
-                                                odt_facing_capacity_constrain = [
-                                                    [odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+                                                odt_facing_capacity_constrain = [odt_with_lower_priority,
+                                                                                 odt_path_to_keep[-1],
+                                                                                 odt_path_to_delete[0:2], [], 1]
                                         # Done with the recording of oft facing capacity constraint
                                         break
                                     # Not enough seats released, need at least one more group to leave
@@ -155,10 +168,10 @@ for odt in odt_priority_list_original:
                         if 'odt_facing_capacity_constrain' in locals():
                             # Record the odt with the last node before capacity constraint.
                             # [odt, last node, index, edge, new path, number of trial]
-                            odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                            odt_info = [odt[0:4], p[j], [p[j], p[j + 1]], [], 1]
                             odt_facing_capacity_constrain.append(odt_info)
                         else:
-                            odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+                            odt_facing_capacity_constrain = [[odt[0:4], p[j], [p[j], p[j + 1]], [], 1]]
 
                         # Done for this odt, do not need to continue to assign further. go to the next one
                         break
@@ -169,10 +182,10 @@ for odt in odt_priority_list_original:
                     if 'odt_facing_capacity_constrain' in locals():
                         # Record the odt with the last node before capacity constraint.
                         # [odt, last node, index, edge, new path, number of trial]
-                        odt_info = [odt, p[j], j, [p[j], p[j + 1]], [], 1]
+                        odt_info = [odt[0:4], p[j], [p[j], p[j + 1]], [], 1]
                         odt_facing_capacity_constrain.append(odt_info)
                     else:
-                        odt_facing_capacity_constrain = [[odt, p[j], j, [p[j], p[j + 1]], [], 1]]
+                        odt_facing_capacity_constrain = [[odt[0:4], p[j], [p[j], p[j + 1]], [], 1]]
 
                     # Done for this odt, do not need to continue to assign further. go to the next one
                     break
@@ -189,18 +202,18 @@ for odt in odt_priority_list_original:
 
 # %% Duplicates in odt_capacity_constraint
 
-keep = []
-index = []
-i = 0
-for odt in odt_facing_capacity_constrain:
-    if odt[0][0:2] in keep:
-        datetime.datetime.strptime(odt[1][1], "%Y-%m-%dT%H:%M:%S")
-        i += 1
-        pass
-    else:
-        keep.append(odt[0][0:2])
-        index.append(i)
-        i += 1
+# keep = []
+# index = []
+# i = 0
+# for odt in odt_facing_capacity_constrain:
+#     if odt[0][0:2] in keep:
+#         datetime.datetime.strptime(odt[1][1], "%Y-%m-%dT%H:%M:%S")
+#         i += 1
+#         pass
+#     else:
+#         keep.append(odt[0][0:2])
+#         index.append(i)
+#         i += 1
 # %% Flow assignment
 # for j in range(len(p) - 1):
 #     try:
