@@ -110,6 +110,8 @@ for odt in odt_priority_list_original:
                                             # Get the path from the original list
                                             extract_odt_path = extract_odt[0][4]
 
+                                            if extract_odt_path is None:
+                                                print(extract_odt)
                                             # Get the index of the last node before the full capacity train
                                             index_last_node_on_path_before_capacity = extract_odt_path.index(p[j])
 
@@ -168,10 +170,10 @@ for odt in odt_priority_list_original:
                         if 'odt_facing_capacity_constrain' in locals():
                             # Record the odt with the last node before capacity constraint.
                             # [odt, last node, index, edge, new path, number of trial]
-                            odt_info = [odt[0:4], p[j], [p[j], p[j + 1]], [], 1]
+                            odt_info = [odt[0:4], p[j-1], [p[j], p[j + 1]], [], 1]
                             odt_facing_capacity_constrain.append(odt_info)
                         else:
-                            odt_facing_capacity_constrain = [[odt[0:4], p[j], [p[j], p[j + 1]], [], 1]]
+                            odt_facing_capacity_constrain = [[odt[0:4], p[j-1], [p[j], p[j + 1]], [], 1]]
 
                         # Done for this odt, do not need to continue to assign further. go to the next one
                         break
@@ -182,10 +184,10 @@ for odt in odt_priority_list_original:
                     if 'odt_facing_capacity_constrain' in locals():
                         # Record the odt with the last node before capacity constraint.
                         # [odt, last node, index, edge, new path, number of trial]
-                        odt_info = [odt[0:4], p[j], [p[j], p[j + 1]], [], 1]
+                        odt_info = [odt[0:4], p[j-1], [p[j], p[j + 1]], [], 1]
                         odt_facing_capacity_constrain.append(odt_info)
                     else:
-                        odt_facing_capacity_constrain = [[odt[0:4], p[j], [p[j], p[j + 1]], [], 1]]
+                        odt_facing_capacity_constrain = [[odt[0:4], p[j-1], [p[j], p[j + 1]], [], 1]]
 
                     # Done for this odt, do not need to continue to assign further. go to the next one
                     break
