@@ -204,8 +204,11 @@ parameters.odt_as_list = odt_list
 odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
     parameters, timetable_initial_graph)
 
-# And save the output of the first list of odt facing capcity constraint
+# And save the output of the first list of odt facing capacity constraint
 alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
+alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+
 # Filter the passengers
 if filter_passengers:
     shortest_path.find_path_for_all_passengers_and_remove_unserved_demand(timetable_initial_graph, odt_list,
