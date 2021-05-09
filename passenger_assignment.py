@@ -6,12 +6,11 @@ Created on Sun May  09 2021
 Passenger assignment with capacity constraint
 """
 import networkx as nx
-import numpy as np
 import shortest_path
 
 
 # %% Passenger assignment
-def passenger_assignment_capacity_constraint_first_loop(parameters, timetable_initial_graph):
+def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
     """
     Method that assign all the passengers from the odt priority list. It will capture all the odt that are facing
     capacity constraint on their trip. Will return the passenger assignment of the origin odt plus a list of all the odt

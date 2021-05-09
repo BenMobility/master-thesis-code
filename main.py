@@ -12,6 +12,7 @@ import helpers
 import timetable_graph
 import shortest_path
 import alns_platform
+import passenger_assignment
 import numpy as np
 
 # Viriato
@@ -199,6 +200,12 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
+# Assign the passenger on the timetable graph
+odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+    parameters, timetable_initial_graph)
+
+# And save the output of the first list of odt facing capcity constraint
+alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
 # Filter the passengers
 if filter_passengers:
     shortest_path.find_path_for_all_passengers_and_remove_unserved_demand(timetable_initial_graph, odt_list,
