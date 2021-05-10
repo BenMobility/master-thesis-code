@@ -284,8 +284,20 @@ while True:
         m += 1
         print(f'Moving to next iteration: {m}')
     except KeyError:
+        assigned = 0
+        unassigned = 0
+        count_assigned = 0
+        count_unassigned = 0
+        for odt in odt_priority_list_original:
+            if odt[5] == 0:
+                assigned += odt[3]
+                count_assigned += 1
+            else:
+                unassigned += odt[3]
+                count_unassigned += 1
         print('End of passenger assignment')
-        # todo: add the number of assigned and unassigned passenger (sum of penalty vs no penalty)
+        print(f'\nThe number of assigned passengers: {assigned} for a total of group: {count_assigned}')
+        print(f'The number of unassigned passengers: {unassigned} for a total of group: {count_unassigned}')
         break
 
 # %% while loop for multiple iterations
