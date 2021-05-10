@@ -35,14 +35,14 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
 
         # Compute the shortest path with dijkstra
         try:
-            l, p = shortest_path.single_source_dijkstra(timetable_initial_graph, odt[0], odt[1])
+            _, p = shortest_path.single_source_dijkstra(timetable_initial_graph, odt[0], odt[1])
             # Save the path
             odt_priority_list_original[i][4] = p
             # Save the length of the path
             try:
-                odt_priority_list_original[i][5] = round(l, 1)
+                odt_priority_list_original[i][5] = 0
             except IndexError:
-                odt_priority_list_original[i].append(round(l, 1))
+                odt_priority_list_original[i].append(0)
 
             # Assign the flow on the timetable graph's edges
             for j in range(len(p) - 1):
@@ -131,14 +131,17 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
 
                                                     if 'odt_facing_capacity_constrain' in locals():
                                                         # Record the odt with the last node before capacity constraint.
-                                                        # [odt, last node, index, edge, new path, number of trial]
-                                                        odt_info = [odt_with_lower_priority, odt_path_to_keep,
-                                                                    odt_path_to_delete[0:2], 1]
+                                                        # [odt, odt path to keep, edge full, number of trial]
+                                                        odt_info = [odt_with_lower_priority,
+                                                                    odt_path_to_keep,
+                                                                    odt_path_to_delete[0:2],
+                                                                    1]
                                                         odt_facing_capacity_constrain.append(odt_info)
                                                     else:
                                                         odt_facing_capacity_constrain = [odt_with_lower_priority,
                                                                                          odt_path_to_keep,
-                                                                                         odt_path_to_delete[0:2], 1]
+                                                                                         odt_path_to_delete[0:2],
+                                                                                         1]
                                                 # Done with the recording of oft facing capacity constraint
                                                 break
                                             # Not enough seats released, need at least one more group to leave
@@ -155,10 +158,10 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                 if 'odt_facing_capacity_constrain' in locals():
                                     # Record the odt with the last node before capacity constraint.
                                     # [odt, last node, index, edge, new path, number of trial]
-                                    odt_info = [odt[0:4], p[:j-1], [p[j], p[j + 1]], 1]
+                                    odt_info = [odt[0:4], p[:j], [p[j], p[j + 1]], 1]
                                     odt_facing_capacity_constrain.append(odt_info)
                                 else:
-                                    odt_facing_capacity_constrain = [[odt[0:4], p[:j-1], [p[j], p[j + 1]], 1]]
+                                    odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
 
                                 # Done for this odt, do not need to continue to assign further. go to the next one
                                 break
@@ -169,10 +172,10 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                             if 'odt_facing_capacity_constrain' in locals():
                                 # Record the odt with the last node before capacity constraint.
                                 # [odt, last node, index, edge, new path, number of trial]
-                                odt_info = [odt[0:4], p[:j-1], [p[j], p[j + 1]], 1]
+                                odt_info = [odt[0:4], p[:j], [p[j], p[j + 1]], 1]
                                 odt_facing_capacity_constrain.append(odt_info)
                             else:
-                                odt_facing_capacity_constrain = [[odt[0:4], p[:j-1], [p[j], p[j + 1]], 1]]
+                                odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
 
                             # Done for this odt, do not need to continue to assign further. go to the next one
                             break

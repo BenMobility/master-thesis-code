@@ -73,7 +73,7 @@ create_timetable_home_connections_from_scratch = False  # True, if you want to c
 full_od_file = False  # True, if you want to read to full od file ~287,000 KB [28]
 read_od_departure_time_file = True  # False, if you want to make it from scratch [29]
 create_group_passengers = True  # True, if you want to group the passengers for the assignment [30]
-random_seed = 42  # Priority list for passengers [31]
+max_iteration_recompute_path = 3  # The limit of recomputing the passenger path [31]
 read_selected_zones_demand_and_travel_time = True  # True, if you want to read csv files of demand and travel time [32]
 capacity_constraint = False  # False, if capacity constraint is included or not in the passenger assign. [53]
 assign_passenger = True  # True, makes assign passenger during the shortest path algorithm in ALNS [38]
@@ -111,9 +111,9 @@ list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connec
                    weight_closed_tracks, train_capacity, bus_capacity, penalty_no_path,
                    delayTime_to_consider_cancel, delayTime_to_consider_partCancel, commercial_stops,
                    time_discretization, group_size_passenger, full_od_file, read_od_departure_time_file,
-                   create_group_passengers, random_seed, read_selected_zones_demand_and_travel_time, number_iteration,
-                   number_iteration_archive, delay_options, time_delta_delayed_bus, min_headway, assign_passenger,
-                   deviation_penalty_cancel, deviation_penalty_delay, deviation_penalty_emergency,
+                   create_group_passengers, max_iteration_recompute_path, read_selected_zones_demand_and_travel_time,
+                   number_iteration, number_iteration_archive, delay_options, time_delta_delayed_bus, min_headway,
+                   assign_passenger, deviation_penalty_cancel, deviation_penalty_delay, deviation_penalty_emergency,
                    deviation_penalty_bus, deviation_penalty_rerouted, reaction_factor_operation,
                    reaction_factor_deviation, warm_up_phase, iterations_temperature_level,
                    number_of_temperature_change, reaction_factor_return_archive, reaction_factor_weights,

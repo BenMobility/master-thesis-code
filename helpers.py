@@ -85,7 +85,7 @@ class Parameters:
         self.full_od_file = list_parameters[28]
         self.read_od_departure_file = list_parameters[29]
         self.create_group_passengers = list_parameters[30]
-        self.random_seed = list_parameters[31]
+        self.max_iteration_recompute_path = list_parameters[31]
         self.read_selected_zones_demand_travel_time = list_parameters[32]
         self.capacity_constraint = list_parameters[53]
 
