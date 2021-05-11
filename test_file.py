@@ -59,7 +59,10 @@ while True:
                 # and restore the initial weight on the edge
                 initial_weight = timetable_initial_graph[odt[2][0]][odt[2][1]]['weight']
                 timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = parameters.weight_closed_tracks
-                _, p = shortest_path.single_source_dijkstra(timetable_initial_graph, odt[1][-1], odt[0][1])
+                _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
+                                                            odt[1][-1],
+                                                            odt[0][1],
+                                                            cutoff=parameters.weight_closed_tracks - 1)
                 timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = initial_weight
                 # Save the path
                 odt_list[i][1].extend(p[1:])
@@ -67,7 +70,7 @@ while True:
                 # Assign the flow on the timetable graph's edges
                 for j in range(len(p) - 1):
                     try:
-                        if sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[3] > parameters.train_capacity:
+                        if sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[0][3] > parameters.train_capacity:
                             try:
                                 # Check if the current passenger is already seated in the train
                                 if p[j - 1][2] == p[j][2]:
@@ -78,7 +81,7 @@ while True:
                                     odt_with_lower_priority_index = []
 
                                     # Remove assigned odt with lower priority on the edge
-                                    while sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[3] > \
+                                    while sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[0][3] > \
                                             parameters.train_capacity:
                                         try:
                                             # Check if the assigned odt is already seated in the train, if so, go to
@@ -98,7 +101,7 @@ while True:
 
                                                 # Check if removing the assigned odt from the train is enough, if not,
                                                 # need to add another assigned from the list
-                                                if sum(odt_with_lower_priority_flow) >= odt[3]:
+                                                if sum(odt_with_lower_priority_flow) >= odt[0][3]:
                                                     for odt_with_lower_priority in odt_with_lower_priority_name:
                                                         # Extract the odt to get the recorded path from the original
                                                         # priority list
@@ -167,13 +170,13 @@ while True:
                                                                 odt_info = [odt_with_lower_priority,  # ODT name
                                                                             odt_path_to_keep[-1],   # ODT path to keep
                                                                             odt_path_to_delete[0:2],    # Edge full
-                                                                            odt[4]+1]   # Number of iteration
+                                                                            odt[3]+1]   # Number of iteration
                                                             except KeyError:
                                                                 odt_facing_capacity_dict_for_iteration[m+1] =\
                                                                     [odt_with_lower_priority,
                                                                      odt_path_to_keep[-1],
                                                                      odt_path_to_delete[0:2],
-                                                                     odt[4]+1]
+                                                                     odt[3]+1]
 
                                                     # Done with the recording of oft facing capacity constraint
                                                     break
@@ -183,9 +186,9 @@ while True:
                                         # Not suppose to happen, but it might if there an assignment mistake
                                         except IndexError:
                                             print(
-                                                f'Train is at full capacity and the current odt {odt} is already seated'
-                                                f', but the algorithm cannot find the assigned odt that is assigned but'
-                                                f' not seated in the train.')
+                                                f'Train is at full capacity and the current odt {odt[0]} is already '
+                                                f'seated, but the algorithm cannot find the assigned odt that is'
+                                                f' assigned but not seated in the train.')
                                             break
 
                                 # It means, that the next train is at full capacity. Hence, the current odt journey
