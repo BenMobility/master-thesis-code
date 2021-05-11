@@ -17,7 +17,8 @@ import numpy as np
 
 # Viriato
 base_url = 'http://localhost:8080'  # Viriato localhost
-np.random.seed(42)  # Random seed for the main code
+random_seed = 42
+np.random.seed(random_seed)  # Random seed for the main code
 
 # %% filter, alns
 filter_passengers = False
@@ -121,7 +122,7 @@ list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connec
 
 # %% Time window from Viriato and close tracks ids from disruption scenario
 print('\nMain code is running.')
-print(f'Random seed used is: {list_parameters[31]}')
+print(f'Random seed used is: {random_seed}')
 time_window = viriato_interface.get_time_window()
 print(f'The time window for this experiment is: {time_window.from_time} to {time_window.to_time}.')
 closed_track_ids = viriato_interface.get_section_track_closure_ids(time_window)
@@ -200,14 +201,14 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-# Assign the passenger on the timetable graph
-odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
-    parameters, timetable_initial_graph)
-
-# And save the output of the first list of odt facing capacity constraint
-alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
-alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
-alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+# # Assign the passenger on the timetable graph
+# odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+#     parameters, timetable_initial_graph)
+#
+# # And save the output of the first list of odt facing capacity constraint
+# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
+# alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
+# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
 
 # Filter the passengers
 if filter_passengers:
