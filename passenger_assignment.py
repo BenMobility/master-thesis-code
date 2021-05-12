@@ -28,6 +28,7 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
 
     # Assign the passengers based on the priority list
     for odt in odt_priority_list_original:
+
         # Break the loop if reached the last odt to avoid index error
         if i == len(odt_priority_list_original):
             print('End of the passenger assignment')
@@ -78,7 +79,9 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
 
                                             # Check if removing the assigned odt from the train is enough, if not, need\
                                             # to add another assigned from the list
-                                            if sum(odt_with_lower_priority_flow) >= odt[3]:
+                                            if parameters.train_capacity >= \
+                                                    sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) - \
+                                                    sum(odt_with_lower_priority_flow) + odt[3]:
                                                 for odt_with_lower_priority in odt_with_lower_priority_name:
                                                     # Extract the odt to get the recorded path from the original
                                                     # priority list
@@ -107,9 +110,9 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                     try:
                                                         odt_priority_list_original[
                                                             index_in_original_list][4] = odt_path_to_keep
-                                                        odt_priority_list_original[index_in_original_list][5] = None
+                                                        odt_priority_list_original[index_in_original_list][5] = 0
                                                     except ValueError:
-                                                        print(f'{odt_priority_list_original[index_in_original_list][0:2]} '
+                                                        print(f'{odt_priority_list_original[index_in_original_list][0]}'
                                                               f' at index {index_in_original_list} has already a '
                                                               f'changed value but it was not recorded properly. Please'
                                                               f'check passenger assignment')
@@ -142,7 +145,11 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                                                          odt_path_to_keep,
                                                                                          odt_path_to_delete[0:2],
                                                                                          1]
-                                                # Done with the recording of oft facing capacity constraint
+
+                                                # Finally, add the current odt on the clean edge
+                                                timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
+                                                timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0:4])
+                                                # Done with the recording of odt facing capacity constraint
                                                 break
                                             # Not enough seats released, need at least one more group to leave
                                             else:
@@ -163,7 +170,13 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                 else:
                                     odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
 
-                                # Done for this odt, do not need to continue to assign further. go to the next one
+                                # Done for this odt, update the path on the original list
+                                # Find the index on the original list
+                                index_in_original_list = odt_priority_list_original.index(odt)
+
+                                # Update the new path
+                                odt_priority_list_original[index_in_original_list][4] = p[:j]
+                                # do not need to continue to assign further. go to the next one
                                 break
 
                         # It means that the previous edge is home to the first station,
@@ -178,6 +191,12 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                 odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
 
                             # Done for this odt, do not need to continue to assign further. go to the next one
+                            # But before need to assign the path to the original list
+                            # Find the index on the original list
+                            index_in_original_list = odt_priority_list_original.index(odt)
+
+                            # Update the new path
+                            odt_priority_list_original[index_in_original_list][4] = p[:j]
                             break
                     else:
                         timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])

@@ -30,7 +30,6 @@ import networkx as nx
 
 # %% 1st passenger assignment
 
-# %% Read pickle files for alns
 timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_alns.pkl', allow_pickle=True)
 parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
 
@@ -38,17 +37,20 @@ parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
 odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
     parameters, timetable_initial_graph)
 
-# # And save the output of the first list of odt facing capacity constraint
-# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
-# alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
-# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+# And save the output of the first list of odt facing capacity constraint
+alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
+alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
 
-# # %% Loading data
-# timetable_initial_graph = np.load('output/pickle/timetable_with_first_assignment_done.pkl', allow_pickle=True)
-# parameters = np.load('output/pickle/parameters_with_first_assignment_done.pkl', allow_pickle=True)
-# odt_facing_capacity_constraint = np.load('output/pickle/odt_facing_capacity_constraint.pkl', allow_pickle=True)
+# %% Passenger assignment with capacity constraint 2nd and more iteration
 
-# %% Passenger assignment with capacity constraint
+# ['4072_07:20', 4067]
+# extract_odt_test = [item for item in odt_priority_list_original if item[0:2] == odt_with_lower_priority[0][0:2]]
+
+# Loading data
+timetable_initial_graph = np.load('output/pickle/timetable_with_first_assignment_done.pkl', allow_pickle=True)
+parameters = np.load('output/pickle/parameters_with_first_assignment_done.pkl', allow_pickle=True)
+odt_facing_capacity_constraint = np.load('output/pickle/odt_facing_capacity_constraint.pkl', allow_pickle=True)
 
 odt_priority_list_original = parameters.odt_as_list
 
@@ -118,7 +120,9 @@ while True:
 
                                                 # Check if removing the assigned odt from the train is enough, if not,
                                                 # need to add another assigned from the list
-                                                if sum(odt_with_lower_priority_flow) >= odt[0][3]:
+                                                if parameters.train_capacity >= \
+                                                    sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) - \
+                                                        sum(odt_with_lower_priority_flow) + odt[0][3]:
                                                     for odt_with_lower_priority in odt_with_lower_priority_name:
                                                         # Extract the odt to get the recorded path from the original
                                                         # priority list
@@ -195,6 +199,10 @@ while True:
                                                                      odt_path_to_delete[0:2],
                                                                      odt[3]+1]
 
+                                                    # Finally, add the current odt on the clean edge
+                                                    timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
+                                                    timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(
+                                                        odt[0:4])
                                                     # Done with the recording of oft facing capacity constraint
                                                     break
                                                 # Not enough seats released, need at least one more group to leave
