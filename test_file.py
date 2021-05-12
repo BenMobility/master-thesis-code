@@ -30,17 +30,17 @@ import networkx as nx
 
 # %% 1st passenger assignment
 
-timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_alns.pkl', allow_pickle=True)
-parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
-
-# Assign the passenger on the timetable graph
-odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
-    parameters, timetable_initial_graph)
-
-# And save the output of the first list of odt facing capacity constraint
-alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
-alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
-alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+# timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_alns.pkl', allow_pickle=True)
+# parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
+#
+# # Assign the passenger on the timetable graph
+# odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+#     parameters, timetable_initial_graph)
+#
+# # And save the output of the first list of odt facing capacity constraint
+# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
+# alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
+# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
 
 # %% Passenger assignment with capacity constraint 2nd and more iteration
 
@@ -67,6 +67,9 @@ while True:
 
         # Assign the passengers based on the priority list
         for odt in odt_list:
+
+            # debug
+            debug = odt[0][0:2]
             # Break the loop if reached the last odt to avoid index error
             if i == len(odt_list):
                 print('End of the passenger assignment')
@@ -133,6 +136,8 @@ while True:
                                                         index_in_original_list = odt_priority_list_original.index(
                                                             extract_odt[0])
 
+                                                        # Verify the type of extract_odt between odt original format
+                                                        # or
                                                         # Get the path from the original list
                                                         extract_odt_path = extract_odt[0][4]
 
@@ -200,9 +205,9 @@ while True:
                                                                      odt[3]+1]
 
                                                     # Finally, add the current odt on the clean edge
-                                                    timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
+                                                    timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[0][3])
                                                     timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(
-                                                        odt[0:4])
+                                                        odt[0])
                                                     # Done with the recording of oft facing capacity constraint
                                                     break
                                                 # Not enough seats released, need at least one more group to leave
@@ -294,20 +299,44 @@ while True:
                                 # Done for this odt, do not need to continue to assign further. go to the next one
                                 break
                         else:
-                            timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
-                            timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0:4])
+                            timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[0][3])
+                            timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0])
 
                     # If there is a key error, it means it is either a home-station edge, station-destination edge or a
                     # transfer, hence we go check the next node
                     except KeyError:
                         pass
+
+                # Update the odt info on the original list
+                extract_odt = [item for item in odt_priority_list_original
+                               if item[0:2] == odt[0][0:2]]
+
+                # Find the index on the original list
+                index_in_original_list = odt_priority_list_original.index(
+                    extract_odt[0])
+
+                # Update the original odt with the new oath
+                odt_priority_list_original[index_in_original_list][4] = odt_list[i][1]
+
+                # Keep to zero if no penalty
+                odt_priority_list_original[index_in_original_list][5] = 0
+
             # If there is no path, it raises an error. Record the none path and add the penalty
             except nx.exception.NetworkXNoPath:
-                odt_priority_list_original[i][4] = None
+                # Extract the odt to get the recorded path from the original
+                # priority list
+                extract_odt = [item for item in odt_priority_list_original
+                               if item[0:2] == odt[0][0:2]]
+
+                # Find the index on the original list
+                index_in_original_list = odt_priority_list_original.index(
+                    extract_odt[0])
+
+                odt_priority_list_original[index_in_original_list][4] = None
                 try:
-                    odt_priority_list_original[i][5] = parameters.penalty_no_path
+                    odt_priority_list_original[index_in_original_list][5] = parameters.penalty_no_path
                 except IndexError:
-                    odt_priority_list_original[i].append(parameters.penalty_no_path)
+                    odt_priority_list_original[index_in_original_list].append(parameters.penalty_no_path)
             i += 1
         m += 1
         print(f'Moving to next iteration: {m}')
