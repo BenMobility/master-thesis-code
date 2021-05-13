@@ -7,6 +7,7 @@ Passenger assignment with capacity constraint
 """
 import networkx as nx
 import shortest_path
+import copy
 
 
 # %% Passenger assignment
@@ -218,7 +219,322 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
     # Sort in a descending order for the new list of odt facing capacity constraint
     odt_facing_capacity_constrain.sort(key=lambda x: x[0][2], reverse=True)
     return odt_facing_capacity_constrain, parameters, timetable_initial_graph
-# %% Sort the list in descending manner with the level of importance
+# %% Assigning flow for the 2nd and more iteration
+
+
+def passenger_assignment_facing_capacity_constraint(parameters, odt_facing_capacity_constraint,
+                                                    timetable_initial_graph):
+
+    odt_priority_list_original = parameters.odt_as_list
+
+    # Create a dictionary for the iterations
+    odt_facing_capacity_dict_for_iteration = {0: copy.deepcopy(odt_facing_capacity_constraint)}
+
+    # Start the loop for the passenger assignment with capacity constraint
+    m = 0
+    while True:
+        try:
+            odt_list = odt_facing_capacity_dict_for_iteration[m]
+
+            # remove the duplicates from the list
+            odt_list = remove_the_duplicates(odt_list)
+
+            # Set the count to zero for the loop
+            i = 0
+
+            # Assign the passengers based on the priority list
+            for odt in odt_list:
+
+                # debug
+                debug = odt[0][0:2]
+                # Break the loop if reached the last odt to avoid index error
+                if i == len(odt_list):
+                    print('End of the passenger assignment')
+                    break
+
+                # Compute the shortest path with dijkstra
+                try:
+                    # First make sure that they won't use the path with the full capacity constraint, do not forget to save
+                    # and restore the initial weight on the edge
+                    initial_weight = timetable_initial_graph[odt[2][0]][odt[2][1]]['weight']
+                    timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = parameters.weight_closed_tracks
+                    _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
+                                                                odt[1][-1],
+                                                                odt[0][1],
+                                                                cutoff=parameters.weight_closed_tracks - 1)
+                    timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = initial_weight
+                    # Save the path, origin to destination with the new path
+                    odt_list[i][1].extend(p[1:])
+
+                    # Assign the flow on the timetable graph's edges starting from the new path only
+                    for j in range(len(p) - 1):
+                        try:
+                            if sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[0][3] > parameters.train_capacity:
+                                try:
+                                    # Check if the current passenger is already seated in the train
+                                    if p[j - 1][2] == p[j][2]:
+                                        # Initialize the parameters for the capacity constraint checks
+                                        k = 1
+                                        odt_with_lower_priority_name = []
+                                        odt_with_lower_priority_flow = []
+                                        odt_with_lower_priority_index = []
+
+                                        # Remove assigned odt with lower priority on the edge
+                                        while sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) + odt[0][3] > \
+                                                parameters.train_capacity:
+                                            try:
+                                                # Check if the assigned odt is already seated in the train, if so, go to
+                                                # next assigned odt
+                                                if timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k] in \
+                                                        timetable_initial_graph[p[j - 1]][p[j]]['odt_assigned']:
+                                                    k += 1
+                                                # If not assigned in the previous edge, hence the assigned passenger must be
+                                                # from another train
+                                                else:
+                                                    # Save the assigned
+                                                    odt_with_lower_priority_name.append(
+                                                        timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k])
+                                                    odt_with_lower_priority_flow.append(
+                                                        timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'][-k][3])
+                                                    odt_with_lower_priority_index.append(-k)
+
+                                                    # Check if removing the assigned odt from the train is enough, if not,
+                                                    # need to add another assigned from the list
+                                                    if parameters.train_capacity >= \
+                                                        sum(timetable_initial_graph[p[j]][p[j + 1]]['flow']) - \
+                                                            sum(odt_with_lower_priority_flow) + odt[0][3]:
+                                                        for odt_with_lower_priority in odt_with_lower_priority_name:
+                                                            # Extract the odt to get the recorded path from the original
+                                                            # priority list
+                                                            extract_odt = [item for item in odt_priority_list_original
+                                                                           if item[0:2] == odt_with_lower_priority[0:2]]
+
+                                                            # Find the index on the original list
+                                                            index_in_original_list = odt_priority_list_original.index(
+                                                                extract_odt[0])
+
+                                                            # Verify the type of extract_odt between odt original format
+                                                            # or
+                                                            # Get the path from the original list
+                                                            extract_odt_path = extract_odt[0][4]
+
+                                                            # Get the index of the last node before the full capacity train
+                                                            index_last_node_on_path_before_capacity = \
+                                                                extract_odt_path.index(p[j])
+
+                                                            # Split the path into delete and keep path
+                                                            odt_path_to_delete = extract_odt_path[
+                                                                                 index_last_node_on_path_before_capacity:]
+                                                            odt_path_to_keep = extract_odt_path[
+                                                                               :index_last_node_on_path_before_capacity]
+
+                                                            # Modify the original path and erase the length, needs to be
+                                                            # recomputed
+                                                            try:
+                                                                odt_priority_list_original[
+                                                                    index_in_original_list][4] = odt_path_to_keep
+                                                                odt_priority_list_original[index_in_original_list][5] = 0
+                                                            except ValueError:
+                                                                # in order to stay inside the lines for code writing
+                                                                message = \
+                                                                    odt_priority_list_original[index_in_original_list][0:2]
+                                                                print(f'{message} at index {index_in_original_list} has '
+                                                                      f'already a changed value but it was not recorded '
+                                                                      f'properly. Please check passenger assignment')
+
+                                                            # Delete the flow and the odt_assigned
+                                                            for n in range(len(odt_path_to_delete) - 1):
+                                                                try:
+                                                                    index_to_delete = timetable_initial_graph[
+                                                                        odt_path_to_delete[n]][
+                                                                        odt_path_to_delete[n + 1]]['odt_assigned'].index(
+                                                                        odt_with_lower_priority)
+                                                                    del timetable_initial_graph[odt_path_to_delete[n]][
+                                                                        odt_path_to_delete[n + 1]]['flow'][index_to_delete]
+                                                                    del timetable_initial_graph[odt_path_to_delete[n]][
+                                                                        odt_path_to_delete[n + 1]]['odt_assigned'][
+                                                                        index_to_delete]
+                                                                except (KeyError, ValueError):
+                                                                    # KeyError means it is a transfer edge where there is
+                                                                    # no flow or odt_assigned. ValueError can be already
+                                                                    # removed from the edge. How? good question.
+                                                                    continue
+
+                                                            if odt[3] + 1 > parameters.max_iteration_recompute_path:
+                                                                odt_priority_list_original[
+                                                                    index_in_original_list][4] = odt_path_to_keep
+                                                                odt_priority_list_original[index_in_original_list][5] = \
+                                                                    parameters.penalty_no_path
+
+                                                            else:
+                                                                try:
+                                                                    odt_new_list = \
+                                                                        odt_facing_capacity_dict_for_iteration[m+1]
+                                                                    odt_info = [odt_with_lower_priority,  # ODT name
+                                                                                odt_path_to_keep[-1],   # ODT path to keep
+                                                                                odt_path_to_delete[0:2],    # Edge full
+                                                                                odt[3]+1]   # Number of iteration
+                                                                except KeyError:
+                                                                    odt_facing_capacity_dict_for_iteration[m+1] =\
+                                                                        [odt_with_lower_priority,
+                                                                         odt_path_to_keep[-1],
+                                                                         odt_path_to_delete[0:2],
+                                                                         odt[3]+1]
+
+                                                        # Finally, add the current odt on the clean edge
+                                                        timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[0][3])
+                                                        timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(
+                                                            odt[0])
+                                                        # Done with the recording of oft facing capacity constraint
+                                                        break
+                                                    # Not enough seats released, need at least one more group to leave
+                                                    else:
+                                                        k += 1
+                                            # Not suppose to happen, but it might if there an assignment mistake
+                                            except IndexError:
+                                                print(
+                                                    f'Train is at full capacity and the current odt {odt[0]} is already '
+                                                    f'seated, but the algorithm cannot find the assigned odt that is'
+                                                    f' assigned but not seated in the train.')
+                                                break
+
+                                    # It means, that the next train is at full capacity. Hence, the current odt journey
+                                    # needs to be computed from here in the next list
+                                    else:
+
+                                        # First, we need to check if the odt has reached the limit of recomputing path
+                                        if odt[3] + 1 > parameters.max_iteration_recompute_path:
+                                            # Extract the odt to get the recorded path from the original
+                                            # priority list
+                                            extract_odt = [item for item in odt_priority_list_original
+                                                           if item[0:2] == odt[0][0:2]]
+
+                                            # Find the index on the original list
+                                            index_in_original_list = odt_priority_list_original.index(
+                                                extract_odt[0])
+
+                                            # Update the original with the penalty
+                                            odt_priority_list_original[index_in_original_list][4] = \
+                                                odt_list[i][1][:-(len(p)-j)]  # Keep the assigned path
+                                            odt_priority_list_original[index_in_original_list][5] = \
+                                                parameters.penalty_no_path
+
+                                        else:
+                                            try:
+                                                odt_new_list = \
+                                                    odt_facing_capacity_dict_for_iteration[m + 1]
+                                                odt_info = [odt[0],  # ODT name
+                                                            odt_list[i][1][:-(len(p)-j)],  # ODT path to keep
+                                                            [p[j], p[j + 1]],  # Edge full
+                                                            odt[3] + 1]  # Number of iteration
+                                                odt_new_list.append(odt_info)
+                                            except KeyError:
+                                                odt_facing_capacity_dict_for_iteration[m + 1] = \
+                                                    [[odt[0],
+                                                     odt_list[i][1][:-(len(p)-j)],
+                                                     [p[j], p[j + 1]],
+                                                     odt[3] + 1]]
+
+                                        # Done for this odt, do not need to continue to assign further. go to the next one
+                                        break
+
+                                # It means that the previous edge is home to the first station,
+                                # hence the passenger is not seated in the train
+                                except IndexError:
+                                    # First, we need to check if the odt has reached the limit of recomputing path
+                                    if odt[3] + 1 > parameters.max_iteration_recompute_path:
+                                        # Extract the odt to get the recorded path from the original
+                                        # priority list
+                                        extract_odt = [item for item in odt_priority_list_original
+                                                       if item[0:2] == odt[0][0:2]]
+
+                                        # Find the index on the original list
+                                        index_in_original_list = odt_priority_list_original.index(
+                                            extract_odt[0])
+
+                                        # Update the original with the penalty
+                                        odt_priority_list_original[index_in_original_list][4] = \
+                                            odt_list[i][1][:-(len(p) - j)]  # Keep the assigned path
+                                        odt_priority_list_original[index_in_original_list][5] = \
+                                            parameters.penalty_no_path
+
+                                    else:
+                                        try:
+                                            odt_new_list = \
+                                                odt_facing_capacity_dict_for_iteration[m + 1]
+                                            odt_info = [odt[0],  # ODT name
+                                                        odt_list[i][1][:-(len(p) - j)],  # ODT path to keep
+                                                        [p[j], p[j + 1]],  # Edge full
+                                                        odt[3] + 1]  # Number of iteration
+                                        except KeyError:
+                                            odt_facing_capacity_dict_for_iteration[m + 1] = \
+                                                [[odt[0],
+                                                 odt_list[i][1][:-(len(p) - j)],
+                                                 [p[j], p[j + 1]],
+                                                 odt[3] + 1]]
+
+                                    # Done for this odt, do not need to continue to assign further. go to the next one
+                                    break
+                            else:
+                                timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[0][3])
+                                timetable_initial_graph[p[j]][p[j + 1]]['odt_assigned'].append(odt[0])
+
+                        # If there is a key error, it means it is either a home-station edge, station-destination edge or a
+                        # transfer, hence we go check the next node
+                        except KeyError:
+                            pass
+
+                    # Update the odt info on the original list
+                    extract_odt = [item for item in odt_priority_list_original
+                                   if item[0:2] == odt[0][0:2]]
+
+                    # Find the index on the original list
+                    index_in_original_list = odt_priority_list_original.index(
+                        extract_odt[0])
+
+                    # Update the original odt with the new oath
+                    odt_priority_list_original[index_in_original_list][4] = odt_list[i][1]
+
+                    # Keep to zero if no penalty
+                    odt_priority_list_original[index_in_original_list][5] = 0
+
+                # If there is no path, it raises an error. Record the none path and add the penalty
+                except nx.exception.NetworkXNoPath:
+                    # Extract the odt to get the recorded path from the original
+                    # priority list
+                    extract_odt = [item for item in odt_priority_list_original
+                                   if item[0:2] == odt[0][0:2]]
+
+                    # Find the index on the original list
+                    index_in_original_list = odt_priority_list_original.index(
+                        extract_odt[0])
+
+                    odt_priority_list_original[index_in_original_list][4] = None
+                    try:
+                        odt_priority_list_original[index_in_original_list][5] = parameters.penalty_no_path
+                    except IndexError:
+                        odt_priority_list_original[index_in_original_list].append(parameters.penalty_no_path)
+                i += 1
+            m += 1
+            print(f'Moving to next iteration: {m}')
+        except KeyError:
+            assigned = 0
+            unassigned = 0
+            count_assigned = 0
+            count_unassigned = 0
+            for odt in odt_priority_list_original:
+                if odt[5] == 0:
+                    assigned += odt[3]
+                    count_assigned += 1
+                else:
+                    unassigned += odt[3]
+                    count_unassigned += 1
+            print('End of passenger assignment')
+            print(f'\nThe number of assigned passengers: {assigned} for a total of group: {count_assigned}')
+            print(f'The number of unassigned passengers: {unassigned} for a total of group: {count_unassigned}')
+            break
+
+    return  parameters, timetable_initial_graph
 
 # %% Remove the duplicates
 
