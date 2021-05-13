@@ -142,10 +142,10 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                                     1]
                                                         odt_facing_capacity_constrain.append(odt_info)
                                                     else:
-                                                        odt_facing_capacity_constrain = [odt_with_lower_priority,
+                                                        odt_facing_capacity_constrain = [[odt_with_lower_priority,
                                                                                          odt_path_to_keep,
                                                                                          odt_path_to_delete[0:2],
-                                                                                         1]
+                                                                                         1]]
 
                                                 # Finally, add the current odt on the clean edge
                                                 timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
@@ -253,8 +253,6 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
             # Assign the passengers based on the priority list
             for odt in odt_list:
 
-                # debug
-                debug = odt[0][0:2]
                 # Break the loop if reached the last odt to avoid index error
                 if i == len(odt_list):
                     print('End of the passenger assignment')
@@ -388,15 +386,17 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                                     odt_new_list = \
                                                                         odt_facing_capacity_dict_for_iteration[m+1]
                                                                     odt_info = [odt_with_lower_priority,  # ODT name
-                                                                                odt_path_to_keep[-1],  # ODT path keep
+                                                                                odt_path_to_keep,  # ODT path keep
                                                                                 odt_path_to_delete[0:2],    # Edge full
                                                                                 odt[3]+1]   # Number of iteration
+                                                                    odt_facing_capacity_dict_for_iteration[
+                                                                        m + 1].append(odt_info)
                                                                 except KeyError:
                                                                     odt_facing_capacity_dict_for_iteration[m+1] =\
-                                                                        [odt_with_lower_priority,
-                                                                         odt_path_to_keep[-1],
+                                                                        [[odt_with_lower_priority,
+                                                                         odt_path_to_keep,
                                                                          odt_path_to_delete[0:2],
-                                                                         odt[3]+1]
+                                                                         odt[3]+1]]
 
                                                         # Finally, add the current odt on the clean edge
                                                         timetable_initial_graph[p[j]][p[j + 1]][
@@ -445,7 +445,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             odt_list[i][1][:-(len(p)-j)],  # ODT path to keep
                                                             [p[j], p[j + 1]],  # Edge full
                                                             odt[3] + 1]  # Number of iteration
-                                                odt_new_list.append(odt_info)
+                                                odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                             except KeyError:
                                                 odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                     [[odt[0],
@@ -454,7 +454,22 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                      odt[3] + 1]]
 
                                         # Done for this odt, do not need to continue to assign further. go to the next
-                                        # one
+                                        # one but before need to assign the path to the original list
+                                        # Find the index on the original list
+
+                                        # Transform the odt to have the same format
+                                        odt_with_original_format = [odt[0][0],
+                                                                    odt[0][1],
+                                                                    odt[0][2],
+                                                                    odt[0][3],
+                                                                    odt[1],
+                                                                    0]
+
+                                        index_in_original_list = \
+                                            odt_priority_list_original.index(odt_with_original_format)
+
+                                        # Update the new path
+                                        odt_priority_list_original[index_in_original_list][4] = p[:j]
                                         break
 
                                 # It means that the previous edge is home to the first station,
@@ -485,6 +500,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                         odt_list[i][1][:-(len(p) - j)],  # ODT path to keep
                                                         [p[j], p[j + 1]],  # Edge full
                                                         odt[3] + 1]  # Number of iteration
+                                            odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                         except KeyError:
                                             odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                 [[odt[0],
@@ -493,6 +509,12 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                  odt[3] + 1]]
 
                                     # Done for this odt, do not need to continue to assign further. go to the next one
+                                    # But before need to assign the path to the original list
+                                    # Find the index on the original list
+                                    index_in_original_list = odt_priority_list_original.index(odt)
+
+                                    # Update the new path
+                                    odt_priority_list_original[index_in_original_list][4] = p[:j]
                                     break
                             else:
                                 timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[0][3])

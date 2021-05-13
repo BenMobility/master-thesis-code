@@ -32,6 +32,7 @@ import networkx as nx
 
 timetable_initial_graph = np.load('output/pickle/timetable_initial_graph_for_alns.pkl', allow_pickle=True)
 parameters = np.load('output/pickle/parameters_for_alns.pkl', allow_pickle=True)
+parameters.train_capacity = 500
 
 # Assign the passenger on the timetable graph
 odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
