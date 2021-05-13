@@ -201,15 +201,22 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-# # Assign the passenger on the timetable graph
-# odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
-#     parameters, timetable_initial_graph)
-#
-# # And save the output of the first list of odt facing capacity constraint
-# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
-# alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
-# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+# Assign the passenger on the timetable graph
+odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+    parameters, timetable_initial_graph)
 
+timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration = \
+    passenger_assignment.capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint,
+                                                      timetable_initial_graph)
+
+# And save the output of the first list of odt facing capacity constraint
+alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
+alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
+                             'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint.pkl')
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_with_first_assignment_done.pkl')
+alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_first_assignment_done.pkl')
+
+# todo: remove filter the passengers
 # Filter the passengers
 if filter_passengers:
     shortest_path.find_path_for_all_passengers_and_remove_unserved_demand(timetable_initial_graph, odt_list,
