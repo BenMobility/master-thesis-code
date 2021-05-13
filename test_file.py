@@ -52,6 +52,7 @@ timetable_initial_graph = np.load('output/pickle/timetable_with_first_assignment
 parameters = np.load('output/pickle/parameters_with_first_assignment_done.pkl', allow_pickle=True)
 odt_facing_capacity_constraint = np.load('output/pickle/odt_facing_capacity_constraint.pkl', allow_pickle=True)
 
+
 odt_priority_list_original = parameters.odt_as_list
 
 # Create a dictionary for the iterations
@@ -62,6 +63,10 @@ m = 0
 while True:
     try:
         odt_list = odt_facing_capacity_dict_for_iteration[m]
+
+        # remove the duplicates from the list
+        odt_list = passenger_assignment.remove_the_duplicates(odt_list)
+
         # Set the count to zero for the loop
         i = 0
 

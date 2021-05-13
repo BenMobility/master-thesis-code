@@ -220,3 +220,47 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
     return odt_facing_capacity_constrain, parameters, timetable_initial_graph
 # %% Sort the list in descending manner with the level of importance
 
+# %% Remove the duplicates
+
+
+def remove_the_duplicates(odt_facing_capacity_constraint):
+    """
+    method that removes the duplicates on the list while making sure to keep only the odt with the shortest trip due to
+    the fact it has faced the capacity constraint.
+    :param odt_facing_capacity_constraint: list of odt that face a train with full capacity.
+    :return: odt_facing_capacity_constraint: new list without duplicates.
+    """
+    # Set a dictionary that keeps the index from the previous list and the odt name. Set a list of all duplicates
+    # indexes and set i to for the iteration and keeping track of the index from the previous list
+    seen = {}  # Dict in order to keep the index from the list and the odt name for checking
+    duplicates_to_delete = []
+    i = 0
+
+    # Loop through all the odt in the list
+    for item in odt_facing_capacity_constraint:
+
+        # If the item has been already seen in the list. One of them has faced a train with full capacity earlier. Need
+        # to keep that one only
+        if item[0][0:4] in seen.values():
+            index_odt_list_in_seen = list(seen.keys())[list(seen.values()).index(item[0][0:4])]
+            length_in_seen = len(odt_facing_capacity_constraint[index_odt_list_in_seen][1])
+            length_current_item = len(item[1])
+
+            # Check which one is the earliest one based on the length of their path. If the earliest is the item, we
+            # Need to remove the other one from the seen list and replace it by the item. If not, save the index of the
+            # other
+            if length_in_seen > length_current_item:
+                duplicates_to_delete.append(index_odt_list_in_seen)
+                seen.pop(index_odt_list_in_seen)
+                seen[i] = item[0][0:4]
+            else:
+                duplicates_to_delete.append(i)
+        # It has not been seen, so add the item the seen dict.
+        else:
+            seen[i] = item[0][0:4]
+        i += 1
+
+    for index_to_delete in sorted(duplicates_to_delete, reverse=True):
+        del odt_facing_capacity_constraint[index_to_delete]
+
+    return odt_facing_capacity_constraint
