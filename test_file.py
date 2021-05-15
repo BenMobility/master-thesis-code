@@ -50,9 +50,15 @@ timetable_initial_graph = np.load('output/pickle/timetable_with_first_assignment
 parameters = np.load('output/pickle/parameters_with_first_assignment_done.pkl', allow_pickle=True)
 odt_facing_capacity_constraint = np.load('output/pickle/odt_facing_capacity_constraint.pkl', allow_pickle=True)
 
-timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration = \
+timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
     passenger_assignment.capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint,
-                                                           timetable_initial_graph)
+                                                      timetable_initial_graph)
+
+# And save the output of the first list of odt facing capacity constraint
+alns_platform.pickle_results(odt_priority_list_original, 'output/pickle/odt_after_passengers_assignment.pkl')
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_after_passengers_assignment.pkl')
+alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_after_passengers_assignment.pkl')
+
 
 # %% Start ALNS
 # set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)

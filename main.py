@@ -205,11 +205,12 @@ parameters.odt_as_list = odt_list
 odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
     parameters, timetable_initial_graph)
 
-timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration = \
+timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
     passenger_assignment.capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint,
                                                       timetable_initial_graph)
 
-# And save the output of the first list of odt facing capacity constraint
+# And save the output of the passengers assignment
+alns_platform.pickle_results(odt_priority_list_original, 'output/pickle/odt_priority_list_original.pkl')
 alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
 alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
                              'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint.pkl')
