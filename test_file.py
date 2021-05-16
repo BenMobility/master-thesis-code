@@ -76,7 +76,12 @@ odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(e
                                                                                timetable_initial_graph,
                                                                                odt_priority_list_original)
 
-
+# Assign the passengers facing disruption
+timetable_initial_graph, assigned, unassigned, odt_facing_disruption, odt_priority_list_original = \
+    passenger_assignment.assignment_with_disruption(odt_priority_list_original,
+                                                    odt_facing_disruption,
+                                                    timetable_initial_graph,
+                                                    parameters)
 # %% Start ALNS
 # set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
