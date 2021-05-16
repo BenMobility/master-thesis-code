@@ -700,4 +700,89 @@ def remove_the_duplicates(odt_facing_capacity_constraint):
     for index_to_delete in sorted(duplicates_to_delete, reverse=True):
         del odt_facing_capacity_constraint[index_to_delete]
 
+    # Put in order of priority
+    odt_facing_capacity_constraint.sort(key=lambda x: x[0][2], reverse=True)
     return odt_facing_capacity_constraint
+
+
+def get_edges_on_closed_tracks(parameters, timetable_initial_graph):
+    """
+    Method that create a dictionary of nodes. Departure node as key and Arrival node as value.
+    :param parameters: To get the path arrival nodes on closed track computed before in the main file
+    :param timetable_initial_graph: directed graph that contains all the edges
+    :return: Dictionary of departure and arrival nodes for every edge on closed tracks.
+    """
+    # Get the edges on the closed tracks
+    edges_on_closed_tracks = {}
+
+    # Loop through all the nodes on closed tracks and get the departure nodes accordingly with the arrival node
+    for arrival in parameters.path_nodes_on_closed_track:
+        departure_node = [pred for pred in timetable_initial_graph.predecessors(arrival)]
+        edges_on_closed_tracks[departure_node[0]] = arrival
+
+    return edges_on_closed_tracks
+
+
+def create_list_odt_facing_disruption(edges_on_closed_tracks, timetable_initial_graph, odt_priority_list_original):
+    """
+    Method that creates a list of all the odt that are facing the disruption.
+    :param edges_on_closed_tracks: list of all the edges on the closed tracks
+    :param timetable_initial_graph: directed graph with all the edges including flow and odt assigned
+    :param odt_priority_list_original: the first list of all the odt ordered by the priority rules
+    :return: list of odt facing disruption
+    """
+    # Create the empty list
+    odt_facing_disruption = []
+
+    # Loop through all the edges on closed tracks
+    for departure_node, arrival_node in edges_on_closed_tracks.items():
+
+        # Loop through all the odt assigned on the closed track
+        for current_odt in timetable_initial_graph[departure_node][arrival_node]['odt_assigned']:
+
+            # Get the information from the first list
+            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt_path = extract_odt[0][4]
+            index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
+            # Delete the flow and the odt_assigned
+            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+            for n in range(len(odt_path_to_delete) - 1):
+                try:
+                    index_to_delete = timetable_initial_graph[
+                        odt_path_to_delete[n]][odt_path_to_delete[n + 1]]['odt_assigned'].index(current_odt)
+                    del timetable_initial_graph[odt_path_to_delete[n]][odt_path_to_delete[n + 1]]['flow'][
+                        index_to_delete]
+                    del timetable_initial_graph[odt_path_to_delete[n]][odt_path_to_delete[n + 1]]['odt_assigned'][
+                        index_to_delete]
+                except (KeyError, ValueError):
+                    # KeyError means it is a transfer edge where there
+                    # is no flow or odt_assigned. ValueError can be
+                    # already removed from the edge. How? good question.
+                    continue
+
+            # Check number of iteration from the previous odt_facing_capacity
+            number_iteration = 0
+            # todo: takes too much time for little results...
+            # for _, odt_list_capacity in sorted(odt_facing_capacity_dict_for_iteration.items(), reverse=True):
+            #     if any(item[0][0] == extract_odt[0][0:4] for item in odt_list_capacity):
+            #         number_iteration = [item[0][3] for item in odt_list_capacity if item[0][0] == extract_odt[0][0:4]]
+            #         break
+
+            # Transform the odt on the odt facing disruption format
+            odt_facing_format = [extract_odt[0][0:4],
+                                 list(odt_path_to_keep),
+                                 [departure_node, arrival_node],
+                                 number_iteration + 1]
+
+            odt_facing_disruption.append(odt_facing_format)
+
+            # Update the original list with the new path and set to 0 if it was the penalty value
+            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][5] = 0
+
+    return odt_facing_disruption
