@@ -87,7 +87,7 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                     # Extract the odt to get the recorded path from the original
                                                     # priority list
                                                     extract_odt = [item for item in odt_priority_list_original
-                                                                   if item[0:2] == odt_with_lower_priority[0:2]]
+                                                                   if item[0:4] == odt_with_lower_priority[0:4]]
 
                                                     # Find the index on the original list
                                                     index_in_original_list = odt_priority_list_original.index(
@@ -255,6 +255,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
             for odt in odt_list:
 
                 # Break the loop if reached the last odt to avoid index error
+
                 if i == len(odt_list):
                     print('End of the passenger assignment')
                     break
@@ -318,7 +319,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             # Extract the odt to get the recorded path from the original
                                                             # priority list
                                                             extract_odt = [item for item in odt_priority_list_original
-                                                                           if item[0:2] == odt_with_lower_priority[0:2]]
+                                                                           if item[0:4] == odt_with_lower_priority[0:4]]
 
                                                             # Find the index on the original list
                                                             index_in_original_list = odt_priority_list_original.index(
@@ -424,7 +425,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             try:
                                                                 extract_odt_facing_capacity_constraint = \
                                                                     [item for item in odt_list[i:]
-                                                                     if item[0][0:2] == odt_with_lower_priority[0:2]]
+                                                                     if item[0][0:4] == odt_with_lower_priority[0:4]]
 
                                                                 index_in_odt_list = odt_list.index(
                                                                     extract_odt_facing_capacity_constraint[0])
@@ -463,7 +464,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                             # Extract the odt to get the recorded path from the original
                                             # priority list
                                             extract_odt = [item for item in odt_priority_list_original
-                                                           if item[0:2] == odt[0][0:2]]
+                                                           if item[0:4] == odt[0][0:4]]
 
                                             # Find the index on the original list
                                             index_in_original_list = odt_priority_list_original.index(
@@ -531,7 +532,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                         # Extract the odt to get the recorded path from the original
                                         # priority list
                                         extract_odt = [item for item in odt_priority_list_original
-                                                       if item[0:2] == odt[0][0:2]]
+                                                       if item[0:4] == odt[0][0:4]]
 
                                         # Find the index on the original list
                                         index_in_original_list = odt_priority_list_original.index(
@@ -603,7 +604,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                     if j == (len(p) - 2):
                         # Update the odt info on the original list
                         extract_odt = [item for item in odt_priority_list_original
-                                       if item[0:2] == odt[0][0:2]]
+                                       if item[0:4] == odt[0][0:4]]
 
                         # Find the index on the original list
                         index_in_original_list = odt_priority_list_original.index(
@@ -620,7 +621,7 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                     # Extract the odt to get the recorded path from the original
                     # priority list
                     extract_odt = [item for item in odt_priority_list_original
-                                   if item[0:2] == odt[0][0:2]]
+                                   if item[0:4] == odt[0][0:4]]
 
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -750,7 +751,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                                                             # Extract the odt to get the recorded path from the original
                                                             # priority list
                                                             extract_odt = [item for item in odt_priority_list_original
-                                                                           if item[0:2] == odt_with_lower_priority[0:2]]
+                                                                           if item[0:4] == odt_with_lower_priority[0:4]]
 
                                                             # Find the index on the original list
                                                             index_in_original_list = odt_priority_list_original.index(
@@ -856,7 +857,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                                                             try:
                                                                 extract_odt_facing_capacity_constraint = \
                                                                     [item for item in odt_list[i:]
-                                                                     if item[0][0:2] == odt_with_lower_priority[0:2]]
+                                                                     if item[0][0:4] == odt_with_lower_priority[0:4]]
 
                                                                 index_in_odt_list = odt_list.index(
                                                                     extract_odt_facing_capacity_constraint[0])
@@ -895,7 +896,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                                             # Extract the odt to get the recorded path from the original
                                             # priority list
                                             extract_odt = [item for item in odt_priority_list_original
-                                                           if item[0:2] == odt[0][0:2]]
+                                                           if item[0:4] == odt[0][0:4]]
 
                                             # Find the index on the original list
                                             index_in_original_list = odt_priority_list_original.index(
@@ -963,7 +964,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                                         # Extract the odt to get the recorded path from the original
                                         # priority list
                                         extract_odt = [item for item in odt_priority_list_original
-                                                       if item[0:2] == odt[0][0:2]]
+                                                       if item[0:4] == odt[0][0:4]]
 
                                         # Find the index on the original list
                                         index_in_original_list = odt_priority_list_original.index(
@@ -1034,7 +1035,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                     # Once all the path is assigned with the current odt, update the original list with the new path
                     if j == (len(p) - 2):
                         # Update the odt info on the original list
-                        extract_odt = [item for item in odt_priority_list_original if item[0:2] == odt[0][0:2]]
+                        extract_odt = [item for item in odt_priority_list_original if item[0:4] == odt[0][0:4]]
 
                         # Find the index on the original list
                         index_in_original_list = odt_priority_list_original.index(
@@ -1051,7 +1052,7 @@ def assignment_with_disruption(odt_priority_list_original, odt_facing_disruption
                     # Extract the odt to get the recorded path from the original
                     # priority list
                     extract_odt = [item for item in odt_priority_list_original
-                                   if item[0:2] == odt[0][0:2]]
+                                   if item[0:4] == odt[0][0:4]]
 
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])

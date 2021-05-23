@@ -38,12 +38,12 @@ th_zone_selection = 8000  # Threshold of the zone selection in meters [0]
 nb_zones_to_connect = 1  # Number of zones to connect in total [1]
 nb_stations_to_connect = 2  # Number of stations to connect (in euclidean) [2]
 min_nb_passenger = 0  # Minimum number of passenger [3]
-min_transfer_time = 0  # Original: 4 min Minimum transfer time (m) in minutes [4]
-max_transfer_time = 90  # Original: 15 min  Maximum transfer time (M) in minutes [5]
+min_transfer_time = 4  # Original: 4 min Minimum transfer time (m) in minutes [4]
+max_transfer_time = 15  # Original: 15 min  Maximum transfer time (M) in minutes [5]
 min_transfer_time_bus = 1  # Minimum transfer time in minutes for emergency buses [6]
 max_transfer_time_bus = 20  # Maximum transfer time in minutes for emergency buses [7]
-origin_train_departure_min_time = 0  # (2 min) Minimum waiting time in minutes for the origin train departure [8]
-origin_train_departure_max_time = 90  # (20 min)Maximum waiting time in minutes for the origin train departure [9]
+origin_train_departure_min_time = 2  # (2 min) Minimum waiting time in minutes for the origin train departure [8]
+origin_train_departure_max_time = 20  # (20 min)Maximum waiting time in minutes for the origin train departure [9]
 beta_transfer = 10  # Beta for transfer edges minutes [10]
 beta_waiting = 2.5  # Beta for waiting edges min/min [11]
 penalty_edge = 1000  # Penalty edge for not assigned passengers in the system [12] todo: change for something else
@@ -68,7 +68,7 @@ save_pickle = True  # Save the output in a pickle file
 read_pickle = True  # Read the input pickle files
 
 # Create home connection from scratch
-create_timetable_home_connections_from_scratch = True  # True, if you want to connect stations to homes
+create_timetable_home_connections_from_scratch = False  # True, if you want to connect stations to homes
 
 # Passenger assignment
 full_od_file = False  # True, if you want to read to full od file ~287,000 KB [28]
@@ -132,6 +132,9 @@ print('\nBuilding the infrastructure graph.')
 infra_graph, sbb_nodes, nodes_code, id_nodes = infrastructure_graph.build_infrastructure_graph(time_window, save_pickle)
 print('Infrastructure graph done!')
 parameters = helpers.Parameters(infra_graph, time_window, closed_track_ids, list_parameters)
+
+# debug
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_debug.pkl')
 
 # %% Original timetable graph
 print('\nCreate the trains timetable.')

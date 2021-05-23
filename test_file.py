@@ -10,10 +10,39 @@ import numpy as np
 import shortest_path
 import copy
 import passenger_assignment
+import helpers
 import alns_platform
 import networkx as nx
 
 
+# %% Debug main
+timetable_initial_graph = np.load('output/pickle/initial_timetable_m0_M90_threshold_8000.pickle', allow_pickle=True)
+parameters = np.load('output/pickle/parameters_debug.pkl', allow_pickle=True)
+station_candidates = np.load('output/pickle/station_candidates_m0_M90_threshold_8000.pickle', allow_pickle=True)
+odt_list = np.load('output/pickle/odt_list_m0_M90_threshold_8000.pickle', allow_pickle=True)
+
+
+# Zone candidates
+print('\n Define the zone candidates.')
+zone_candidates = helpers.create_zone_candidates_of_stations(station_candidates)
+print('Done.')
+
+# Store in parameters, because of the high computational time
+parameters.station_candidates = station_candidates
+parameters.zone_candidates = zone_candidates
+
+# Add the path column in the odt_list
+[x.append([]) for x in odt_list]
+parameters.odt_as_list = odt_list
+
+# Assign the passenger on the timetable graph
+odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+    parameters, timetable_initial_graph)
+
+timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
+    passenger_assignment.capacity_constraint_2nd_loop(parameters,
+                                                      odt_facing_capacity_constraint,
+                                                      timetable_initial_graph)
 # %% Benchmark
 # timetable_initial_graph = np.load('output/pickle/timetable_benchmark.pkl', allow_pickle=True)
 # parameters = np.load('output/pickle/parameters_benchmark.pkl', allow_pickle=True)
