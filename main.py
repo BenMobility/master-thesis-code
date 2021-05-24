@@ -10,7 +10,6 @@ import infrastructure_graph
 import viriato_interface
 import helpers
 import timetable_graph
-import shortest_path
 import alns_platform
 import passenger_assignment
 import numpy as np
@@ -54,7 +53,7 @@ t_start_op = 10 ** 6  # Starting temperature for Simulated Annealing on the oper
 t_start_de = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [17]
 t_start_tt = 10 ** 6  # Starting temperature for Simulated Annealing on the travel time objective [18]
 weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]
-train_capacity = 500  # Number of passenger per train [20]
+train_capacity = 300  # Number of passenger per train [20]
 bus_capacity = 100  # Number of passenger per bus in Zurich [21]
 penalty_no_path = 9000  # Penalty of no assignment equals duration in minutes [22] todo: define better
 delayTime_to_consider_cancel = 30  # Delay time to consider for full cancel in minutes [23]
@@ -133,9 +132,6 @@ infra_graph, sbb_nodes, nodes_code, id_nodes = infrastructure_graph.build_infras
 print('Infrastructure graph done!')
 parameters = helpers.Parameters(infra_graph, time_window, closed_track_ids, list_parameters)
 
-# debug
-alns_platform.pickle_results(parameters, 'output/pickle/parameters_debug.pkl')
-
 # %% Original timetable graph
 print('\nCreate the trains timetable.')
 trains_timetable = timetable_graph.get_trains_timetable(time_window, sbb_nodes, parameters, debug_mode_train)
@@ -196,6 +192,9 @@ parameters.odt_by_destination = odt_by_dest
 parameters.origin_name_desired_dep_time = origin_name_desired_dep_time
 parameters.path_nodes_on_closed_track = path_nodes_on_closed_track
 
+# debug
+alns_platform.pickle_results(parameters, 'output/pickle/parameters_debug.pkl')
+
 # In order to have a little computational time
 if debug_mode_passenger:
     odt_list = odt_list[0:1000]
@@ -208,36 +207,53 @@ parameters.odt_as_list = odt_list
 odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
     parameters, timetable_initial_graph)
 
-timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
-    passenger_assignment.capacity_constraint_2nd_loop(parameters,
-                                                      odt_facing_capacity_constraint,
-                                                      timetable_initial_graph)
+if odt_facing_capacity_constraint is None:
+    pass
+else:
+    timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original =\
+        passenger_assignment.capacity_constraint_2nd_loop(parameters,
+                                                          odt_facing_capacity_constraint,
+                                                          timetable_initial_graph)
 
 # Reassign the passenger facing disruption
 # Get the edges on the closed tracks
 edges_on_closed_tracks = passenger_assignment.get_edges_on_closed_tracks(parameters, timetable_initial_graph)
 
 # Create the list of odt facing disruption
-odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
-                                                                               timetable_initial_graph,
-                                                                               odt_priority_list_original)
+if 'odt_priority_list_original' in locals():
+    odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
+                                                                                   timetable_initial_graph,
+                                                                                   odt_priority_list_original)
+else:
+    odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
+                                                                                   timetable_initial_graph,
+                                                                                   parameters.odt_as_list)
 
 # Assign the passengers facing disruption
-timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
-odt_priority_list_original = passenger_assignment.assignment_with_disruption(odt_priority_list_original,
-                                                                             odt_facing_disruption,
-                                                                             timetable_initial_graph,
-                                                                             parameters)
+if 'odt_priority_list_original' in locals():
+    timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
+    odt_priority_list_original = passenger_assignment.assignment_with_disruption(odt_priority_list_original,
+                                                                                 odt_facing_disruption,
+                                                                                 timetable_initial_graph,
+                                                                                 parameters)
+else:
+    timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
+    odt_priority_list_original = passenger_assignment.assignment_with_disruption(parameters.odt_as_list,
+                                                                                 odt_facing_disruption,
+                                                                                 timetable_initial_graph,
+                                                                                 parameters)
 
 # And save the output of the passengers assignment
 alns_platform.pickle_results(odt_priority_list_original,
                              'output/pickle/odt_priority_list_original_facing_disruption.pkl')
 alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint.pkl')
 alns_platform.pickle_results(odt_facing_disruption, 'output/pickle/odt_facing_disruption.pkl')
-alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
-                             'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint.pkl')
 alns_platform.pickle_results(parameters, 'output/pickle/parameters_disruption.pkl')
 alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_with_disruption.pkl')
+if 'odt_facing_capacity_dict_for_iteration' in locals():
+    alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
+                                 'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint.pkl')
+
 
 # %% Run the ALNS
 if start_alns:

@@ -216,8 +216,12 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                 odt_priority_list_original[i].append(parameters.penalty_no_path)
         i += 1
 
-    # Sort in a descending order for the new list of odt facing capacity constraint
-    odt_facing_capacity_constrain.sort(key=lambda x: x[0][2], reverse=True)
+    # To avoid unbound local error
+    if 'odt_facing_capacity_constrain' in locals():
+        # Sort in a descending order for the new list of odt facing capacity constraint
+        odt_facing_capacity_constrain.sort(key=lambda x: x[0][2], reverse=True)
+    else:
+        odt_facing_capacity_constrain = None
     return odt_facing_capacity_constrain, parameters, timetable_initial_graph
 # %% Assigning flow for the 2nd and more iteration
 
