@@ -20,7 +20,7 @@ timetable_initial_graph = np.load('output/pickle/initial_timetable_m0_M90_thresh
 parameters = np.load('output/pickle/parameters_debug.pkl', allow_pickle=True)
 station_candidates = np.load('output/pickle/station_candidates_m0_M90_threshold_8000.pickle', allow_pickle=True)
 odt_list = np.load('output/pickle/odt_list_m0_M90_threshold_8000.pickle', allow_pickle=True)
-parameters.train_capacity = 400
+parameters.train_capacity = 300
 
 
 # Zone candidates
