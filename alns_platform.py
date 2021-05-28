@@ -776,9 +776,13 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
         #                                                                                                               emergency_train, trains_timetable, track_info, infra_graph, edges_o_stations_d, parameters)
         pass
     elif operator == 'EmergencyBus':
-
-        # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = operator_emergency_bus(timetable_prime_graph, changed_trains,
-        #                                                                                                             trains_timetable, track_info, infra_graph, edges_o_stations_d, parameters)
+        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
+            neighbourhood_operators.operator_emergency_bus(timetable_prime_graph,
+                                                           changed_trains,
+                                                           trains_timetable,
+                                                           track_info,
+                                                           edges_o_stations_d,
+                                                           parameters)
         pass
     elif operator == 'Return':
         # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \

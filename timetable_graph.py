@@ -1072,6 +1072,162 @@ def add_transit_nodes_edges_single_train_to_graph(prime_timetable, nodes_edges_d
         nx.set_edge_attributes(prime_timetable, nodes_edges_dict['waiting_attr'])
 
 
+def create_transit_edges_nodes_emergency_bus(bus):
+    # Set up the lists and dictionaries
+    bus_id = bus['ID']
+    arrival_nodes = []
+    arrival_nodes_attributes = dict()
+    departure_nodes = []
+    departure_nodes_attributes = dict()
+    driving_edges = list()
+    driving_edges_attributes = dict()
+
+    # Loop through all path nodes of a bus
+    n = 0
+    for tpn in bus['TrainPathNodes']:
+        n += 1
+        # Update time and node
+        arrival_time_this_node = tpn['ArrivalTime']
+        arrival_node_this_node = tpn['NodeID']
+        departure_time_this_node = tpn['DepartureTime']
+        departure_node_this_node = tpn['NodeID']
+
+        # If first node of the path
+        if n == 1:
+            departure_time_str = datetime.datetime.strftime(tpn['DepartureTime'], "%Y-%m-%dT%H:%M:%S")
+            node_name_dep_this = (departure_node_this_node, departure_time_str, tpn['ID'], 'd')
+            departure_nodes.append(node_name_dep_this)
+            attributes = {'train': bus_id, 'type': 'departureNode', 'departureTime': departure_time_this_node,
+                          'StopStatus': tpn['StopStatus'], 'bus': 'EmergencyBus'}
+            departure_nodes_attributes[node_name_dep_this] = attributes
+            departure_time_last_node = departure_time_this_node
+            departure_node_last_node = departure_node_this_node
+            departure_node_last_node_name = node_name_dep_this
+
+        # End of the bus
+        elif n == 2:
+            arrival_time_str = datetime.datetime.strftime(tpn['ArrivalTime'], "%Y-%m-%dT%H:%M:%S")
+            node_name_arr_this = (arrival_node_this_node, arrival_time_str, tpn['ID'], 'a')
+            arrival_nodes.append(node_name_arr_this)
+            attributes = {'train': bus_id, 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
+                          'StopStatus': tpn['StopStatus'], 'bus': 'EmergencyBus'}
+
+            arrival_nodes_attributes[node_name_arr_this] = attributes
+
+            # Driving edge to this node
+            run_time = arrival_time_this_node - departure_time_last_node
+            driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
+            driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
+                                                                                           'type': 'driving',
+                                                                                           'bus_id': bus_id,
+                                                                                           'odt_assigned': [],
+                                                                                           'bus': True}
+    nodes_edges_dict = {'arrival_nodes': arrival_nodes, 'departure_nodes': departure_nodes,
+                        'arrival_nodes_attr': arrival_nodes_attributes,
+                        'departure_nodes_attr': departure_nodes_attributes,
+                        'driving_edges': driving_edges, 'driving_attr': driving_edges_attributes}
+    return nodes_edges_dict
+
+
+def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
+    # Zurich central train station code
+    zhHB = ['85ZMUS', '85ZUE', '45ZSZU']
+    zhHB_code = [611, 638, 13]
+
+    # Create a dictionary for the commercial stop of the bus
+    comm_stops_of_bus = {node['ID']: node['NodeID'] for node in bus['TrainPathNodes']
+                         if node['StopStatus'] == 'commercial_stop' and node['ID'] in tpns_bus}
+
+    # List of zurich train station code
+    zh_station_helper = []
+    if any(x in zhHB_code for x in comm_stops_of_bus.values()):
+        zh_station_helper = zhHB_code
+
+    # Set dictionaries for train candidates
+    departure_train_candidates_by_node = dict()
+    arrival_train_candidates_by_node = dict()
+    departure_nodes_bus = dict()
+    arrival_nodes_bus = dict()
+    for x, y in timetable_graph.nodes(data=True):
+        try:
+            if y['train'] == bus['ID']:
+                if y['type'] == 'arrivalNode' and x[2] in tpns_bus:
+                    arrival_nodes_bus[x[2]] = (x, y)
+                elif y['type'] == 'departureNode' and x[2] in tpns_bus:
+                    departure_nodes_bus[x[2]] = (x, y)
+                else:
+                    continue
+            elif x[0] not in comm_stops_of_bus.values() and x[0] not in zh_station_helper:
+                continue
+            elif y['type'] in ['arrivalNodePassing', 'departureNodePassing']:
+                continue
+            elif y['type'] == 'arrivalNode':
+                station = x[0]
+                if not arrival_train_candidates_by_node.__contains__(station):
+                    arrival_train_candidates_by_node[station] = list()
+                arr_station_in_dict = arrival_train_candidates_by_node[station]
+                arr_station_in_dict.append([x, y])
+            elif y['type'] == 'departureNode':
+                station = x[0]
+                if not departure_train_candidates_by_node.__contains__(station):
+                    departure_train_candidates_by_node[station] = list()
+                dep_station_in_dict = departure_train_candidates_by_node[station]
+                dep_station_in_dict.append([x, y])
+            else:
+                print('Check transfer edges single train, somehow a not train node appears in timetable graph')
+        except KeyError:
+            print(x, y)
+
+    # Initiate the transfer edges
+    transfer_edges = list()
+    transfer_edges_attributes = dict()
+
+    # Identify all arrival nodes
+    for tpn in bus['TrainPathNodes']:
+        station = tpn['NodeID']
+
+        # Select dep and arr candidates of trains if there are any
+        arrivals_at_station = []
+        departures_at_station = []
+
+        if station in arrival_train_candidates_by_node.keys():
+            arrivals_at_station = arrival_train_candidates_by_node[station]
+            if station in zh_station_helper:
+                for zh in zh_station_helper:
+                    if station != zh:
+                        arrivals_at_station.extend(arrival_train_candidates_by_node[zh])
+
+        # Departures
+        if station in departure_train_candidates_by_node.keys():
+            departures_at_station = departure_train_candidates_by_node[station]
+            if station in zh_station_helper:
+                for zh in zh_station_helper:
+                    if station != zh:
+                        departures_at_station.extend(departure_train_candidates_by_node[zh])
+
+        # Skip the starting node of a train for arrival of train to departure transfer
+
+        # Transfer edges from arrival of the bus to all departures of other trains
+        if tpn['SequenceNumber'] == 1:
+            for label, attr in departures_at_station:
+                delta_t = attr['departureTime'] - arrival_nodes_bus[tpn['ID']][1]['arrivalTime']
+                if m < delta_t < M:
+                    weight = delta_t * parameters.beta_waiting + datetime.timedelta(minutes=parameters.beta_transfer)
+                    transfer_edges.append([arrival_nodes_bus[tpn['ID']][0], label, float(weight.seconds / 60)])
+                    transfer_edges_attributes[arrival_nodes_bus[tpn['ID']][0], label] = {'type': 'transfer'}
+
+        elif tpn['SequenceNumber'] == 0:
+            # Only edges from arrival of trains to departure of bus
+            for label, attr in arrivals_at_station:
+                delta_t = departure_nodes_bus[tpn['ID']][1]['departureTime'] - attr['arrivalTime']
+                if m < delta_t < M:
+                    weight = delta_t * parameters.beta_waiting + datetime.timedelta(minutes=parameters.beta_transfer)
+                    transfer_edges.append([label, departure_nodes_bus[tpn['ID']][0], float(weight.seconds / 60)])
+                    transfer_edges_attributes[label, departure_nodes_bus[tpn['ID']][0]] = {'type': 'transfer'}
+
+    return transfer_edges, transfer_edges_attributes, [arrival_nodes_bus, departure_nodes_bus]
+
+
 def transfer_edges_single_train(prime_timetable, train, parameters, train_path_nodes_delay):
     # Zurich main station for transfers todo: need to change to not specific and more generic (Get the node id)
     zh_hb_code = ['85ZMUS', '85ZUE', '45ZSZU']

@@ -446,6 +446,118 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
     return changed_trains, prime_timetable, train_id_to_delay, track_info, edges_o_stations_d
 
 
+def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetable, track_info, edges_o_stations_d,
+                           parameters):
+    # Initiate the bus identification number
+    bus_id_nr = 90000
+    bus_id = 'Bus' + str(bus_id_nr)
+
+    # If there is already an emergency bus in the list of changed trains, add 10 to the number until it is a new number.
+    while bus_id in changed_trains.keys():
+        bus_id_nr += 10
+        bus_id = 'Bus' + str(bus_id_nr)
+
+    # Get the time window and the duration of the window in minutes
+    time_window_from_time = parameters.time_window.from_time
+    time_window_to_time = parameters.time_window.to_time
+    time_window_duration_minutes = round((time_window_to_time - time_window_from_time).seconds / 60, 0)
+
+    # Generate the departure time of the emergency bus inside the time window in a randomize way
+    add_time_bus = np.random.randint(0, time_window_duration_minutes - 10)
+    departure_time_bus = time_window_from_time + datetime.timedelta(minutes=add_time_bus)
+
+    # Create the emergency bus
+    emergency_bus = bus_add_bus_path_nodes(bus_id, departure_time_bus)
+
+    # Get the train path nodes of the bus for the timetable graph
+    tpns_bus = [tpn_id['ID'] for tpn_id in emergency_bus['TrainPathNodes']]
+
+    # Create and add driving and waiting edges and nodes to the timetable graph
+    nodes_edges_dict = timetable_graph.create_transit_edges_nodes_emergency_bus(emergency_bus)
+    timetable_graph.add_transit_nodes_edges_single_train_to_graph(timetable_prime_graph, nodes_edges_dict, bus=True)
+
+    # Create and add transfer edges to the timetable graph
+    transfer_edges, transfer_edges_attribute, arrival_departure_nodes_train = \
+        timetable_graph.transfer_edges_single_bus(timetable_prime_graph,
+                                                  emergency_bus,
+                                                  parameters.transfer_MBus,
+                                                  parameters.transfer_mBus,
+                                                  tpns_bus,
+                                                  parameters)
+    timetable_prime_graph.add_weighted_edges_from(transfer_edges)
+    nx.set_edge_attributes(timetable_prime_graph, transfer_edges_attribute)
+
+    # Update the list of edges from origin to destination
+    edges_o_stations_d = timetable_graph.add_edges_of_bus_from_o_stations_d(edges_o_stations_d,
+                                                                            emergency_bus,
+                                                                            timetable_prime_graph,
+                                                                            parameters,
+                                                                            0,
+                                                                            tpns_bus)
+
+    # Update the changed trains method
+    changed_trains[bus_id] = {'train_id': bus_id,
+                              'DebugString': emergency_bus['DebugString'],
+                              'Action': 'EmergencyBus',
+                              'body_message': None,
+                              'EmergencyTrain': True}
+
+    # Add the bus in the list of changed trains list
+    trains_timetable.append(emergency_bus)
+
+    return changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d
+
+
+def bus_add_bus_path_nodes(bus_id, departure_time):
+    # Initiate the bus dictionary
+    bus = {}
+
+    # Get the arrival time
+    arrival_time = departure_time + datetime.timedelta(minutes=10)
+
+    # Save the bus id in the dictionary
+    bus['ID'] = bus_id
+    bus['EmergencyBus'] = True
+
+    # Scenario low traffic, hence the bus needs to serve between Walisellen and Dietlikon. Direction is chosen randomly
+    if np.random.uniform(0.0, 1.0) < 0.5:
+        start = 543  # Walisellen
+        end = 199  # Dietlikon
+    else:
+        start = 199
+        end = 543
+
+    # Save the the bus path nodes
+    bus['TrainPathNodes'] = [{
+            "ID": bus_id + str(1),
+            "SectionTrackID": None,
+            "IsSectionTrackAscending": None,
+            "NodeID": start,
+            "NodeTrackID": None,
+            "ArrivalTime": departure_time,
+            "DepartureTime": departure_time,
+            "MinimumRunTime": datetime.timedelta(seconds=0),
+            "MinimumStopTime": datetime.timedelta(seconds=0),
+            "StopStatus": "commercial_stop",
+            "SequenceNumber": 0
+        },
+        {
+            "ID": bus_id + str(2),
+            "SectionTrackID": None,
+            "IsSectionTrackAscending": None,
+            "NodeID": end,
+            "NodeTrackID": None,
+            "ArrivalTime": arrival_time,
+            "DepartureTime": arrival_time,
+            "MinimumRunTime": datetime.timedelta(minutes=10),
+            "MinimumStopTime": datetime.timedelta(seconds=0),
+            "StopStatus": "commercial_stop",
+            "SequenceNumber": 1
+        }]
+    bus['DebugString'] = "EmergencyBus"
+    return bus
+
+
 def remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train, prime_timetable):
     # Get only the arrival and departure node of the selected train
     arr_dep_nodes_train = [(n, v) for n, v in prime_timetable.nodes(data=True) if v['type'] in
