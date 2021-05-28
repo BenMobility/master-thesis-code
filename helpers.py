@@ -201,9 +201,11 @@ class EdgesOriginStationDestination:
 
         # Set the values in the class
         self.edges_o_stations = edges_o_stations
+        self.edges_o_stations_dict = edges_o_stations_dict # Key origin, value edges connecting to train nodes
+        self.origin_nodes_attributes = origin_nodes_attributes
         self.edges_stations_d = edges_stations_d
-        self.edges_o_stations_dict = edges_o_stations_dict  # Key origin, value edges connecting to train nodes
         self.edges_stations_d_dict = edges_stations_d_dict  # Key destination, value edges connecting to
+        self.destination_nodes_attributes = destination_nodes_attributes
 
 
 class CopyEdgesOriginStationDestination:

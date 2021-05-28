@@ -22,6 +22,7 @@ import shortest_path
 import math
 import timetable_graph
 import pickle
+import passenger_assignment
 
 
 def start(timetable_initial_graph, infra_graph, trains_timetable, parameters):
@@ -334,7 +335,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
     n_iteration = 0
 
     # Set the number of temperature changes and the starting temperature
-    number_temperature_changes = 0  # todo: oliver said that it could be optimized
+    number_temperature_changes = 0
     temp_i = parameters.t_start
 
     # Set the iteration for the archives
@@ -345,16 +346,20 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
     solution_archive = []
 
     # Set the multi-objective cost
-    z_op_current, z_de_current, z_tt_current = [], [], []
-    z_op_accepted, z_de_accepted, z_tt_accepted = [], [], []
+    z_op_current, z_de_reroute_current, z_de_cancel_current, z_tt_current = [], [], [], []
+    z_op_accepted, z_de_reroute_accepted, z_de_cancel_accepted, z_tt_accepted = [], [], [], []
     z_cur_accepted, z_cur_archived, temperature_it = [], [], []
 
     # Combine three different costs
-    all_accepted_solutions = [z_op_accepted, z_de_accepted, z_tt_accepted]
+    all_accepted_solutions = [z_op_accepted, z_de_reroute_accepted, z_de_cancel_accepted, z_tt_accepted]
 
     # Save values - current, accepted and archived
-    z_for_pickle = {'z_op_cur': z_op_current, 'z_de_cur': z_de_current, 'z_tt_cur': z_tt_current,
-                    'z_op_acc': z_op_accepted, 'z_de_acc': z_de_accepted, 'z_tt_acc': z_tt_accepted,
+    z_for_pickle = {'z_op_cur': z_op_current,
+                    'z_de_reroute_cur': z_de_reroute_current, 'z_de_cancel_cur': z_de_cancel_current,
+                    'z_tt_cur': z_tt_current,
+                    'z_op_acc': z_op_accepted,
+                    'z_de_reroute_acc': z_de_reroute_accepted, 'z_de_cancel_acc': z_de_cancel_accepted,
+                    'z_tt_acc': z_tt_accepted,
                     'z_cur_accepted': z_cur_accepted, 'z_cur_archived': z_cur_archived, 't_it': temperature_it}
 
     # Set the feasible timetable graphs to false
@@ -413,20 +418,27 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
                                           edges_o_stations_d)
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph)
-            timetable_solution_prime_graph.deviation_timetable = deviation_timetable(trains_timetable,
-                                                                                     initial_timetable, changed_trains,
-                                                                                     parameters)
+            timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
+                                                                                                     initial_timetable,
+                                                                                                     changed_trains,
+                                                                                                     parameters)
+            timetable_solution_prime_graph.deviation_cancel_timetable = deviation_cancel_timetable(trains_timetable,
+                                                                                                   initial_timetable,
+                                                                                                   changed_trains,
+                                                                                                   parameters)
             timetable_solution_prime_graph.changed_trains = changed_trains
             timetable_solution_prime_graph.set_of_trains_for_operator = parameters.set_of_trains_for_operator
 
             # Archive the current solution
             z_op_current.append(timetable_solution_prime_graph.total_dist_train)
-            z_de_current.append(timetable_solution_prime_graph.deviation_timetable)
+            z_de_reroute_current.append(timetable_solution_prime_graph.deviation_reroute_timetable)
+            z_de_cancel_current.append(timetable_solution_prime_graph.deviation_cancel_timetable)
             z_tt_current.append(timetable_solution_prime_graph.total_traveltime)
 
             # Printout the current results
             print('z_o_current : ', timetable_solution_prime_graph.total_dist_train,
-                  ' z_d_current : ', timetable_solution_prime_graph.deviation_timetable,
+                  ' z_d_reroute_current : ', timetable_solution_prime_graph.deviation_reroute_timetable,
+                  ' z_d_cancel_current : ', timetable_solution_prime_graph.deviation_cancel_timetable,
                   ' z_p_current : ', timetable_solution_prime_graph.total_traveltime)
 
             # Archive limited to 80 solutions (memory issue, could be increased)
@@ -438,7 +450,8 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             z_cur_accepted.append(accepted_solution)
             z_cur_archived.append(archived_solution)
             z_op_accepted.append(timetable_solution_graph.total_dist_train)
-            z_de_accepted.append(timetable_solution_graph.deviation_timetable)
+            z_de_reroute_accepted.append(timetable_solution_graph.deviation_reroute_timetable)
+            z_de_cancel_accepted.append(timetable_solution_graph.deviation_cancel_timetable)
             z_tt_accepted.append(timetable_solution_graph.total_traveltime)
 
             # Save the multi objective results into a pickle
@@ -446,7 +459,8 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Printout the accepted solution
             print('z_o_accepted : ', timetable_solution_graph.total_dist_train,
-                  ' z_d_accepted : ', timetable_solution_graph.deviation_timetable,
+                  ' z_d_reroute_accepted : ', timetable_solution_graph.deviation_reroute_timetable,
+                  ' z_d_cancel_accepted : ', timetable_solution_graph.deviation_cancel_timetable,
                   ' z_p_accepted : ', timetable_solution_graph.total_traveltime)
 
             # Print out the temperature and the number of iteration
@@ -497,10 +511,14 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Record the results of the current solution timetable
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph)
-            timetable_solution_prime_graph.deviation_timetable = deviation_timetable(trains_timetable,
-                                                                                     initial_timetable,
-                                                                                     changed_trains,
-                                                                                     parameters)
+            timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
+                                                                                                     initial_timetable,
+                                                                                                     changed_trains,
+                                                                                                     parameters)
+            timetable_solution_prime_graph.deviation_cancel_timetable = deviation_cancel_timetable(trains_timetable,
+                                                                                                   initial_timetable,
+                                                                                                   changed_trains,
+                                                                                                   parameters)
 
             # Check if the current solution has a value for deviation, if not, it means that the algorithm platform
             # has not been restarted for the original timetable
@@ -520,10 +538,12 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Save the current and the accepted solution
             z_op_current.append(timetable_solution_prime_graph.total_dist_train)
-            z_de_current.append(timetable_solution_prime_graph.deviation_timetable)
+            z_de_reroute_current.append(timetable_solution_prime_graph.deviation_reroute_timetable)
+            z_de_cancel_current.append(timetable_solution_prime_graph.deviation_cancel_timetable)
             z_tt_current.append(timetable_solution_prime_graph.total_traveltime)
             z_op_accepted.append(timetable_solution_prime_graph.total_dist_train)
-            z_de_accepted.append(timetable_solution_prime_graph.deviation_timetable)
+            z_de_reroute_accepted.append(timetable_solution_prime_graph.deviation_reroute_timetable)
+            z_de_cancel_accepted.append(timetable_solution_prime_graph.deviation_cancel_timetable)
             z_tt_accepted.append(timetable_solution_prime_graph.total_traveltime)
             z_cur_accepted.append(True)
             z_cur_archived.append(True)
@@ -533,7 +553,8 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Printout the results
             print(f'z_o: {timetable_solution_prime_graph.total_dist_train} \n'
-                  f'z_d: {timetable_solution_prime_graph.deviation_timetable}\n'
+                  f'z_d_reroute: {timetable_solution_prime_graph.deviation_reroute_timetable}\n'
+                  f'z_d_cancel: {timetable_solution_prime_graph.deviation_cancel_timetable}\n'
                   f'z_p: {timetable_solution_prime_graph.total_traveltime}')
 
             # Save the solution in the archives
@@ -797,17 +818,44 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
     # Set the cutoff duration
     cutoff = parameters.time_duration.seconds/60
 
-    # Compute the shortest path
-    timetable_prime_graph, served_unserved_passengers, total_traveltime = \
-        shortest_path.find_sp_for_all_ods_full_graph_scipy(timetable_prime_graph, parameters, edges_o_stations_d,
-                                                           cutoff=None)
+    # Add the edges origin to stations and stations to destination
+    timetable_full_graph = \
+        timetable_graph.create_graph_with_edges_o_stations_d(edges_o_stations_d,
+                                                             timetable_graph=copy.deepcopy(timetable_prime_graph))
+
+    # Compute the shortest path with capacity constraint
+    print('Assign the passenger on the timetable graph')
+    odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
+        passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
+
+    if odt_facing_capacity_constraint is None:
+        pass
+    else:
+        timetable_prime_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration,\
+        odt_priority_list_original = passenger_assignment.capacity_constraint_2nd_loop(parameters,
+                                                                                       odt_facing_capacity_constraint,
+                                                                                       timetable_prime_graph)
+
+    # Compute the total travel time
+    i = -1
+    while i != len(odt_priority_list_original) - 1:
+        i += 1
+        travel_time = 0
+        try:
+            for j in range(len(odt_priority_list_original[i][4]) - 1):
+                starting_node = odt_priority_list_original[i][4][j]
+                ending_node = odt_priority_list_original[i][4][j + 1]
+                travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
+        except TypeError:
+            travel_time = odt_priority_list_original[i][5]
+        odt_priority_list_original[i].append(travel_time)
+    total_traveltime = sum([item[6] for item in odt_priority_list_original])
 
     # Save the total travel time for the solution
     timetable_solution_graph.total_traveltime = round(total_traveltime, 1)
 
     # Printout the output
-    print('Passengers with path : ', served_unserved_passengers[0], ', passengers without path : ',
-          served_unserved_passengers[1])
+    print('Passengers with path : ', assigned, ', passengers without path : ', unassigned)
 
     return timetable_solution_graph, timetable_prime_graph
 
@@ -829,6 +877,106 @@ def distance_travelled_all_trains(trains_timetable, infra_graph):
     # The distance is in decimeter --> divide by 10 * 1000 to have it in km
     total_distance = round(total_distance / (10*1000), 1)
     return total_distance
+
+
+def deviation_reroute_timetable(trains_timetable, timetable_initial_graph, changed_trains, parameters):
+    parameters.set_of_trains_for_operator = {'Cancel': [], 'CancelFrom': [], 'Delay': [], 'DelayFrom': []}
+    fmt = "%Y-%m-%dT%H:%M:%S"
+
+    # Deviation penalty
+    d_rerouted = parameters.deviation_penalty_rerouted
+
+    total_deviation = 0  # In minutes
+    timetable_initial = helpers.build_dict_from_viriato_object_train_id(
+        timetable_initial_graph.initial_timetable_infeasible)
+
+    # timetable of the current solution
+    timetable_prime = helpers.build_dict_from_viriato_object_train_id(trains_timetable)
+
+    # Loop through all the trains that have been changed
+    for train_id, value in changed_trains.items():
+        action = value['Action']
+
+        # Check the action, if it is reroute, update the deviation penalty
+        if action == 'Reroute':
+            if value['add_stop_time'] > parameters.delayTime_to_consider_cancel:
+                parameters.set_of_trains_for_operator['Cancel'].append(train_id)
+
+            # Check in the train is in the current timetable
+            if train_id in timetable_prime.keys():
+                # Loop through the nodes of the train path
+                for tpn in timetable_prime[train_id].train_path_nodes:
+                    if tpn.id == value['StartEndRR_tpnID']:
+                        dep_time_start_rr = tpn.departure_time
+                        dep_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time
+
+                        # Add the penalty for the rerouted
+                        total_deviation += d_rerouted * (dep_time_end_train - dep_time_start_rr).seconds / 60
+                        break
+
+    return round(total_deviation, 1)
+
+
+def deviation_cancel_timetable(trains_timetable, timetable_initial_graph, changed_trains, parameters):
+    parameters.set_of_trains_for_operator = {'Cancel': [], 'CancelFrom': [], 'Delay': [], 'DelayFrom': []}
+    fmt = "%Y-%m-%dT%H:%M:%S"
+
+    # Deviation penalties for each operator
+    d_cancel = parameters.deviation_penalty_cancel
+    d_emergency = parameters.deviation_penalty_emergency
+
+    total_deviation = 0  # In minutes
+    timetable_initial = helpers.build_dict_from_viriato_object_train_id(
+        timetable_initial_graph.initial_timetable_infeasible)
+
+    # timetable of the current solution
+    timetable_prime = helpers.build_dict_from_viriato_object_train_id(trains_timetable)
+
+    # Loop through all the trains that have been changed
+    for train_id, value in changed_trains.items():
+        action = value['Action']
+
+        # Check the action, if it is cancel, update the deviation penalty
+        if action == 'Cancel':
+
+            # If it is an emergency train, the deviation penalty is not compute here
+            if 'EmergencyTrain' in value.keys():
+                total_deviation += 0
+                continue
+
+            # If it is an emergency bus, the deviation penalty is not compute here
+            elif 'EmergencyBus' in value.keys():
+                total_deviation += 0
+                continue
+
+            # Add the penalty for cancel action with the constant
+            total_deviation += d_cancel
+            departure_first_tpn = timetable_initial[train_id].train_path_nodes[0].departure_time
+            arrival_last_tpn = timetable_initial[train_id].train_path_nodes[-1].arrival_time
+
+            # Add another penalty of the ratio time duration of the train whole itinerary
+            total_deviation += d_cancel * ((arrival_last_tpn - departure_first_tpn).seconds / 60)
+
+        # Check the action, if it is cancel from, update the deviation penalty
+        elif action == 'CancelFrom':
+            # If it is an emergency train, the deviation penalty is compute here
+            if 'EmergencyTrain' in value.keys():
+                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
+                                                             parameters)
+                continue
+
+            # Loop through all the nodes of the train path
+            for tpn in timetable_initial[train_id].train_path_nodes:
+                if tpn.id == value['tpn_cancel_from']:
+
+                    # Get the departure and arrival time
+                    dep_time_canceled_from = tpn.departure_time
+                    arr_time_end_train = timetable_initial[train_id].train_path_nodes[-1].arrival_time
+
+                    # Add the deviation penalty for cancel from
+                    total_deviation += d_cancel * (arr_time_end_train - dep_time_canceled_from).seconds / 60
+
+    return round(total_deviation, 1)
 
 
 def deviation_timetable(trains_timetable, timetable_initial_graph, changed_trains, parameters):
@@ -910,7 +1058,7 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
         # Check the action, if it is reroute, update the deviation penalty
         elif action == 'Reroute':
             if value['add_stop_time'] > parameters.delayTime_to_consider_cancel:
-                    parameters.set_of_trains_for_operator['Cancel'].append(train_id)
+                parameters.set_of_trains_for_operator['Cancel'].append(train_id)
 
             # Check in the train is in the current timetable
             if train_id in timetable_prime.keys():
@@ -993,7 +1141,7 @@ def deviation_emergency_train(timetable_prime, d_e, total_deviation, train_id, p
     arr_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time
 
     # Add the penalty for deviation emergency train
-    total_deviation += d_e + (arr_time_end_train - dep_time_start).seconds / 60
+    total_deviation += d_e * ((arr_time_end_train - dep_time_start).seconds / 60)
 
     # Add the train for the set of trains for operator cancel and delay
     parameters.set_of_trains_for_operator['Cancel'].append(train_id)

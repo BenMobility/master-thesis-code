@@ -78,6 +78,16 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         """
         return algorithm_interface.get_neighboring_nodes_between(from_node_id, to_node_id)
 
+
+    def get_section_track(section_track_id):
+        """
+        method that returns an object for the given section track ID.
+        :param section_track_id: Integer of the section track id
+        :return: object with all this information of the section track
+        """
+        return algorithm_interface.get_section_track(section_track_id)
+
+
     def get_section_track_from(from_node_id):
         """
         method that returns a list of all section tracks which a train can use to any neighboring node of the node
@@ -105,6 +115,15 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         :return: track_closures: all section track closures anywhere on the network (type: Viriato object)
         """
         return algorithm_interface.get_section_track_closures(time_window)
+
+
+    def get_node_track_closures(time_window):
+        """
+        method that returns all node track closures anywhere on the network in time window.
+        :param time_window: time window from Viriato.
+        :return: A list of all node on track closures
+        """
+        return algorithm_interface.get_node_track_closures(time_window)
 
 
     def get_section_track_closure_ids(time_window):

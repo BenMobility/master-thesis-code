@@ -1594,9 +1594,11 @@ def create_restored_feasibility_graph(trains_timetable, parameters):
                                                                                                   parameters)
 
     # Add the transfers edges to the graph
+    print('add transfer edges to graph.')
     timetable_graph = add_transfer_edges_to_graph(timetable_graph, parameters)
 
     # Connect the homes with the stations candidates
+    print('connect homes with station candidates.')
     edges_o_stations_d = connections_homes_with_station_candidates(timetable_graph, parameters)
 
     return timetable_graph, edges_o_stations_d
