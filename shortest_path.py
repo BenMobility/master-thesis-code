@@ -371,9 +371,12 @@ def _dijkstra_multisource(timetable_graph, sources, weight, pred=None, paths=Non
         if v in dist:
             continue  # already searched this node.
         dist[v] = d
-        if v == target:
-            print(target, v)
-            break
+        try:
+            if v == target:
+                print(target, v)
+                break
+        except ValueError:
+            print(v, target)
         for u, e in timetable_graph_successor[v].items():  # u is  successor node with weight e
             cost = weight(v, u, e)  # cost to reach actual nodes
             if cost is None:

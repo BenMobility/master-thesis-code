@@ -5,6 +5,7 @@ Created on Tue Mar 02 2021
 
 Code for the neighbourhood operators for timetable search
 """
+import passenger_assignment
 import viriato_interface
 import numpy as np
 import alns_platform
@@ -213,7 +214,7 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
 
 
 def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, track_info, infra_graph,
-                            edges_o_stations_d, parameters):
+                            edges_o_stations_d, parameters, odt_priority_list_original):
     # Build the list of candidates
     list_delay_candidates = list(set(parameters.set_of_trains_for_operator['Delay']))
     train_id_to_delay = list_delay_candidates[np.random.randint(0, len(list_delay_candidates) - 1)]
@@ -234,6 +235,12 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
         bus = True
     if hasattr(train_to_delay, 'emergency_train') and train_to_delay.emergency_train is True:
         emergency_train = True
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_delay(prime_timetable,
+                                                              train_to_delay,
+                                                              odt_priority_list_original)
 
     # Remove the edges and nodes of train from origin to stations and stations to destination
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_delay, prime_timetable)
@@ -315,7 +322,8 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
     elif not train_update_feasible:
         pass
 
-    return changed_trains, prime_timetable, train_id_to_delay, track_info, edges_o_stations_d
+    return changed_trains, prime_timetable, train_id_to_delay, track_info, edges_o_stations_d,\
+           odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
 def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track_info, infra_graph, edges_o_stations_d,

@@ -53,6 +53,8 @@ class Parameters:
         # Parameters for od departure desired time / group passenger formation
         self.time_discretization = list_parameters[26]
         self.group_size_passenger = list_parameters[27]
+        self.earliest_time = list_parameters[54]
+        self.latest_time = list_parameters[55]
 
         # Parameters for graph creation
         self.transfer_m = datetime.timedelta(minutes=list_parameters[4])
@@ -193,7 +195,7 @@ class EdgesOriginStationDestination:
         self.name = 'edges_o_stations_d'
 
         return_edges_nodes = True
-
+        print('Generate edges from origin to station and from station to destination.')
         origin_nodes, origin_nodes_attributes, destination_nodes, destination_nodes_attributes, edges_o_stations, \
             edges_o_stations_attr, edges_stations_d, edges_stations_d_attr, edges_o_stations_dict, \
         edges_stations_d_dict = timetable_graph.generate_edges_origin_station_destination(graph, parameters,
@@ -800,8 +802,8 @@ def od_with_departure_time(parameters, demand_selected_zones, time_discretizatio
     :return: od with "fromZone, toZone, priority = 1, desired dep time"
     """
     print('Start simulation of the departure times of each passenger.')
-    start_time = parameters.time_window.from_time
-    end_time = parameters.time_window.to_time
+    start_time = parameters.earliest_time
+    end_time = parameters.latest_time
     time_interval = end_time - start_time
     from_zone = np.empty(0)
     to_zone = np.empty(0)

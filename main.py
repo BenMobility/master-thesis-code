@@ -6,6 +6,8 @@ Created on Mon Jan  25 2021
 Main code for repair scheduling in railways
 """
 # %% Imports
+import datetime
+
 import infrastructure_graph
 import viriato_interface
 import helpers
@@ -61,6 +63,8 @@ delayTime_to_consider_partCancel = 10  # Delay time to consider for part cancel 
 commercial_stops = 1  # Threshold for a train to be considered in the timetable [25]
 time_discretization = 10  # Time steps for the passenger grouping [26]
 group_size_passenger = 80  # Size of each passenger group (number of passengers) [27]
+od_desired_departure_time_start = datetime.datetime(year=2005, month=5, day=10, hour=6, minute=0, second=0)  # [54]
+od_desired_departure_time_end = datetime.datetime(year=2005, month=5, day=10, hour=8, minute=0, second=0)  # [55]
 
 # Save/Read pickle
 save_pickle = True  # Save the output in a pickle file
@@ -117,7 +121,8 @@ list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connec
                    deviation_penalty_bus, deviation_penalty_rerouted, reaction_factor_operation,
                    reaction_factor_deviation, warm_up_phase, iterations_temperature_level,
                    number_of_temperature_change, reaction_factor_return_archive, reaction_factor_weights,
-                   max_iteration_feasibility_check, max_iteration_section_check, capacity_constraint]
+                   max_iteration_feasibility_check, max_iteration_section_check, capacity_constraint,
+                   od_desired_departure_time_start, od_desired_departure_time_end]
 
 # %% Time window from Viriato and close tracks ids from disruption scenario
 print('\nMain code is running.')
@@ -166,6 +171,7 @@ selected_zones, demand_selected_zones, travel_time_selected_zones = helpers.read
 
 # Create the OD matrix with the desired departure time for the passengers
 print('\nGet the desired departure time for all the passengers.')
+print(f'The time window for the desired departure time is: {parameters.earliest_time} to {parameters.latest_time}.')
 od_departure_time = helpers.get_od_departure_time(parameters, demand_selected_zones)
 
 # Connect the train stations with all the passenger homes
@@ -200,35 +206,35 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-# Assign the passenger on the timetable graph
-print('Assign the passenger on the timetable graph')
-odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
-    parameters, timetable_initial_graph)
-
-if odt_facing_capacity_constraint is None:
-    pass
-else:
-    timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original =\
-        passenger_assignment.capacity_constraint_2nd_loop(parameters,
-                                                          odt_facing_capacity_constraint,
-                                                          timetable_initial_graph)
-
-print('Assignment on undisrupted network')
-# Get the passenger facing disruption
-# Get the edges on the closed tracks
-print('Get the edges on the closed and get the passengers facing the disruption')
-edges_on_closed_tracks = passenger_assignment.get_edges_on_closed_tracks(parameters, timetable_initial_graph)
-
-# Create the list of odt facing disruption
-if 'odt_priority_list_original' in locals():
-    odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
-                                                                                   timetable_initial_graph,
-                                                                                   odt_priority_list_original)
-else:
-    odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
-                                                                                   timetable_initial_graph,
-                                                                                   parameters.odt_as_list)
-print('Odt facing disruption created.')
+# # Assign the passenger on the timetable graph
+# print('Assign the passenger on the timetable graph')
+# odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
+#     parameters, timetable_initial_graph)
+#
+# if odt_facing_capacity_constraint is None:
+#     pass
+# else:
+#     timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original =\
+#         passenger_assignment.capacity_constraint_2nd_loop(parameters,
+#                                                           odt_facing_capacity_constraint,
+#                                                           timetable_initial_graph)
+#
+# print('Assignment on undisrupted network')
+# # Get the passenger facing disruption
+# # Get the edges on the closed tracks
+# print('Get the edges on the closed and get the passengers facing the disruption')
+# edges_on_closed_tracks = passenger_assignment.get_edges_on_closed_tracks(parameters, timetable_initial_graph)
+#
+# # Create the list of odt facing disruption
+# if 'odt_priority_list_original' in locals():
+#     odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
+#                                                                                    timetable_initial_graph,
+#                                                                                    odt_priority_list_original)
+# else:
+#     odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
+#                                                                                    timetable_initial_graph,
+#                                                                                    parameters.odt_as_list)
+# print('Odt facing disruption created.')
 # # Assign the passengers facing disruption
 # if 'odt_priority_list_original' in locals():
 #     timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
@@ -245,15 +251,15 @@ print('Odt facing disruption created.')
 
 print('Save the output before the alns.')
 # And save the output of the passengers assignment
-alns_platform.pickle_results(odt_priority_list_original,
-                             'output/pickle/odt_priority_list_original_alns.pkl')
-alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint_alns.pkl')
-alns_platform.pickle_results(odt_facing_disruption, 'output/pickle/odt_facing_disruption_alns.pkl')
+# alns_platform.pickle_results(odt_priority_list_original,
+#                              'output/pickle/odt_priority_list_original_alns.pkl')
+# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint_alns.pkl')
+# alns_platform.pickle_results(odt_facing_disruption, 'output/pickle/odt_facing_disruption_alns.pkl')
 alns_platform.pickle_results(parameters, 'output/pickle/parameters_alns.pkl')
 alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_alns.pkl')
-if 'odt_facing_capacity_dict_for_iteration' in locals():
-    alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
-                                 'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint_alns.pkl')
+# if 'odt_facing_capacity_dict_for_iteration' in locals():
+#     alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
+#                                  'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint_alns.pkl')
 alns_platform.pickle_results(infra_graph, 'output/pickle/infra_graph_for_alns.pkl')
 alns_platform.pickle_results(trains_timetable, 'output/pickle/trains_timetable_for_alns.pkl')
 

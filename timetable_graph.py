@@ -856,6 +856,7 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
     # Set the parameters
     total_train_length = len(train.train_path_nodes)
     train_id = train.id
+    fmt = "%Y-%m-%dT%H:%M"
 
     arrival_nodes = []
     arrival_nodes_attributes = dict()
@@ -872,9 +873,12 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
         start_of_train = False
         departure_time_last_node = train.train_path_nodes[idx_start_delay - 1].departure_time
         departure_node_last_node = train.train_path_nodes[idx_start_delay - 1].node_id
+        departure_time_str = datetime.datetime.strftime(train.train_path_nodes[idx_start_delay - 1].departure_time,
+                                                        "%Y-%m-%dT%H:%M:%S")
         departure_node_last_node_name = (departure_node_last_node,
-                                         train.train_path_nodes[idx_start_delay - 1].departure_time,
-                                         train.train_path_nodes[idx_start_delay - 1].id, 'd')
+                                         departure_time_str,
+                                         train.train_path_nodes[idx_start_delay - 1].id,
+                                         'd')
         attributes = {'train': train_id, 'type': 'departureNode', 'departureTime': departure_time_last_node,
                       'StopStatus': train.train_path_nodes[idx_start_delay - 1].stop_status.name}
         departure_nodes_attributes[departure_node_last_node_name] = attributes
@@ -897,7 +901,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
             departure_node_this_node = train_path_node.node_id
 
             if start_of_train:
-                node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id, 'd')
+                departure_time_str = datetime.datetime.strftime(train_path_node.departure_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_dep_this = (departure_node_this_node, departure_time_str, train_path_node.id, 'd')
                 departure_nodes.append(node_name_dep_this)
                 attributes = {'train': train_id, 'type': 'departureNode', 'departureTime': departure_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -910,7 +915,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
 
             # If it is the end of the train
             elif s == total_train_length:
-                node_name_arr_this = (arrival_node_this_node, train_path_node.arrival_time, train_path_node.id, 'a')
+                arrival_time_str = datetime.datetime.strftime(train_path_node.arrival_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_arr_this = (arrival_node_this_node, arrival_time_str, train_path_node.id, 'a')
                 arrival_nodes.append(node_name_arr_this)
                 attributes = {'train': train_id, 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -934,7 +940,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
             else:
 
                 # Arrival nodes
-                node_name_arr_this = (arrival_node_this_node, train_path_node.arrival_time, train_path_node.id, 'a')
+                arrival_time_str = datetime.datetime.strftime(train_path_node.arrival_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_arr_this = (arrival_node_this_node, arrival_time_str, train_path_node.id, 'a')
                 arrival_nodes.append(node_name_arr_this)
                 attributes = {'train': train_id, 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -949,7 +956,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                                                                                                'odt_assigned': []}
 
                 # Departure nodes
-                node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id, 'd')
+                departure_time_str = datetime.datetime.strftime(train_path_node.departure_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_dep_this = (departure_node_this_node, departure_time_str, train_path_node.id, 'd')
                 departure_nodes.append(node_name_dep_this)
                 attributes = {'train': train_id, 'type': 'departureNode', 'departureTime': departure_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -977,8 +985,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
             departure_node_this_node = train_path_node.node_id
 
             if start_of_train:
-                node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id,
-                                      'dp')
+                departure_time_str = datetime.datetime.strftime(train_path_node.departure_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_dep_this = (departure_node_this_node, departure_time_str, train_path_node.id, 'dp')
                 departure_nodes.append(node_name_dep_this)
                 attributes = {'train': train_id, 'type': 'departureNodePassing',
                               'departureTime': departure_time_this_node, 'StopStatus': train_path_node.stop_status.name}
@@ -991,7 +999,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
 
             # End of the train
             elif s == total_train_length:
-                node_name_arr_this = (arrival_node_this_node, train_path_node.arrival_time, train_path_node.id, 'ap')
+                arrival_time_str = datetime.datetime.strftime(train_path_node.arrival_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_arr_this = (arrival_node_this_node, arrival_time_str, train_path_node.id, 'ap')
                 arrival_nodes.append(node_name_arr_this)
                 attributes = {'train': train_id, 'type': 'arrivalNodePassing', 'arrivalTime': arrival_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -1013,7 +1022,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
 
             # Node in between two transit nodes
             else:
-                node_name_arr_this = (arrival_node_this_node, train_path_node.arrival_time, train_path_node.id, 'ap')
+                arrival_time_str = datetime.datetime.strftime(train_path_node.arrival_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_arr_this = (arrival_node_this_node, arrival_time_str, train_path_node.id, 'ap')
                 arrival_nodes.append(node_name_arr_this)
                 attributes = {'train': train_id, 'type': 'arrivalNodePassing', 'arrivalTime': arrival_time_this_node,
                               'StopStatus': train_path_node.stop_status.name}
@@ -1028,8 +1038,8 @@ def create_transit_edges_nodes_single_train(train, infra_graph, idx_start_delay)
                                                                                                'train_id': train_id,
                                                                                                'odt_assigned': []}
 
-                node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id,
-                                      'dp')
+                departure_time_str = datetime.datetime.strftime(train_path_node.departure_time, "%Y-%m-%dT%H:%M:%S")
+                node_name_dep_this = (departure_node_this_node, departure_time_str, train_path_node.id, 'dp')
                 departure_nodes.append(node_name_dep_this)
                 attributes = {'train': train_id, 'type': 'departureNodePassing',
                               'departureTime': departure_time_this_node, 'StopStatus': train_path_node.stop_status.name}
@@ -1274,8 +1284,8 @@ def transfer_edges_single_train(prime_timetable, train, parameters, train_path_n
                 dep_station_in_dict.append([x, y])
             else:
                 print('Check transfer edges single train, somehow a not train node appears in the timetable')
-        except KeyError:
-            print(x, y)
+        except (KeyError, IndexError):
+            pass
 
     # Set transfer edges and attributes list
     transfer_edges = list()
@@ -1594,11 +1604,11 @@ def create_restored_feasibility_graph(trains_timetable, parameters):
                                                                                                   parameters)
 
     # Add the transfers edges to the graph
-    print('add transfer edges to graph.')
+    print('Add transfer edges to graph.')
     timetable_graph = add_transfer_edges_to_graph(timetable_graph, parameters)
 
     # Connect the homes with the stations candidates
-    print('connect homes with station candidates.')
+    print('Connect homes with station candidates.')
     edges_o_stations_d = connections_homes_with_station_candidates(timetable_graph, parameters)
 
     return timetable_graph, edges_o_stations_d

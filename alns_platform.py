@@ -393,7 +393,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             print(f'Selected operator: {operator}')
 
             # Create a new timetable with the current solution but without flow
-            timetable_prime_graph = copy_graph_and_remove_flow(timetable_solution_graph.graph)
+            timetable_prime_graph = timetable_solution_graph.graph
 
             # Create a dict of edges that combines origin to stations and stations to destination edges
             edges_o_stations_d = helpers.CopyEdgesOriginStationDestination(timetable_solution_graph.edges_o_stations_d)
@@ -403,19 +403,23 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Apply the operator on the current solution
             print('Apply the operator on the current solution.')
-            timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator = \
+            timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
+            odt_facing_neighbourhood_operator, odt_priority_list_original = \
                 apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
-                                            track_info,  infra_graph, edges_o_stations_d, parameters)
+                                            track_info, infra_graph, edges_o_stations_d, parameters,
+                                            odt_priority_list_original)
 
             # Set the timetable_solution_graph parameters
             timetable_solution_prime_graph.edges_o_stations_d = edges_o_stations_d
             timetable_solution_prime_graph.timetable = trains_timetable
             timetable_solution_prime_graph.graph = timetable_prime_graph
-            timetable_solution_prime_graph, timetable_prime_graph = \
-                find_path_and_assign_pass(timetable_prime_graph,
-                                          parameters,
-                                          timetable_solution_prime_graph,
-                                          edges_o_stations_d)
+            timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_original = \
+                find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph,
+                                                                 parameters,
+                                                                 timetable_solution_prime_graph,
+                                                                 edges_o_stations_d,
+                                                                 odt_priority_list_original,
+                                                                 odt_facing_neighbourhood_operator)
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
@@ -504,9 +508,9 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             timetable_solution_prime_graph.timetable = copy.deepcopy(trains_timetable)
 
             # Passenger assignment and compute the objective for passenger
-            solutions, timetable_prime_graph = find_path_and_assign_pass(timetable_prime_graph, parameters,
-                                                                         timetable_solution_prime_graph,
-                                                                         edges_o_stations_d)
+            solutions, timetable_prime_graph, odt_priority_list_original =\
+                find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solution_prime_graph,
+                                          edges_o_stations_d)
 
             # Record the results of the current solution timetable
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
@@ -522,7 +526,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Check if the current solution has a value for deviation, if not, it means that the algorithm platform
             # has not been restarted for the original timetable
-            if timetable_solution_prime_graph.deviation_timetable == 0:
+            if timetable_solution_prime_graph.deviation_reroute_timetable == 0:
                 raise Exception('The deviation restored feasibility is 0, we need to restart the Viriato algorithm'
                                 'platform')
 
@@ -625,22 +629,22 @@ def identify_candidates_for_operators(trains_timetable, parameters, timetable_so
             if 'bus_id' in attr.keys():
                 # If the list does not contain yet the bus id, we will add it with the attributes
                 if not all_train_flows.__contains__(attr['bus_id']):
-                    all_train_flows[attr['bus_id']] = {'total_flow': attr['flow'], 'nb_of_edges_with_flow': 1,
-                                                       'avg_flow': attr['flow']}
+                    all_train_flows[attr['bus_id']] = {'total_flow': sum(attr['flow']), 'nb_of_edges_with_flow': 1,
+                                                       'avg_flow': sum(attr['flow'])}
                 # If it contains, only add the flow, add +1 edge for this bus and compute the average again
                 else:
                     train_flow = all_train_flows[attr['train_id']]  # todo: make sure if it should not be bus id
-                    train_flow['total_flow'] += attr['flow']
+                    train_flow['total_flow'] += sum(attr['flow'])
                     train_flow['nb_of_edges_with_flow'] += 1
                     train_flow['avg_flow'] = train_flow['total_flow'] / train_flow['nb_of_edges_with_flow']
             # If not bus, same as previously but add the attributes for the train
             else:
                 if not all_train_flows.__contains__(attr['train_id']):
-                    all_train_flows[attr['train_id']] = {'total_flow': attr['flow'], 'nb_of_edges_with_flow': 1,
-                                                         'avg_flow': attr['flow']}
+                    all_train_flows[attr['train_id']] = {'total_flow': sum(attr['flow']), 'nb_of_edges_with_flow': 1,
+                                                         'avg_flow': sum(attr['flow'])}
                 else:
                     train_flow = all_train_flows[attr['train_id']]
-                    train_flow['total_flow'] += attr['flow']
+                    train_flow['total_flow'] += sum(attr['flow'])
                     train_flow['nb_of_edges_with_flow'] += 1
                     train_flow['avg_flow'] = train_flow['total_flow'] / train_flow['nb_of_edges_with_flow']
 
@@ -767,7 +771,7 @@ def copy_graph_and_remove_flow(timetable_solution_graph
 
 
 def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable, track_info,
-                                infra_graph, edges_o_stations_d, parameters):
+                                infra_graph, edges_o_stations_d, parameters, odt_priority_list_original):
     # Apply the selected operator
     if operator == 'Cancel':
         # Cancel random train
@@ -782,9 +786,16 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
 
     elif operator == 'Delay':
         # Delay random train
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
-            neighbourhood_operators.operator_complete_delay(timetable_prime_graph, changed_trains, trains_timetable,
-                                                            track_info, infra_graph, edges_o_stations_d, parameters)
+        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
+        odt_facing_neighbourhood_operator, odt_priority_list_original = \
+            neighbourhood_operators.operator_complete_delay(timetable_prime_graph,
+                                                            changed_trains,
+                                                            trains_timetable,
+                                                            track_info,
+                                                            infra_graph,
+                                                            edges_o_stations_d,
+                                                            parameters,
+                                                            odt_priority_list_original)
 
     elif operator == 'DelayFrom':
         changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
@@ -810,7 +821,8 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
         #     operator_return_train_to_initial_timetable(timetable_prime_graph, changed_trains, trains_timetable, track_info, infra_graph,
         #                                                edges_o_stations_d, parameters)
         pass
-    return timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator
+    return timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator,\
+           odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
 def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solution_graph, edges_o_stations_d):
@@ -823,13 +835,23 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
         timetable_graph.create_graph_with_edges_o_stations_d(edges_o_stations_d,
                                                              timetable_graph=copy.deepcopy(timetable_prime_graph))
 
+    # Add the origin nodes that are still missing in the full graph from the odt_list
+    node_types = {}
+    node_names_origin = []
+    for odt in parameters.odt_as_list:
+        node_types[odt[0]] = {'train': None, 'type': 'origin'}
+        node_names_origin.append(odt[0])
+        node_types[odt[1]] = {'train': None, 'type': 'destination'}
+    timetable_full_graph.add_nodes_from(node_names_origin)
+    nx.set_node_attributes(timetable_full_graph, node_types)
+
     # Compute the shortest path with capacity constraint
     print('Assign the passenger on the timetable graph')
     odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
         passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
 
     if odt_facing_capacity_constraint is None:
-        pass
+        odt_priority_list_original = copy.deepcopy(parameters.odt_as_list)
     else:
         timetable_prime_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration,\
         odt_priority_list_original = passenger_assignment.capacity_constraint_2nd_loop(parameters,
@@ -857,7 +879,65 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
     # Printout the output
     print('Passengers with path : ', assigned, ', passengers without path : ', unassigned)
 
-    return timetable_solution_graph, timetable_prime_graph
+    return timetable_solution_graph, timetable_prime_graph, odt_priority_list_original
+
+
+def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, parameters, timetable_solution_graph,
+                                                     edges_o_stations_d, odt_priority_list_original,
+                                                     odt_facing_neighbourhood_operator):
+
+    # Set the cutoff duration
+    cutoff = parameters.time_duration.seconds/60
+
+    # Add the edges origin to stations and stations to destination
+    timetable_full_graph = \
+        timetable_graph.create_graph_with_edges_o_stations_d(edges_o_stations_d,
+                                                             timetable_graph=copy.deepcopy(timetable_prime_graph))
+
+    # Add the origin nodes that are still missing in the full graph from the odt_list
+    node_types = {}
+    node_names_origin = []
+    for odt in parameters.odt_as_list:
+        node_types[odt[0]] = {'train': None, 'type': 'origin'}
+        node_names_origin.append(odt[0])
+        node_types[odt[1]] = {'train': None, 'type': 'destination'}
+    timetable_full_graph.add_nodes_from(node_names_origin)
+    nx.set_node_attributes(timetable_full_graph, node_types)
+
+    # Compute the shortest path with capacity constraint
+    print('Assign the passenger on the timetable graph')
+    odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
+        passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
+
+    timetable_full_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
+        odt_priority_list_original = \
+        passenger_assignment.assignment_neighbourhood_operator(odt_priority_list_original,
+                                                               odt_facing_neighbourhood_operator,
+                                                               timetable_full_graph,
+                                                               parameters)
+
+    # Compute the total travel time
+    i = -1
+    while i != len(odt_priority_list_original) - 1:
+        i += 1
+        travel_time = 0
+        try:
+            for j in range(len(odt_priority_list_original[i][4]) - 1):
+                starting_node = odt_priority_list_original[i][4][j]
+                ending_node = odt_priority_list_original[i][4][j + 1]
+                travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
+        except TypeError:
+            travel_time = odt_priority_list_original[i][5]
+        odt_priority_list_original[i].append(travel_time)
+    total_traveltime = sum([item[6] for item in odt_priority_list_original])
+
+    # Save the total travel time for the solution
+    timetable_solution_graph.total_traveltime = round(total_traveltime, 1)
+
+    # Printout the output
+    print('Passengers with path : ', assigned_disruption, ', passengers without path : ', unassigned_disruption)
+
+    return timetable_solution_graph, timetable_prime_graph, odt_priority_list_original
 
 
 def distance_travelled_all_trains(trains_timetable, infra_graph):
