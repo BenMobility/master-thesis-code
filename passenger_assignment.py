@@ -1086,8 +1086,6 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                     unassigned += odt[3]
                     count_unassigned += 1
             print('End of passenger assignment')
-            print(f'\nThe number of assigned passengers: {assigned} for a total of group: {count_assigned}')
-            print(f'The number of unassigned passengers: {unassigned} for a total of group: {count_unassigned}')
             break
 
     return timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, \

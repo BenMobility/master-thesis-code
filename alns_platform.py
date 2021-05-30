@@ -868,9 +868,13 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
                 starting_node = odt_priority_list_original[i][4][j]
                 ending_node = odt_priority_list_original[i][4][j + 1]
                 travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
+            # Need to add the penalty if the odt has a path but do not reach the destination
+            travel_time += odt_priority_list_original[i][5]
+            odt_priority_list_original[i].append(travel_time)
+        # No path found from the beginning, it will results with a type error
         except TypeError:
             travel_time = odt_priority_list_original[i][5]
-        odt_priority_list_original[i].append(travel_time)
+            odt_priority_list_original[i].append(travel_time)
     total_traveltime = sum([item[6] for item in odt_priority_list_original])
 
     # Save the total travel time for the solution
@@ -906,9 +910,6 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
 
     # Compute the shortest path with capacity constraint
     print('Assign the passenger on the timetable graph')
-    odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
-        passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
-
     timetable_full_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
         odt_priority_list_original = \
         passenger_assignment.assignment_neighbourhood_operator(odt_priority_list_original,
@@ -925,10 +926,15 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
             for j in range(len(odt_priority_list_original[i][4]) - 1):
                 starting_node = odt_priority_list_original[i][4][j]
                 ending_node = odt_priority_list_original[i][4][j + 1]
-                travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
+                travel_time += timetable_full_graph[starting_node][ending_node]['weight']
+            # Add the penalty if it has a penalty because it did not reach the destination (either 0 or penalty)
+            travel_time += odt_priority_list_original[i][5]
+            odt_priority_list_original[i][6] = travel_time
+        # When there is no path from the beginning, it is assign None hence type error
         except TypeError:
             travel_time = odt_priority_list_original[i][5]
-        odt_priority_list_original[i].append(travel_time)
+            odt_priority_list_original[i][6] = travel_time
+
     total_traveltime = sum([item[6] for item in odt_priority_list_original])
 
     # Save the total travel time for the solution
@@ -937,7 +943,7 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
     # Printout the output
     print('Passengers with path : ', assigned_disruption, ', passengers without path : ', unassigned_disruption)
 
-    return timetable_solution_graph, timetable_prime_graph, odt_priority_list_original
+    return timetable_solution_graph, timetable_full_graph, odt_priority_list_original
 
 
 def distance_travelled_all_trains(trains_timetable, infra_graph):
@@ -1290,11 +1296,14 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
         for solution in solution_archive:
             # Check if one of the multi-objective is better than the solutions in the archive with boolean
             cond_tt = timetable_solution_prime_graph.total_traveltime < solution.total_traveltime
-            cond_de = timetable_solution_prime_graph.deviation_timetable < solution.deviation_timetable
+            cond_de_reroute = \
+                timetable_solution_prime_graph.deviation_reroute_timetable < solution.deviation_reroute_timetable
+            cond_de_cancel = \
+                timetable_solution_prime_graph.deviation_cancel_timetable < solution.deviation_cancel_timetable
             cond_op = timetable_solution_prime_graph.total_dist_train < solution.total_dist_train
 
             # If any of the three objectives is better. Continue the search
-            if any([cond_tt, cond_op, cond_de]):
+            if any([cond_tt, cond_op, cond_de_reroute, cond_de_cancel]):
                 continue
 
             # If the solution does not show any improvement, it is dominated. Stop the search
@@ -1308,7 +1317,8 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
             accepted_solution = True
             print('Solution added to archive')
             solution_archive.append(timetable_solution_prime_graph)
-            timetable_solution_graph = get_solution_graph_with_copy_solution_prime(timetable_solution_prime_graph, parameters)
+            timetable_solution_graph = get_solution_graph_with_copy_solution_prime(timetable_solution_prime_graph,
+                                                                                   parameters)
             scores = update_scores(operator, parameters.score_1, scores)
 
     # Check if there are any solutions in the archive which are dominated by current solution
@@ -1321,17 +1331,23 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
         for solution in solution_archive[:-1]:
             i += 1
             cond_tt = timetable_solution_prime_graph.total_traveltime <= solution.total_traveltime
-            cond_de = timetable_solution_prime_graph.deviation_timetable <= solution.deviation_timetable
+            cond_de_reroute = \
+                timetable_solution_prime_graph.deviation_reroute_timetable < solution.deviation_reroute_timetable
+            cond_de_cancel = \
+                timetable_solution_prime_graph.deviation_cancel_timetable < solution.deviation_cancel_timetable
             cond_op = timetable_solution_prime_graph.total_dist_train <= solution.total_dist_train
 
             # If all the current solution objectives are smaller than the archived solution or are equals, double check
             # if it is strictly smaller in at least one of the three objectives
-            if all([cond_tt, cond_op, cond_de]):
+            if all([cond_tt, cond_op, cond_de_reroute, cond_de_cancel]):
                 cond_tt = timetable_solution_prime_graph.total_traveltime < solution.total_traveltime
-                cond_de = timetable_solution_prime_graph.deviation_timetable < solution.deviation_timetable
+                cond_de_reroute = \
+                    timetable_solution_prime_graph.deviation_reroute_timetable < solution.deviation_reroute_timetable
+                cond_de_cancel = \
+                    timetable_solution_prime_graph.deviation_cancel_timetable < solution.deviation_cancel_timetable
                 cond_op = timetable_solution_prime_graph.total_dist_train < solution.total_dist_train
                 # If one of the three objectives is strictly smaller than the archived solution, get the index
-                if any([cond_tt, cond_op, cond_de]):
+                if any([cond_tt, cond_op, cond_de_reroute, cond_de_cancel]):
                     index_dominated_solutions.append(i)
         # Delete all the dominated solution from the archives
         if len(index_dominated_solutions) >= 1:
@@ -1356,13 +1372,24 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
             acceptance_prob_operation = 0.001
             print('Division by zero, temperature_i', temp_i)
 
-        # Acceptance criterion for deviation objective
-        z_d_prime = timetable_solution_prime_graph.deviation_timetable
-        z_d = timetable_solution_graph.deviation_timetable
+        # Acceptance criterion for deviation objective reroute
+        z_d_reroute_prime = timetable_solution_prime_graph.deviation_reroute_timetable
+        z_d_reroute = timetable_solution_graph.deviation_reroute_timetable
         try:
-            acceptance_prob_deviation = min(math.exp((-(z_d_prime - z_d) / temp_i[1])) * reaction_factor_dev, 1)
+            acceptance_prob_deviation_reroute = \
+                min(math.exp((-(z_d_reroute_prime - z_d_reroute) / temp_i[1])) * reaction_factor_dev, 1)
         except ZeroDivisionError:
-            acceptance_prob_deviation = 0.001
+            acceptance_prob_deviation_reroute = 0.001
+            print('Division by zero, temperature_i', temp_i)
+
+        # Acceptance criterion for deviation objective cancel
+        z_d_cancel_prime = timetable_solution_prime_graph.deviation_cancel_timetable
+        z_d_cancel = timetable_solution_graph.deviation_cancel_timetable
+        try:
+            acceptance_prob_deviation_cancel =\
+                min(math.exp((-(z_d_cancel_prime - z_d_cancel) / temp_i[1])) * reaction_factor_dev, 1)
+        except ZeroDivisionError:
+            acceptance_prob_deviation_cancel = 0.001
             print('Division by zero, temperature_i', temp_i)
 
         # Acceptance criterion for travel time objective
@@ -1375,7 +1402,9 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
             print('Division by zero, temperature_i', temp_i)
 
         # Get the overall acceptance probability
-        acceptance_prob = acceptance_prob_passenger * acceptance_prob_deviation * acceptance_prob_operation
+        acceptance_prob = \
+            acceptance_prob_passenger * acceptance_prob_deviation_reroute * acceptance_prob_deviation_cancel *\
+            acceptance_prob_operation
 
         # Set the random seed
         rd = np.random.uniform(0.0, 1.0)
@@ -1407,13 +1436,20 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
                     idx_throw_away = i
                     continue
                 else:
-                    if solution_archive[i].deviation_timetable >= current_worst.deviation_timetable:
-                        if solution_archive[i].deviation_timetable > current_worst.deviation_timetable:
+                    if solution_archive[i].deviation_reroute_timetable >= current_worst.deviation_reroute_timetable:
+                        if solution_archive[i].deviation_reroute_timetable > current_worst.deviation_reroute_timetable:
                             idx_throw_away = i
                             continue
                         else:
-                            if solution_archive[i].total_dist_train > current_worst.total_dist_train:
-                                idx_throw_away = i
+                            if solution_archive[i].deviation_cancel_timetable >= \
+                                    current_worst.deviation_cancel_timetable:
+                                if solution_archive[i].deviation_cancel_timetable >\
+                                        current_worst.deviation_cancel_timetable:
+                                    idx_throw_away = i
+                                    continue
+                            else:
+                                if solution_archive[i].total_dist_train > current_worst.total_dist_train:
+                                    idx_throw_away = i
 
         print('Worst solution is deleted')
         del solution_archive[idx_throw_away]
@@ -1429,7 +1465,8 @@ def get_solution_graph_with_copy_solution_prime(timetable_solution_prime_graph, 
     timetable_solution_graph.graph = timetable_graph.copy_graph_with_flow(timetable_solution_prime_graph.graph)
     timetable_solution_graph.total_dist_train = timetable_solution_prime_graph.total_dist_train
     timetable_solution_graph.total_traveltime = timetable_solution_prime_graph.total_traveltime
-    timetable_solution_graph.deviation_timetable = timetable_solution_prime_graph.deviation_timetable
+    timetable_solution_graph.deviation_reroute_timetable = timetable_solution_prime_graph.deviation_reroute_timetable
+    timetable_solution_graph.deviation_cancel_timetable = timetable_solution_prime_graph.deviation_cancel_timetable
     timetable_solution_graph.changed_trains = copy.deepcopy(timetable_solution_prime_graph.changed_trains)
     timetable_solution_graph.edges_o_stations_d = \
         helpers.CopyEdgesOriginStationDestination(timetable_solution_prime_graph.edges_o_stations_d)
@@ -1438,7 +1475,6 @@ def get_solution_graph_with_copy_solution_prime(timetable_solution_prime_graph, 
     timetable_solution_graph.set_of_trains_for_operator['Delay'] = \
         copy.deepcopy(parameters.set_of_trains_for_operator['Delay'])
 
-    # timetable_solution_graph.track_info = copy_track_info_from_track_info(timetable_solution_prime_graph.track_info)
     return timetable_solution_graph
 
 
