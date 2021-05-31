@@ -62,7 +62,8 @@ def short_turn_train_viriato_preselection(parameters, train_to_short_turn, train
     return cloned_train_1, cloned_train_2
 
 
-def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_info, edges_o_stations_d, parameters):
+def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_info, edges_o_stations_d, parameters,
+                    odt_priority_list_original):
     # Get random train indices
     random_train_idx = np.random.randint(0, len(trains_timetable))
     train_to_cancel = trains_timetable[random_train_idx]
@@ -75,6 +76,12 @@ def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_inf
         emergency_train = True
     if hasattr(train_to_cancel, 'emergency_bus') and train_to_cancel.emergency_bus is True:
         bus = True
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_complete_cancel(prime_timetable,
+                                                                        train_to_cancel,
+                                                                        odt_priority_list_original)
 
     # Remove the edges and nodes of the canceled train
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_cancel, prime_timetable)
@@ -108,11 +115,12 @@ def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_inf
     # Delete the train from the trains timetable
     del trains_timetable[random_train_idx]
 
-    return changed_trains, prime_timetable, track_info, edges_o_stations_d
+    return changed_trains, prime_timetable, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator, \
+           odt_priority_list_original
 
 
 def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, track_info, infra_graph, edges_o_stations_d,
-                         parameters):
+                         parameters, odt_priority_list_original):
     # Initialize
     train_found = False
     list_cancel_candidates = list(set(parameters.set_of_trains_for_operator['Cancel']))
@@ -160,6 +168,12 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
     # Cancel from last comm stop
     idx_tpn_cancel_from = identify_last_departure_train_path_node_id_of_train_to_cancel_from(train_to_cancel_from)
     train_path_node_cancel_from = train_to_cancel_from.train_path_nodes[idx_tpn_cancel_from]
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from,
+                                                                    train_path_node_cancel_from,
+                                                                    odt_priority_list_original)
 
     # Remove edges and nodes of the canceled train
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_cancel_from,
@@ -210,7 +224,8 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
                                                    'tpn_cancel_from': train_path_node_cancel_from.id,
                                                    'EmergencyTrain': True}
 
-    return changed_trains, prime_timetable, train_id_to_cancel_from, track_info, edges_o_stations_d
+    return changed_trains, prime_timetable, train_id_to_cancel_from, track_info, edges_o_stations_d,\
+           odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
 def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, track_info, infra_graph,
@@ -327,7 +342,7 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
 
 
 def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track_info, infra_graph, edges_o_stations_d,
-                        parameters):
+                        parameters, odt_priority_list_original):
     # Set the train search to false for starting and the random seed
     train_found = False
 
@@ -379,6 +394,13 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
     # Cancel from last comm stop
     idx_tpn_delay_from = identify_departure_train_path_node_id_of_train_to_delay_from(train_to_delay, parameters)
     tpn_cancel_from = train_to_delay.train_path_nodes[idx_tpn_delay_from]
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_part_delay(prime_timetable,
+                                                                   train_to_delay,
+                                                                   tpn_cancel_from,
+                                                                   odt_priority_list_original)
 
     # Set emergency train to false and check that the train to delay is an emergency train
     emergency_train = False
@@ -451,11 +473,12 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
     elif not train_update_feasible:
         pass
 
-    return changed_trains, prime_timetable, train_id_to_delay, track_info, edges_o_stations_d
+    return changed_trains, prime_timetable, train_id_to_delay, track_info, edges_o_stations_d, \
+           odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
 def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetable, track_info, edges_o_stations_d,
-                           parameters):
+                           parameters, odt_priority_list_original):
     # Initiate the bus identification number
     bus_id_nr = 90000
     bus_id = 'Bus' + str(bus_id_nr)
@@ -479,6 +502,12 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
 
     # Get the train path nodes of the bus for the timetable graph
     tpns_bus = [tpn_id['ID'] for tpn_id in emergency_bus['TrainPathNodes']]
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, timetable_prime_graph, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_emergency_bus(timetable_prime_graph,
+                                                                      tpns_bus,
+                                                                      odt_priority_list_original)
 
     # Create and add driving and waiting edges and nodes to the timetable graph
     nodes_edges_dict = timetable_graph.create_transit_edges_nodes_emergency_bus(emergency_bus)
@@ -513,7 +542,8 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
     # Add the bus in the list of changed trains list
     trains_timetable.append(emergency_bus)
 
-    return changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d
+    return changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d,\
+           odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
 def bus_add_bus_path_nodes(bus_id, departure_time):
@@ -1127,10 +1157,12 @@ def check_tpn_departure_feasibility_delay_operator(dep_time_tpn, i, tpn, tpn_cle
 
 
 def remove_entries_in_tpn_information_and_update_tpn_of_delayed_train(track_info, train_to_delay, idx_start_delay):
-    for train_path_node in train_to_delay.train_path_node[idx_start_delay:]:
+    for train_path_node in train_to_delay.train_path_nodes[idx_start_delay:]:
         tuple_key_value_arr = track_info.tuple_key_value_of_tpn_ID_arrival.pop(train_path_node.id)
         tuple_key_value_dep = track_info.tuple_key_value_of_tpn_ID_departure.pop(train_path_node.id)
         tpn_info = track_info.tpn_information.pop(train_path_node.id)
+        train_path_node = update_delayed_train_path_node(
+            train_to_delay.runtime_delay_feasible[train_path_node.id], train_path_node)
 
     # Update track info
     alns_platform.used_tracks_single_train(track_info.trains_on_closed_tracks,
@@ -1145,8 +1177,8 @@ def remove_entries_in_tpn_information_and_update_tpn_of_delayed_train(track_info
 
 
 def update_delayed_train_path_node(runtime_delay_feasible, train_path_node):
-    train_path_node.departure_time = runtime_delay_feasible['DepartureTime']
-    train_path_node.arrival_time = runtime_delay_feasible['ArrivalTime']
+    train_path_node._AlgorithmTrainPathNode__departure_time = runtime_delay_feasible['DepartureTime']
+    train_path_node._AlgorithmTrainPathNode__arrival_time = runtime_delay_feasible['ArrivalTime']
     return train_path_node
 
 
@@ -1401,20 +1433,6 @@ def remove_tpn_added_to_track_info_tpn_sequences(tpn_sequences_added_section, tr
                 track_info.track_sequences_of_TPN[key].remove(value)
             except ValueError:
                 pass
-
-
-def remove_entries_in_tpn_information_and_update_tpn_of_delayed_train(track_info, train_to_delay, idx_start_delay):
-    for tpn in train_to_delay.train_path_nodes[idx_start_delay:]:
-        tuple_key_value_arr = track_info.tuple_key_value_of_tpn_ID_arrival.pop(tpn.id)
-        tuple_key_value_dep = track_info.tuple_key_value_of_tpn_ID_departure.pop(tpn.id)
-        tpn_info = track_info.tpn_information.pop(tpn.id)
-
-    # Update track info
-    alns_platform.used_tracks_single_train(track_info.trains_on_closed_tracks, track_info.nr_usage_tracks,
-                                           track_info.tpn_information, track_info.track_sequences_of_TPN,
-                                           train_to_delay, track_info.trains_on_closed_tracks,
-                                           track_info.tuple_key_value_of_tpn_ID_arrival,
-                                           track_info.tuple_key_value_of_tpn_ID_departure, idx_start_delay)
 
 
 def restore_disruption_feasibility(infra_graph, track_info, parameters):

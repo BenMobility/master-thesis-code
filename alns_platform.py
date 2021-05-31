@@ -441,9 +441,9 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Printout the current results
             print('z_o_current : ', timetable_solution_prime_graph.total_dist_train,
-                  ' z_d_reroute_current : ', timetable_solution_prime_graph.deviation_reroute_timetable,
-                  ' z_d_cancel_current : ', timetable_solution_prime_graph.deviation_cancel_timetable,
-                  ' z_p_current : ', timetable_solution_prime_graph.total_traveltime)
+                  '\n z_d_reroute_current : ', timetable_solution_prime_graph.deviation_reroute_timetable,
+                  '\n z_d_cancel_current : ', timetable_solution_prime_graph.deviation_cancel_timetable,
+                  '\n z_p_current : ', timetable_solution_prime_graph.total_traveltime)
 
             # Archive limited to 80 solutions (memory issue, could be increased)
             timetable_solution_graph, scores, accepted_solution, archived_solution = \
@@ -463,9 +463,9 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Printout the accepted solution
             print('z_o_accepted : ', timetable_solution_graph.total_dist_train,
-                  ' z_d_reroute_accepted : ', timetable_solution_graph.deviation_reroute_timetable,
-                  ' z_d_cancel_accepted : ', timetable_solution_graph.deviation_cancel_timetable,
-                  ' z_p_accepted : ', timetable_solution_graph.total_traveltime)
+                  '\n z_d_reroute_accepted : ', timetable_solution_graph.deviation_reroute_timetable,
+                  '\n z_d_cancel_accepted : ', timetable_solution_graph.deviation_cancel_timetable,
+                  '\n z_p_accepted : ', timetable_solution_graph.total_traveltime)
 
             # Print out the temperature and the number of iteration
             print('temperature : ', temp_i, ' iteration : ', n_iteration)
@@ -775,14 +775,26 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
     # Apply the selected operator
     if operator == 'Cancel':
         # Cancel random train
-        changed_trains, timetable_prime_graph, track_info, edges_o_stations_d = \
-            neighbourhood_operators.operator_cancel(timetable_prime_graph, changed_trains, trains_timetable, track_info,
-                                                    edges_o_stations_d, parameters)
+        changed_trains, timetable_prime_graph, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator,\
+        odt_priority_list_original = neighbourhood_operators.operator_cancel(timetable_prime_graph,
+                                                                             changed_trains,
+                                                                             trains_timetable,
+                                                                             track_info,
+                                                                             edges_o_stations_d,
+                                                                             parameters,
+                                                                             odt_priority_list_original)
 
     elif operator == 'CancelFrom':
-        changed_trains, timetable_prime_graph, train_id_operated, track_info, edges_o_stations_d = \
-            neighbourhood_operators.operator_cancel_from(timetable_prime_graph, changed_trains, trains_timetable,
-                                                         track_info, infra_graph, edges_o_stations_d, parameters)
+        changed_trains, timetable_prime_graph, train_id_to_cancel_from, track_info, edges_o_stations_d, \
+        odt_facing_neighbourhood_operator, odt_priority_list_original = \
+            neighbourhood_operators.operator_cancel_from(timetable_prime_graph,
+                                                         changed_trains,
+                                                         trains_timetable,
+                                                         track_info,
+                                                         infra_graph,
+                                                         edges_o_stations_d,
+                                                         parameters,
+                                                         odt_priority_list_original)
 
     elif operator == 'Delay':
         # Delay random train
@@ -798,29 +810,40 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
                                                             odt_priority_list_original)
 
     elif operator == 'DelayFrom':
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
-            neighbourhood_operators.operator_part_delay(timetable_prime_graph, changed_trains, trains_timetable,
-                                                        track_info, infra_graph, edges_o_stations_d, parameters)
+        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d,\
+        odt_facing_neighbourhood_operator, odt_priority_list_original = \
+            neighbourhood_operators.operator_part_delay(timetable_prime_graph,
+                                                        changed_trains,
+                                                        trains_timetable,
+                                                        track_info,
+                                                        infra_graph,
+                                                        edges_o_stations_d,
+                                                        parameters,
+                                                        odt_priority_list_original)
 
     elif operator == 'EmergencyTrain':
+        odt_facing_neighbourhood_operator = None
         # emergency_train = nh.call_emergency_train_scen_low()
         # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = operator_emergency_train(timetable_prime_graph, changed_trains,
+        #
         #                                                                                                               emergency_train, trains_timetable, track_info, infra_graph, edges_o_stations_d, parameters)
-        pass
     elif operator == 'EmergencyBus':
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
+        changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d,\
+        odt_facing_neighbourhood_operator, odt_priority_list_original = \
             neighbourhood_operators.operator_emergency_bus(timetable_prime_graph,
                                                            changed_trains,
                                                            trains_timetable,
                                                            track_info,
                                                            edges_o_stations_d,
-                                                           parameters)
-        pass
+                                                           parameters,
+                                                           odt_priority_list_original)
+
     elif operator == 'Return':
+        odt_facing_neighbourhood_operator = None
         # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
         #     operator_return_train_to_initial_timetable(timetable_prime_graph, changed_trains, trains_timetable, track_info, infra_graph,
         #                                                edges_o_stations_d, parameters)
-        pass
+
     return timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator,\
            odt_facing_neighbourhood_operator, odt_priority_list_original
 
@@ -1387,7 +1410,7 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
         z_d_cancel = timetable_solution_graph.deviation_cancel_timetable
         try:
             acceptance_prob_deviation_cancel =\
-                min(math.exp((-(z_d_cancel_prime - z_d_cancel) / temp_i[1])) * reaction_factor_dev, 1)
+                min(math.exp((-(z_d_cancel_prime - z_d_cancel) / temp_i[2])) * reaction_factor_dev, 1)
         except ZeroDivisionError:
             acceptance_prob_deviation_cancel = 0.001
             print('Division by zero, temperature_i', temp_i)
@@ -1396,7 +1419,7 @@ def archiving_acceptance_rejection(timetable_solution_graph, timetable_solution_
         z_tt_prime = timetable_solution_prime_graph.total_traveltime
         z_tt = timetable_solution_graph.total_traveltime
         try:
-            acceptance_prob_passenger = min(math.exp((-(z_tt_prime - z_tt) / temp_i[2])), 1)
+            acceptance_prob_passenger = min(math.exp((-(z_tt_prime - z_tt) / temp_i[3])), 1)
         except ZeroDivisionError:
             acceptance_prob_passenger = 0.001
             print('Division by zero, temperature_i', temp_i)
@@ -1509,23 +1532,26 @@ def pickle_results(file_for_pickle, filename):
 
 
 def pickle_archive_operation_travel_time_deviation(solution_archive):
-    z_op, z_de, z_tt = [], [], []
+    z_op, z_de_reroute, z_de_cancel, z_tt = [], [], [], []
 
-    archive_for_pickle = {'z_op': z_op, 'z_de': z_de, 'z_tt': z_tt}
+    archive_for_pickle = {'z_op': z_op, 'z_de_reroute': z_de_reroute, 'z_de_cancel': z_de_cancel, 'z_tt': z_tt}
     for solution in solution_archive:
         z_op.append(solution.total_dist_train)
-        z_de.append(solution.deviation_timetable)
+        z_de_reroute.append(solution.deviation_reroute_timetable)
+        z_de_cancel.append(solution.deviation_cancel_timetable)
         z_tt.append(solution.total_traveltime)
     pickle_results(archive_for_pickle, 'output/pickle/z_archive.pkl')
 
 
 def pickle_archive_with_changed_trains(solution_archive):
-    z_op, z_de, z_tt, changed_trains = [], [], [], []
+    z_op, z_de_reroute, z_de_cancel, z_tt, changed_trains = [], [], [], [], []
 
-    archive_for_pickle = {'z_op': z_op, 'z_de': z_de, 'z_tt': z_tt, 'changed_trains': changed_trains}
+    archive_for_pickle = {'z_op': z_op, 'z_de_reroute': z_de_reroute, 'z_de_cancel': z_de_cancel, 'z_tt': z_tt,
+                          'changed_trains': changed_trains}
     for solution in solution_archive:
         z_op.append(solution.total_dist_train)
-        z_de.append(solution.deviation_timetable)
+        z_de_reroute.append(solution.deviation_reroute_timetable)
+        z_de_cancel.append(solution.deviation_cancel_timetable)
         z_tt.append(solution.total_traveltime)
         changed_trains.append(solution.changed_trains)
     pickle_results(archive_for_pickle, 'output/pickle/z_archive.pkl')
@@ -1543,17 +1569,22 @@ def update_temperature(temp_i, n_iteration, nb_temperature_changes, all_accepted
         if n_iteration % iterations_at_temperature_level == 0:
             nb_temperature_changes += 1
             sigma_z_op = np.std(all_accepted_solutions[0])
-            sigma_z_de = np.std(all_accepted_solutions[1])
-            sigma_z_tt = np.std(all_accepted_solutions[2])
+            sigma_z_de_reroute = np.std(all_accepted_solutions[1])
+            sigma_z_de_cancel = np.std(all_accepted_solutions[2])
+            sigma_z_tt = np.std(all_accepted_solutions[3])
             temp_i[0] =\
                 - sigma_z_op / (np.log(p_0 + ((p_f - p_0) / number_of_temperature_change) * nb_temperature_changes))
             temp_i[1] =\
-                - sigma_z_de / (np.log(p_0 + ((p_f - p_0) / number_of_temperature_change) * nb_temperature_changes))
-            temp_i[2] =\
+                - sigma_z_de_reroute / \
+                (np.log(p_0 + ((p_f - p_0) / number_of_temperature_change) * nb_temperature_changes))
+            temp_i[2] = \
+                - sigma_z_de_cancel / \
+                (np.log(p_0 + ((p_f - p_0) / number_of_temperature_change) * nb_temperature_changes))
+            temp_i[3] =\
                 - sigma_z_tt / (np.log(p_0 + ((p_f - p_0) / number_of_temperature_change) * nb_temperature_changes))
 
     elif nb_temperature_changes == number_of_temperature_change:
-        temp_i = [0, 0, 0]
+        temp_i = [0, 0, 0, 0]
 
     return temp_i, nb_temperature_changes
 
@@ -1591,8 +1622,9 @@ def periodically_select_solution(solution_archive, timetable_solution_graph, n_i
         timetable_solution_graph = get_solution_graph_with_copy_solution_prime(solution_archive[rd_index], parameters)
         print('Return to archive: selected solution :')
         print('z_o_accepted : ', timetable_solution_graph.total_dist_train,
-              ' z_d_accepted : ', timetable_solution_graph.deviation_timetable,
-              ' z_p_accepted : ', timetable_solution_graph.total_traveltime)
+              '\n z_d_reroute_accepted : ', timetable_solution_graph.deviation_reroute_timetable,
+              '\n z_d_cancel_accepted : ', timetable_solution_graph.deviation_cancel_timetable,
+              '\n z_p_accepted : ', timetable_solution_graph.total_traveltime)
 
     return timetable_solution_graph, iterations_until_return_archives, return_to_archive_at_iteration
 

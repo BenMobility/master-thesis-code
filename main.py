@@ -52,7 +52,8 @@ score_1 = 10  # Score for the ALNS algorithm, accepted solution. [13]
 score_2 = 2  # Score for the ALNS algorithm, accepted solution, yet worsened solution. [14]
 score_3 = 0  # Score for the ALNS algorithm, rejected solution. [15]
 t_start_op = 10 ** 6  # Starting temperature for Simulated Annealing on the operation objective [16]
-t_start_de = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [17]
+t_start_de_reroute = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [17]
+t_start_de_cancel = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [56]
 t_start_tt = 10 ** 6  # Starting temperature for Simulated Annealing on the travel time objective [18]
 weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]
 train_capacity = 1500  # Number of passenger per train [20]
@@ -111,7 +112,7 @@ max_iteration_section_check = 3  # Maximum number of iterations for the section 
 list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connect, min_nb_passenger,
                    min_transfer_time, max_transfer_time, min_transfer_time_bus, max_transfer_time_bus,
                    origin_train_departure_min_time, origin_train_departure_max_time, beta_transfer, beta_waiting,
-                   penalty_edge, score_1, score_2, score_3, t_start_op, t_start_de, t_start_tt,
+                   penalty_edge, score_1, score_2, score_3, t_start_op, t_start_de_reroute, t_start_tt,
                    weight_closed_tracks, train_capacity, bus_capacity, penalty_no_path,
                    delayTime_to_consider_cancel, delayTime_to_consider_partCancel, commercial_stops,
                    time_discretization, group_size_passenger, full_od_file, read_od_departure_time_file,
@@ -122,7 +123,7 @@ list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connec
                    reaction_factor_deviation, warm_up_phase, iterations_temperature_level,
                    number_of_temperature_change, reaction_factor_return_archive, reaction_factor_weights,
                    max_iteration_feasibility_check, max_iteration_section_check, capacity_constraint,
-                   od_desired_departure_time_start, od_desired_departure_time_end]
+                   od_desired_departure_time_start, od_desired_departure_time_end, t_start_de_cancel]
 
 # %% Time window from Viriato and close tracks ids from disruption scenario
 print('\nMain code is running.')

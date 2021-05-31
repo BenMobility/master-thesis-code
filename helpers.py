@@ -41,8 +41,8 @@ class Parameters:
         self.score_1 = list_parameters[13]
         self.score_2 = list_parameters[14]
         self.score_3 = list_parameters[15]
-
-        self.t_start = [list_parameters[16], list_parameters[17], list_parameters[18]]  # start temp. [z_op, z_de, z_tt]
+        # start temp. [z_op, z_de_reroute, z_de_cancel, z_tt]
+        self.t_start = [list_parameters[16], list_parameters[17], list_parameters[56], list_parameters[18]]
 
         self.weight_closed_tracks = list_parameters[19]
         self.train_capacity = list_parameters[20]
@@ -247,7 +247,8 @@ class Solution:
         self.timetable = None
         self.total_traveltime = None
         self.total_dist_train = None
-        self.deviation_timetable = None
+        self.deviation_reroute_timetable = None
+        self.deviation_cancel_timetable = None
         self.graph = None
         self.changed_trains = None
         self.track_info = None
