@@ -86,8 +86,11 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                 for odt_with_lower_priority in odt_with_lower_priority_name:
                                                     # Extract the odt to get the recorded path from the original
                                                     # priority list
+
                                                     extract_odt = [item for item in odt_priority_list_original
-                                                                   if item[0:4] == odt_with_lower_priority[0:4]]
+                                                                   if item[0:2] == odt_with_lower_priority[0:2]
+                                                                   and abs(item[2] - odt_with_lower_priority[2]) < 0.001
+                                                                   and item[3] == odt_with_lower_priority[3]]
 
                                                     # Find the index on the original list
                                                     index_in_original_list = odt_priority_list_original.index(
@@ -323,7 +326,11 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             # Extract the odt to get the recorded path from the original
                                                             # priority list
                                                             extract_odt = [item for item in odt_priority_list_original
-                                                                           if item[0:4] == odt_with_lower_priority[0:4]]
+                                                                           if item[0:2] == odt_with_lower_priority[0:2]
+                                                                           and
+                                                                           abs(item[2] - odt_with_lower_priority[2])
+                                                                           < 0.001
+                                                                           and item[3] == odt_with_lower_priority[3]]
 
                                                             # Find the index on the original list
                                                             index_in_original_list = odt_priority_list_original.index(
@@ -468,7 +475,9 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                             # Extract the odt to get the recorded path from the original
                                             # priority list
                                             extract_odt = [item for item in odt_priority_list_original
-                                                           if item[0:4] == odt[0][0:4]]
+                                                           if item[0:2] == odt[0][0:2]
+                                                           and abs(item[2] - odt[0][2]) < 0.0001
+                                                           and item[3] == odt[0][3]]
 
                                             # Find the index on the original list
                                             index_in_original_list = odt_priority_list_original.index(
@@ -536,7 +545,9 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                         # Extract the odt to get the recorded path from the original
                                         # priority list
                                         extract_odt = [item for item in odt_priority_list_original
-                                                       if item[0:4] == odt[0][0:4]]
+                                                       if item[0:2] == odt[0][0:2]
+                                                       and abs(item[2] - odt[0][2]) < 0.0001
+                                                       and item[3] == odt[0][3]]
 
                                         # Find the index on the original list
                                         index_in_original_list = odt_priority_list_original.index(
@@ -608,7 +619,9 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                     if j == (len(p) - 2):
                         # Update the odt info on the original list
                         extract_odt = [item for item in odt_priority_list_original
-                                       if item[0:4] == odt[0][0:4]]
+                                       if item[0:2] == odt[0][0:2]
+                                       and abs(item[2] - odt[0][2]) < 0.0001
+                                       and item[3] == odt[0][3]]
 
                         # Find the index on the original list
                         index_in_original_list = odt_priority_list_original.index(
@@ -625,7 +638,9 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                     # Extract the odt to get the recorded path from the original
                     # priority list
                     extract_odt = [item for item in odt_priority_list_original
-                                   if item[0:4] == odt[0][0:4]]
+                                   if item[0:2] == odt[0][0:2]
+                                   and abs(item[2] - odt[0][2]) < 0.0001
+                                   and item[3] == odt[0][3]]
 
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -755,7 +770,11 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                             # Extract the odt to get the recorded path from the original
                                                             # priority list
                                                             extract_odt = [item for item in odt_priority_list_original
-                                                                           if item[0:4] == odt_with_lower_priority[0:4]]
+                                                                           if item[0:2] == odt_with_lower_priority[0:2]
+                                                                           and
+                                                                           abs(item[2] - odt_with_lower_priority[2])
+                                                                           < 0.0001
+                                                                           and item[3] == odt_with_lower_priority[3]]
 
                                                             # Find the index on the original list
                                                             index_in_original_list = odt_priority_list_original.index(
@@ -900,7 +919,11 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                             # Extract the odt to get the recorded path from the original
                                             # priority list
                                             extract_odt = [item for item in odt_priority_list_original
-                                                           if item[0:4] == odt[0][0:4]]
+                                                           if item[0:2] == odt[0][0:2]
+                                                           and
+                                                           abs(item[2] - odt[0][2])
+                                                           < 0.0001
+                                                           and item[3] == odt[0][3]]
 
                                             # Find the index on the original list
                                             index_in_original_list = odt_priority_list_original.index(
@@ -968,7 +991,9 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                         # Extract the odt to get the recorded path from the original
                                         # priority list
                                         extract_odt = [item for item in odt_priority_list_original
-                                                       if item[0:4] == odt[0][0:4]]
+                                                       if item[0:2] == odt[0][0:2]
+                                                       and abs(item[2] - odt[0][2]) < 0.0001
+                                                       and item[3] == odt[0][3]]
 
                                         # Find the index on the original list
                                         index_in_original_list = odt_priority_list_original.index(
@@ -1039,7 +1064,10 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                     # Once all the path is assigned with the current odt, update the original list with the new path
                     if j == (len(p) - 2):
                         # Update the odt info on the original list
-                        extract_odt = [item for item in odt_priority_list_original if item[0:4] == odt[0][0:4]]
+                        extract_odt = [item for item in odt_priority_list_original
+                                       if item[0:2] == odt[0][0:2]
+                                       and abs(item[2] - odt[0][2]) < 0.0001
+                                       and item[3] == odt[0][3]]
 
                         # Find the index on the original list
                         index_in_original_list = odt_priority_list_original.index(
@@ -1056,7 +1084,9 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                     # Extract the odt to get the recorded path from the original
                     # priority list
                     extract_odt = [item for item in odt_priority_list_original
-                                   if item[0:4] == odt[0][0:4]]
+                                   if item[0:2] == odt[0][0:2]
+                                   and abs(item[2] - odt[0][2]) < 0.0001
+                                   and item[3] == odt[0][3]]
 
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1176,16 +1206,33 @@ def create_list_odt_facing_disruption(edges_on_closed_tracks, timetable_initial_
         for current_odt in timetable_initial_graph[departure_node][arrival_node]['odt_assigned']:
 
             # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
+            # Delete the flow and the odt_assigned
+            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
 
             # Get the index from original list for future update
             index_in_original_list = odt_priority_list_original.index(extract_odt[0])
 
-            # Delete the flow and the odt_assigned
-            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = timetable_initial_graph[
@@ -1248,14 +1295,33 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Get the index from original list for future update
-            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             # Delete the flow and the odt_assigned
             odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = prime_timetable[
@@ -1317,14 +1383,33 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Get the index from original list for future update
-            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             # Delete the flow and the odt_assigned
             odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = prime_timetable[
@@ -1388,14 +1473,33 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Get the index from original list for future update
-            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             # Delete the flow and the odt_assigned
             odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = prime_timetable[
@@ -1448,15 +1552,35 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
     for i in reversed(range(len(arr_dep_nodes_train) - 1)):
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
-            # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            # Get the information from the first list, due the fact of error in rounding. We can verify the priority
+            # with the absolute difference.
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Get the index from original list for future update
-            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             # Delete the flow and the odt_assigned
             odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = prime_timetable[
@@ -1509,14 +1633,33 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, tpns_bus, odt_prio
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list
-            extract_odt = [item for item in odt_priority_list_original if item[0:4] == current_odt]
+            extract_odt = [item for item in odt_priority_list_original
+                           if item[0:2] == current_odt[0:2]
+                           and abs(item[2] - current_odt[2]) < 0.0001
+                           and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
             index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_previous = index_last_node_on_path_before_disruption - 1
+
             odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Get the index from original list for future update
-            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
             # Delete the flow and the odt_assigned
             odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
+
+            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
+            # needs to be deleted for further assignment
+            try:
+                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
+                        and extract_odt_path[index_previous][3] == 'd':
+                    odt_path_to_keep = extract_odt_path[:index_previous]
+                    # Delete the flow and the odt_assigned
+                    odt_path_to_delete = extract_odt_path[index_previous:]
+            # If it is already the first node, it will show an index error obviously
+            except IndexError:
+                continue
+
+            # Get the index from original list for future update
+            index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
             for n in range(len(odt_path_to_delete) - 1):
                 try:
                     index_to_delete = prime_timetable[

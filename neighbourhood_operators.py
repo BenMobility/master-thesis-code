@@ -503,12 +503,6 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
     # Get the train path nodes of the bus for the timetable graph
     tpns_bus = [tpn_id['ID'] for tpn_id in emergency_bus['TrainPathNodes']]
 
-    # Get the list of odt facing the neighbourhood operator
-    odt_facing_neighbourhood_operator, timetable_prime_graph, odt_priority_list_original = \
-        passenger_assignment.find_passenger_affected_by_emergency_bus(timetable_prime_graph,
-                                                                      tpns_bus,
-                                                                      odt_priority_list_original)
-
     # Create and add driving and waiting edges and nodes to the timetable graph
     nodes_edges_dict = timetable_graph.create_transit_edges_nodes_emergency_bus(emergency_bus)
     timetable_graph.add_transit_nodes_edges_single_train_to_graph(timetable_prime_graph, nodes_edges_dict, bus=True)
@@ -523,6 +517,12 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
                                                   parameters)
     timetable_prime_graph.add_weighted_edges_from(transfer_edges)
     nx.set_edge_attributes(timetable_prime_graph, transfer_edges_attribute)
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, timetable_prime_graph, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_emergency_bus(timetable_prime_graph,
+                                                                      transfer_edges,
+                                                                      odt_priority_list_original)
 
     # Update the list of edges from origin to destination
     edges_o_stations_d = timetable_graph.add_edges_of_bus_from_o_stations_d(edges_o_stations_d,
