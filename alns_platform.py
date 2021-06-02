@@ -954,7 +954,7 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
             travel_time += odt_priority_list_original[i][5]
             odt_priority_list_original[i][6] = travel_time
         # When there is no path from the beginning, it is assign None hence type error
-        except TypeError:
+        except (TypeError, KeyError):
             travel_time = odt_priority_list_original[i][5]
             odt_priority_list_original[i][6] = travel_time
 

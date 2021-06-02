@@ -1,3 +1,4 @@
 input/2010_Distanz_Systemfahrplan_B.txt
 input/2010_TravelTime_allZones.txt
 output/pickle/solution_archive.pkl
+output/shelve/*

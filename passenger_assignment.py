@@ -1304,7 +1304,7 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
 
     # Get the node for the train is cancel from and index
     extract_node = [item for item in arr_dep_nodes_train if item[2] == tpn_part_delay.id]
-    index_first_node_delay = arr_dep_nodes_train.index(extract_node[0])
+    index_first_node_delay = arr_dep_nodes_train.index(extract_node[0])-1
 
     # Reduced the list from the first node to be cancelled to the end
     arr_dep_nodes_train = arr_dep_nodes_train[index_first_node_delay:]
@@ -1373,7 +1373,9 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
 
     # Get the node for the train is cancel from and index
     extract_node = [item for item in arr_dep_nodes_train if item[2] == train_path_node_cancel_from.id]
-    index_first_node_cancel = arr_dep_nodes_train.index(extract_node[0])
+    # Since the node includes also arrival of the train. It means the train will not start from the previous node. Hence
+    # we need to take the passenger from there to
+    index_first_node_cancel = arr_dep_nodes_train.index(extract_node[0])-1
 
     # Reduced the list from the first node to be cancelled to the end
     arr_dep_nodes_train = arr_dep_nodes_train[index_first_node_cancel:]

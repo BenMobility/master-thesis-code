@@ -391,15 +391,15 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
                 if comm_stops > 3:
                     train_found = True
 
-    # Cancel from last comm stop
+    # Delay from last comm stop
     idx_tpn_delay_from = identify_departure_train_path_node_id_of_train_to_delay_from(train_to_delay, parameters)
-    tpn_cancel_from = train_to_delay.train_path_nodes[idx_tpn_delay_from]
+    tpn_delay_from = train_to_delay.train_path_nodes[idx_tpn_delay_from]
 
     # Get the list of odt facing the neighbourhood operator
     odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
         passenger_assignment.find_passenger_affected_by_part_delay(prime_timetable,
                                                                    train_to_delay,
-                                                                   tpn_cancel_from,
+                                                                   tpn_delay_from,
                                                                    odt_priority_list_original)
 
     # Set emergency train to false and check that the train to delay is an emergency train
