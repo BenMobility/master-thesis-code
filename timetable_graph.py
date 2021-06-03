@@ -1453,21 +1453,24 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
     # Loop through all path nodes of a bus
     n = 0
-    for train_path_node in bus.train_path_nodes:
+    for train_path_node in bus['TrainPathNodes']:
         n += 1
 
         # Update time and node
-        arrival_time_this_node = train_path_node.arrival_time
-        arrival_node_this_node = train_path_node.node_id
-        departure_time_this_node = train_path_node.departure_time
-        departure_node_this_node = train_path_node.node_id
+        arrival_time_this_node = train_path_node['ArrivalTime']
+        arrival_node_this_node = train_path_node['NodeID']
+        departure_time_this_node = train_path_node['DepartureTime']
+        departure_node_this_node = train_path_node['NodeID']
 
         # First node
         if n == 1:
-            node_name_dep_this = (departure_node_this_node, train_path_node.departure_time, train_path_node.id, 'd')
+            node_name_dep_this = (departure_node_this_node,
+                                  train_path_node['DepartureTime'],
+                                  train_path_node['ID'],
+                                  'd')
             departure_nodes.append(node_name_dep_this)
-            attributes = {'train': bus.id, 'type': 'departureNode', 'departureTime': departure_time_this_node,
-                          'StopStatus': train_path_node.stop_status.name, 'bus': 'EmergencyBus'}
+            attributes = {'train': bus['ID'], 'type': 'departureNode', 'departureTime': departure_time_this_node,
+                          'StopStatus': train_path_node['StopStatus'], 'bus': 'EmergencyBus'}
             departure_nodes_attributes[node_name_dep_this] = attributes
             departure_time_last_node = departure_time_this_node
             departure_node_last_node = departure_node_this_node
@@ -1475,10 +1478,10 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
         # End of the bus
         elif n == 2:
-            node_name_arr_this = (arrival_node_this_node, train_path_node.arrival_time, train_path_node.id, 'a')
+            node_name_arr_this = (arrival_node_this_node, train_path_node['ArrivalTime'], train_path_node['ID'], 'a')
             arrival_nodes.append(node_name_arr_this)
-            attributes = {'train': bus.id, 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
-                          'StopStatus': train_path_node.stop_status.name, 'bus': 'EmergencyBus'}
+            attributes = {'train': bus['ID'], 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
+                          'StopStatus': train_path_node['StopStatus'], 'bus': 'EmergencyBus'}
 
             arrival_nodes_attributes[node_name_arr_this] = attributes
 
@@ -1487,7 +1490,7 @@ def create_transit_edges_nodes_emergency_bus(bus):
             driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
             driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                            'type': 'driving',
-                                                                                           'bus_id': bus.id,
+                                                                                           'bus_id': bus['ID'],
                                                                                            'bus': True,
                                                                                            'odt_assigned': []}
 
