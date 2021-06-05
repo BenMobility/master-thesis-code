@@ -92,7 +92,7 @@ min_headway = 120  # Minimum headway between two consecutive trains (in seconds)
 deviation_penalty_cancel = 50  # Penalty for deviated the initial timetable with a cancellation [39]
 deviation_penalty_delay = 1  # Penalty for deviated the initial timetable with a delay [40]
 deviation_penalty_emergency = 1000  # Penalty for deviated the initial timetable with an emergency [41]
-deviation_penalty_bus = deviation_penalty_emergency / 10  # Penalty for deviated the initial timetable with a bus [42]
+deviation_penalty_bus = 1.2  # Penalty for deviated the initial timetable with a bus [42]
 deviation_penalty_rerouted = 10  # Penalty for deviated the initial timetable with a rerouted train [43]
 
 # Acceptance or rejection solutions
@@ -147,12 +147,14 @@ print('Trains timetable done!')
 print('keep track of the path nodes on the closed tracks.')
 track_info = alns_platform.TrackInformation(trains_timetable, closed_track_ids)
 path_nodes_on_closed_track = []
+stations_on_closed_tracks = []
 for train_on_closed_track in track_info.trains_on_closed_tracks:
     for node in train_on_closed_track.train_path_nodes:
         if any([node.section_track_id == c for c in closed_track_ids]):
             path_nodes_on_closed_track.append((node.node_id, node.arrival_time.strftime("%Y-%m-%dT%H:%M:%S"), node.id,
                                                'a'))
-
+            stations_on_closed_tracks.append(node.node_id)
+parameters.stations_on_closed_tracks = np.unique(stations_on_closed_tracks)
 # Timetable with waiting edges and transfer edges
 print('\nCreate timetable with waiting edges and transfer edges.')
 timetable_waiting_transfer, stations_with_commercial_stop = \

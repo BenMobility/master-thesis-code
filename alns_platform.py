@@ -38,6 +38,8 @@ def start(timetable_initial_graph, infra_graph, trains_timetable, parameters):
     # Get the closed tracks from Viriato, the possessions are defined in Viriato
     print('Get the closed tracks.')
     possessions = viriato_interface.get_section_track_closures(parameters.time_window)
+    parameters.disruption_time = (
+        possessions[0].closure_time_window_from_node.from_time, possessions[0].closure_time_window_to_node.to_time)
 
     # Increase weight on the close track edges todo: change to remove edge after benchmark
     print('Increase the weights on the edges.')
@@ -117,12 +119,17 @@ def used_tracks_all_trains(trains_timetable, closed_section_track_ids):
     # Identify all trains driving on closed tracks
     trains_on_closed_tracks = []
     for train in trains_timetable:
-        train_id_debug_string[train.id] = train.debug_string
+        try:
+            train_id_debug_string[train.id] = train.debug_string
 
-        used_tracks_single_train(closed_section_track_ids, nr_usage_tracks, train_path_node_information,
-                                 track_sequences_of_train_path_node, train, trains_on_closed_tracks,
-                                 tuple_key_value_of_train_path_node_id_arrival,
-                                 tuple_key_value_of_train_path_node_id_departure, idx_start_delay=0)
+            used_tracks_single_train(closed_section_track_ids, nr_usage_tracks, train_path_node_information,
+                                     track_sequences_of_train_path_node, train, trains_on_closed_tracks,
+                                     tuple_key_value_of_train_path_node_id_arrival,
+                                     tuple_key_value_of_train_path_node_id_departure, idx_start_delay=0)
+        # Emergency bus
+        except AttributeError:
+            continue
+
 
     # sort the sequence tracks dict by arrival time from early to late
     for k, v in track_sequences_of_train_path_node.items():
@@ -421,7 +428,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
                                                                  odt_priority_list_original,
                                                                  odt_facing_neighbourhood_operator)
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
-                                                                                            infra_graph)
+                                                                                            infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
                                                                                                      initial_timetable,
                                                                                                      changed_trains,
@@ -453,6 +460,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Save the current solution, the accepted solution
             z_cur_accepted.append(accepted_solution)
             z_cur_archived.append(archived_solution)
+
             z_op_accepted.append(timetable_solution_graph.total_dist_train)
             z_de_reroute_accepted.append(timetable_solution_graph.deviation_reroute_timetable)
             z_de_cancel_accepted.append(timetable_solution_graph.deviation_cancel_timetable)
@@ -514,7 +522,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Record the results of the current solution timetable
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
-                                                                                            infra_graph)
+                                                                                            infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
                                                                                                      initial_timetable,
                                                                                                      changed_trains,
@@ -608,16 +616,22 @@ def identify_candidates_for_operators(trains_timetable, parameters, timetable_so
     for train in trains_timetable:
         # Set commercial stop at 0
         comm_stops = 0
-        if isinstance(train.id, str):
-            # It is a bus
-            continue
-        # Compute the number of commercial stop in the train path
-        for train_path_node in train.train_path_nodes:
-            if train_path_node.stop_status == 'commercial_stop':
-                comm_stops += 1
-        # If the number of commercial stop is less than 2, cancel the train
-        if comm_stops <= 2:
-            parameters.set_of_trains_for_operator['Cancel'].append(train.id)
+        try:
+            # Compute the number of commercial stop in the train path
+            for train_path_node in train.train_path_nodes:
+                if train_path_node.stop_status == 'commercial_stop':
+                    comm_stops += 1
+            # If the number of commercial stop is less than 2, cancel the train
+            if comm_stops <= 2:
+                parameters.set_of_trains_for_operator['Cancel'].append(train.id)
+        except AttributeError:
+            # Compute the number of commercial stop in the train path
+            for train_path_node in train['TrainPathNodes']:
+                if train_path_node['StopStatus'] == 'commercial_stop':
+                    comm_stops += 1
+            # If the number of commercial stop is less than 2, cancel the train
+            if comm_stops <= 2:
+                parameters.set_of_trains_for_operator['Cancel'].append(train['ID'])
     # Set all train flows list
     all_train_flows = {}
     for (u, v, attr) in timetable_prime_graph.edges.data():
@@ -969,7 +983,7 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
     return timetable_solution_graph, timetable_full_graph, odt_priority_list_original
 
 
-def distance_travelled_all_trains(trains_timetable, infra_graph):
+def distance_travelled_all_trains(trains_timetable, infra_graph, parameters):
     # Set distance to zero
     total_distance = 0
 
@@ -980,9 +994,14 @@ def distance_travelled_all_trains(trains_timetable, infra_graph):
             continue
 
         # Loop through all the nodes in the train path and add the distance in the total distance
-        for tpn in train.train_path_nodes:
-            if tpn.section_track_id is not None:
-                total_distance += infra_graph.graph['cache_trackID_dist'][tpn.section_track_id]
+        try:
+            for tpn in train.train_path_nodes:
+                if tpn.section_track_id is not None:
+                    total_distance += infra_graph.graph['cache_trackID_dist'][tpn.section_track_id]
+        # It is a bus
+        except AttributeError:
+            # It is a bus that takes 10 minutes to do the run. Average of 50 km/hr, 12 km for 10 minutes. (decimeter)
+            total_distance += parameters.deviation_penalty_bus * 40000
     # The distance is in decimeter --> divide by 10 * 1000 to have it in km
     total_distance = round(total_distance / (10*1000), 1)
     return total_distance
@@ -1013,15 +1032,18 @@ def deviation_reroute_timetable(trains_timetable, timetable_initial_graph, chang
 
             # Check in the train is in the current timetable
             if train_id in timetable_prime.keys():
-                # Loop through the nodes of the train path
-                for tpn in timetable_prime[train_id].train_path_nodes:
-                    if tpn.id == value['StartEndRR_tpnID']:
-                        dep_time_start_rr = tpn.departure_time
-                        dep_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time
+                try:
+                    # Loop through the nodes of the train path
+                    for tpn in timetable_prime[train_id].train_path_nodes:
+                        if tpn.id == value['StartEndRR_tpnID']:
+                            dep_time_start_rr = tpn.departure_time
+                            dep_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time
 
-                        # Add the penalty for the rerouted
-                        total_deviation += d_rerouted * (dep_time_end_train - dep_time_start_rr).seconds / 60
-                        break
+                            # Add the penalty for the rerouted
+                            total_deviation += d_rerouted * (dep_time_end_train - dep_time_start_rr).seconds / 60
+                            break
+                except AttributeError:
+                    continue
 
     return round(total_deviation, 1)
 

@@ -1185,8 +1185,9 @@ def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
                 dep_station_in_dict.append([x, y])
             else:
                 print('Check transfer edges single train, somehow a not train node appears in timetable graph')
-        except KeyError:
-            print(x, y)
+        # Index error refers to a destination node where x[0] shows an error because it is a scalar
+        except (KeyError, IndexError):
+            continue
 
     # Initiate the transfer edges
     transfer_edges = list()
@@ -1394,11 +1395,10 @@ def add_edges_of_train_from_o_stations_d(edges_o_stations_d, train, prime_timeta
     return edges_o_stations_d
 
 
-def add_edges_of_bus_from_o_stations_d(edges_o_stations_d, train, prime_timetable, parameters, tpn_idx_start_delay,
-                                       tpn_delay):
+def add_edges_of_bus_from_o_stations_d(edges_o_stations_d, bus, prime_timetable, parameters):
     # Get the arrival and departure node of the bus
-    arr_dep_nodes_bus = [(n, v) for n, v in prime_timetable.nodes(data=True) if v['train'] == train.id
-                         and v['type'] in ['arrivalNode', 'departureNode'] and n[2] in tpn_delay]
+    arr_dep_nodes_bus = [(n, v) for n, v in prime_timetable.nodes(data=True) if v['train'] == bus['ID']
+                         and v['type'] in ['arrivalNode', 'departureNode']]
 
     # Get the OD time from the parameters and the zone candidates as well
     odt_by_origin = parameters.odt_by_origin
@@ -1464,8 +1464,9 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
         # First node
         if n == 1:
+            departure_time_str = datetime.datetime.strftime(train_path_node['DepartureTime'], "%Y-%m-%dT%H:%M:%S")
             node_name_dep_this = (departure_node_this_node,
-                                  train_path_node['DepartureTime'],
+                                  departure_time_str,
                                   train_path_node['ID'],
                                   'd')
             departure_nodes.append(node_name_dep_this)
@@ -1478,7 +1479,11 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
         # End of the bus
         elif n == 2:
-            node_name_arr_this = (arrival_node_this_node, train_path_node['ArrivalTime'], train_path_node['ID'], 'a')
+            arrival_time_str = datetime.datetime.strftime(train_path_node['ArrivalTime'], "%Y-%m-%dT%H:%M:%S")
+            node_name_arr_this = (arrival_node_this_node,
+                                  arrival_time_str,
+                                  train_path_node['ID'],
+                                  'a')
             arrival_nodes.append(node_name_arr_this)
             attributes = {'train': bus['ID'], 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
                           'StopStatus': train_path_node['StopStatus'], 'bus': 'EmergencyBus'}

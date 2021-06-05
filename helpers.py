@@ -1133,7 +1133,14 @@ def build_dict_from_viriato_object_train_id(trains_timetable):
     :param trains_timetable: list of train's object.
     :return: converted dictionary keyed by key
     """
-    return dict((train.id, train) for train in trains_timetable)
+    timetable = {}
+    for train in trains_timetable:
+        try:
+            timetable[train.id] = train
+        except AttributeError:
+            timetable[train['ID']] = train
+    # dict((train.id, train) for train in trains_timetable)
+    return timetable
 
 
 def build_dict_from_viriato_object_run_time_train_path_node_id(run_time):

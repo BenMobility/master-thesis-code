@@ -489,8 +489,8 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
         bus_id = 'Bus' + str(bus_id_nr)
 
     # Get the time window and the duration of the window in minutes
-    time_window_from_time = parameters.time_window.from_time
-    time_window_to_time = parameters.time_window.to_time
+    time_window_from_time = parameters.disruption_time[0]
+    time_window_to_time = parameters.disruption_time[1]
     time_window_duration_minutes = round((time_window_to_time - time_window_from_time).seconds / 60, 0)
 
     # Generate the departure time of the emergency bus inside the time window in a randomize way
@@ -498,7 +498,7 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
     departure_time_bus = time_window_from_time + datetime.timedelta(minutes=add_time_bus)
 
     # Create the emergency bus
-    emergency_bus = bus_add_bus_path_nodes(bus_id, departure_time_bus)
+    emergency_bus = bus_add_bus_path_nodes(bus_id, departure_time_bus, parameters)
 
     # Get the train path nodes of the bus for the timetable graph
     tpns_bus = [tpn_id['ID'] for tpn_id in emergency_bus['TrainPathNodes']]
@@ -528,9 +528,7 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
     edges_o_stations_d = timetable_graph.add_edges_of_bus_from_o_stations_d(edges_o_stations_d,
                                                                             emergency_bus,
                                                                             timetable_prime_graph,
-                                                                            parameters,
-                                                                            0,
-                                                                            tpns_bus)
+                                                                            parameters)
 
     # Update the changed trains method
     changed_trains[bus_id] = {'train_id': bus_id,
@@ -546,7 +544,7 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
            odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
-def bus_add_bus_path_nodes(bus_id, departure_time):
+def bus_add_bus_path_nodes(bus_id, departure_time, parameters):
     # Initiate the bus dictionary
     bus = {}
 
@@ -559,11 +557,11 @@ def bus_add_bus_path_nodes(bus_id, departure_time):
 
     # Scenario low traffic, hence the bus needs to serve between Walisellen and Dietlikon. Direction is chosen randomly
     if np.random.uniform(0.0, 1.0) < 0.5:
-        start = 543  # Walisellen
-        end = 199  # Dietlikon
+        start = parameters.stations_on_closed_tracks[1]
+        end = parameters.stations_on_closed_tracks[0]
     else:
-        start = 199
-        end = 543
+        start = parameters.stations_on_closed_tracks[0]
+        end = parameters.stations_on_closed_tracks[1]
 
     # Save the the bus path nodes
     bus['TrainPathNodes'] = [{
