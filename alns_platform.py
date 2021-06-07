@@ -399,6 +399,50 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Print the selected operator
             print(f'Selected operator: {operator}')
 
+            # to debug
+            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
+            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(edges_o_stations_d, 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
+            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
+            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
+            pickle_results(infra_graph, 'output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(operator, 'output/pickle/debug/operator_'+str(n_iteration)+'.pkl')
+            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
+            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(edges_o_stations_d , 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
+            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
+            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_solution_prime_graph, 'output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(initial_timetable, 'output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(z_op_current, 'output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_reroute_current, 'output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_cancel_current, 'output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_tt_current, 'output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_solution_graph, 'output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(scores, 'output/pickle/debug/scores_'+str(n_iteration)+'.pkl')
+            pickle_results(temp_i, 'output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl')
+            pickle_results(solution_archive, 'output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl')
+            pickle_results(z_cur_accepted, 'output/pickle/debug/z_cur_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_cur_archived, 'output/pickle/debug/z_cur_archived_'+str(n_iteration)+'.pkl')
+            pickle_results(z_op_accepted, 'output/pickle/debug/z_op_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_reroute_accepted, 'output/pickle/debug/z_de_reroute_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_cancel_accepted, 'output/pickle/debug/z_de_cancel_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_tt_accepted, 'output/pickle/debug/z_tt_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_for_pickle, 'output/pickle/debug/z_for_pickle_'+str(n_iteration)+'.pkl')
+            pickle_results(n_iteration, 'output/pickle/debug/n_iteration_'+str(n_iteration)+'.pkl')
+            pickle_results(number_temperature_changes, 'output/pickle/debug/number_temperature_changes_'+str(n_iteration)+'.pkl')
+            pickle_results(all_accepted_solutions, 'output/pickle/debug/all_accepted_solutions_'+str(n_iteration)+'.pkl')
+            pickle_results(return_to_archive_at_iteration, 'output/pickle/debug/return_to_archive_at_iteration_'+str(n_iteration)+'.pkl')
+            pickle_results(iterations_until_return_archives, 'output/pickle/debug/iterations_until_return_archives_'+str(n_iteration)+'.pkl')
+            pickle_results(number_usage, 'output/pickle/debug/number_usage_'+str(n_iteration)+'.pkl')
+            pickle_results(probabilities, 'output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl')
+            pickle_results(weights, 'output/pickle/debug/_'+str(n_iteration)+'.pkl')
+            pickle_results(temperature_it, 'output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl')
+
             # Create a new timetable with the current solution but without flow
             timetable_prime_graph = timetable_solution_graph.graph
 
@@ -520,6 +564,48 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
                 find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solution_prime_graph,
                                           edges_o_stations_d)
 
+            # to debug
+            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
+            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(edges_o_stations_d, 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
+            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
+            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
+            pickle_results(infra_graph, 'output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
+            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(edges_o_stations_d , 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
+            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
+            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
+            pickle_results(timetable_solution_prime_graph, 'output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl')
+            pickle_results(initial_timetable, 'output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl')
+            pickle_results(z_op_current, 'output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_reroute_current, 'output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_cancel_current, 'output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl')
+            pickle_results(z_tt_current, 'output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl')
+            pickle_results(scores, 'output/pickle/debug/scores_'+str(n_iteration)+'.pkl')
+            pickle_results(temp_i, 'output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl')
+            pickle_results(solution_archive, 'output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl')
+            pickle_results(z_cur_accepted, 'output/pickle/debug/z_cur_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_cur_archived, 'output/pickle/debug/z_cur_archived_'+str(n_iteration)+'.pkl')
+            pickle_results(z_op_accepted, 'output/pickle/debug/z_op_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_reroute_accepted, 'output/pickle/debug/z_de_reroute_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_de_cancel_accepted, 'output/pickle/debug/z_de_cancel_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_tt_accepted, 'output/pickle/debug/z_tt_accepted_'+str(n_iteration)+'.pkl')
+            pickle_results(z_for_pickle, 'output/pickle/debug/z_for_pickle_'+str(n_iteration)+'.pkl')
+            pickle_results(n_iteration, 'output/pickle/debug/n_iteration_'+str(n_iteration)+'.pkl')
+            pickle_results(number_temperature_changes, 'output/pickle/debug/number_temperature_changes_'+str(n_iteration)+'.pkl')
+            pickle_results(all_accepted_solutions, 'output/pickle/debug/all_accepted_solutions_'+str(n_iteration)+'.pkl')
+            pickle_results(return_to_archive_at_iteration, 'output/pickle/debug/return_to_archive_at_iteration_'+str(n_iteration)+'.pkl')
+            pickle_results(iterations_until_return_archives, 'output/pickle/debug/iterations_until_return_archives_'+str(n_iteration)+'.pkl')
+            pickle_results(number_usage, 'output/pickle/debug/number_usage_'+str(n_iteration)+'.pkl')
+            pickle_results(probabilities, 'output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl')
+            pickle_results(weights, 'output/pickle/debug/_'+str(n_iteration)+'.pkl')
+            pickle_results(temperature_it, 'output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl')
+
             # Record the results of the current solution timetable
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph, parameters)
@@ -534,7 +620,8 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
 
             # Check if the current solution has a value for deviation, if not, it means that the algorithm platform
             # has not been restarted for the original timetable
-            if timetable_solution_prime_graph.deviation_reroute_timetable == 0:
+            if timetable_solution_prime_graph.deviation_reroute_timetable == 0 \
+                    and timetable_solution_prime_graph.deviation_cancel_timetable == 0:
                 raise Exception('The deviation restored feasibility is 0, we need to restart the Viriato algorithm'
                                 'platform')
 
@@ -886,6 +973,11 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
     print('Assign the passenger on the timetable graph')
     odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
         passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
+
+    # to debug
+    pickle_results(parameters, 'output/pickle/debug/parameters_passenger.pkl')
+    pickle_results(odt_facing_capacity_constraint, 'output/pickle/debug/odt_facing_capacity_constraint_passenger.pkl')
+    pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_passenger.pkl')
 
     if odt_facing_capacity_constraint is None:
         odt_priority_list_original = copy.deepcopy(parameters.odt_as_list)

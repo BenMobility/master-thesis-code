@@ -484,12 +484,6 @@ def find_sp_for_all_ods_full_graph_scipy(timetable_prime_graph, parameters, edge
             served_unserved_pass[0] += group_size
             total_traveltime += group_size * length
 
-            # Passenger assignment and capacity constraint
-            if parameters.assign_passenger:
-                timetable_prime_graph = \
-                    assign_pass_and_remove_arcs_exceeded_capacity(timetable_prime_graph, parameters, path,
-                                                                  (target, group_size))
-
         # Print out the iteration with the time computation
         if i % 100 == 0:
             if print_out:

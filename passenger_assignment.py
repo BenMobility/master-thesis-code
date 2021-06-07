@@ -37,7 +37,10 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
 
         # Compute the shortest path with dijkstra
         try:
-            _, p = shortest_path.single_source_dijkstra(timetable_initial_graph, odt[0], odt[1])
+            _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
+                                                        odt[0],
+                                                        odt[1],
+                                                        cutoff=1000)
             # Save the path
             odt_priority_list_original[i][4] = p
             # Save the length of the path
@@ -271,12 +274,12 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                 try:
                     # First make sure that they won't use the path with the full capacity constraint, do not forget to
                     # save and restore the initial weight on the edge
-                    initial_weight = timetable_initial_graph[odt[2][0]][odt[2][1]]['weight']
+                    initial_weight = copy.deepcopy(timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'])
                     timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = parameters.weight_closed_tracks
                     _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
                                                                 odt[1][-1],
                                                                 odt[0][1],
-                                                                cutoff=parameters.weight_closed_tracks - 1)
+                                                                cutoff=1000)
                     timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = initial_weight
                     # Save the path, origin to destination with the new path
                     odt_list[i][1] = odt_list[i][1] + p[1:]
@@ -721,7 +724,7 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                     _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
                                                                 odt[1][-1],
                                                                 odt[0][1],
-                                                                cutoff=parameters.weight_closed_tracks - 1)
+                                                                cutoff=1000)
                     # Save the path, origin to destination with the new path
                     odt_list[i][1] = odt_list[i][1] + p[1:]
 
@@ -964,12 +967,15 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                         length_on_original_path = len(odt[1]) - len(p[1:])
 
                                         # Transform the odt to have the same format
-                                        odt_with_original_format = [odt[0][0],
-                                                                    odt[0][1],
-                                                                    odt[0][2],
-                                                                    odt[0][3],
-                                                                    list(odt[1][:length_on_original_path]),
-                                                                    0]
+                                        try:
+                                            odt_with_original_format = [odt[0][0],
+                                                                        odt[0][1],
+                                                                        odt[0][2],
+                                                                        odt[0][3],
+                                                                        list(odt[1][:length_on_original_path]),
+                                                                        0]
+                                        except ValueError:
+                                            print(odt)
 
                                         index_in_original_list = \
                                             odt_priority_list_original.index(odt_with_original_format)

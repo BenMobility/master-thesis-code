@@ -23,7 +23,7 @@ np.random.seed(random_seed)  # Random seed for the main code
 
 # %% filter, alns
 filter_passengers = False
-start_alns = False
+start_alns = True
 debug_mode_passenger = False
 debug_mode_train = False
 
@@ -39,8 +39,8 @@ th_zone_selection = 8000  # Threshold of the zone selection in meters [0]
 nb_zones_to_connect = 1  # Number of zones to connect in total [1]
 nb_stations_to_connect = 2  # Number of stations to connect (in euclidean) [2]
 min_nb_passenger = 0  # Minimum number of passenger [3]
-min_transfer_time = 4  # Original: 4 min Minimum transfer time (m) in minutes [4]
-max_transfer_time = 15  # Original: 15 min  Maximum transfer time (M) in minutes [5]
+min_transfer_time = 2  # Original: 4 min Minimum transfer time (m) in minutes [4]
+max_transfer_time = 20  # Original: 15 min  Maximum transfer time (M) in minutes [5]
 min_transfer_time_bus = 1  # Minimum transfer time in minutes for emergency buses [6]
 max_transfer_time_bus = 20  # Maximum transfer time in minutes for emergency buses [7]
 origin_train_departure_min_time = 2  # (2 min) Minimum waiting time in minutes for the origin train departure [8]
@@ -56,9 +56,9 @@ t_start_de_reroute = 10 ** 6  # Starting temperature for Simulated Annealing on 
 t_start_de_cancel = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [56]
 t_start_tt = 10 ** 6  # Starting temperature for Simulated Annealing on the travel time objective [18]
 weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]
-train_capacity = 1500  # Number of passenger per train [20]
+train_capacity = 500  # Number of passenger per train [20]
 bus_capacity = 100  # Number of passenger per bus in Zurich [21]
-penalty_no_path = 9000  # Penalty of no assignment equals duration in minutes [22] todo: define better
+penalty_no_path = 120  # Penalty of no assignment equals duration in minutes [22] todo: define better
 delayTime_to_consider_cancel = 30  # Delay time to consider for full cancel in minutes [23]
 delayTime_to_consider_partCancel = 10  # Delay time to consider for part cancel in minutes [24]
 commercial_stops = 1  # Threshold for a train to be considered in the timetable [25]
@@ -84,7 +84,7 @@ capacity_constraint = False  # False, if capacity constraint is included or not 
 assign_passenger = True  # True, makes assign passenger during the shortest path algorithm in ALNS [38]
 
 #  ALNS Neighbourhood search
-number_iteration = 10  # Number of iteration for the ALNS [33]
+number_iteration = 400  # Number of iteration for the ALNS [33]
 number_iteration_archive = 100  # Number of iteration before archiving the solution, binder use 2000 [34]
 delay_options = [5, 10, 15, 20]  # The options for how long delaying the train for delay operator [35]
 time_delta_delayed_bus = 10  # Time added from the delayed departure time of the bus to compute its arrival time [36]
@@ -209,60 +209,10 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-# # Assign the passenger on the timetable graph
-# print('Assign the passenger on the timetable graph')
-# odt_facing_capacity_constraint, parameters, timetable_initial_graph = passenger_assignment.capacity_constraint_1st_loop(
-#     parameters, timetable_initial_graph)
-#
-# if odt_facing_capacity_constraint is None:
-#     pass
-# else:
-#     timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original =\
-#         passenger_assignment.capacity_constraint_2nd_loop(parameters,
-#                                                           odt_facing_capacity_constraint,
-#                                                           timetable_initial_graph)
-#
-# print('Assignment on undisrupted network')
-# # Get the passenger facing disruption
-# # Get the edges on the closed tracks
-# print('Get the edges on the closed and get the passengers facing the disruption')
-# edges_on_closed_tracks = passenger_assignment.get_edges_on_closed_tracks(parameters, timetable_initial_graph)
-#
-# # Create the list of odt facing disruption
-# if 'odt_priority_list_original' in locals():
-#     odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
-#                                                                                    timetable_initial_graph,
-#                                                                                    odt_priority_list_original)
-# else:
-#     odt_facing_disruption = passenger_assignment.create_list_odt_facing_disruption(edges_on_closed_tracks,
-#                                                                                    timetable_initial_graph,
-#                                                                                    parameters.odt_as_list)
-# print('Odt facing disruption created.')
-# # Assign the passengers facing disruption
-# if 'odt_priority_list_original' in locals():
-#     timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
-#     odt_priority_list_original = passenger_assignment.assignment_with_disruption(odt_priority_list_original,
-#                                                                                  odt_facing_disruption,
-#                                                                                  timetable_initial_graph,
-#                                                                                  parameters)
-# else:
-#     timetable_initial_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
-#     odt_priority_list_original = passenger_assignment.assignment_with_disruption(parameters.odt_as_list,
-#                                                                                  odt_facing_disruption,
-#                                                                                  timetable_initial_graph,
-#                                                                                  parameters)
-
 print('Save the output before the alns.')
 # And save the output of the passengers assignment
-# alns_platform.pickle_results(odt_priority_list_original,
-#                              'output/pickle/odt_priority_list_original_alns.pkl')
-# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/odt_facing_capacity_constraint_alns.pkl')
-# alns_platform.pickle_results(odt_facing_disruption, 'output/pickle/odt_facing_disruption_alns.pkl')
 alns_platform.pickle_results(parameters, 'output/pickle/parameters_alns.pkl')
 alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_alns.pkl')
-# if 'odt_facing_capacity_dict_for_iteration' in locals():
-#     alns_platform.pickle_results(odt_facing_capacity_dict_for_iteration,
-#                                  'output/pickle/odt_facing_capacity_dict_facing_capacity_constraint_alns.pkl')
 alns_platform.pickle_results(infra_graph, 'output/pickle/infra_graph_for_alns.pkl')
 alns_platform.pickle_results(trains_timetable, 'output/pickle/trains_timetable_for_alns.pkl')
 

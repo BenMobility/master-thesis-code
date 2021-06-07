@@ -1478,7 +1478,7 @@ def restore_disruption_feasibility(infra_graph, track_info, parameters):
         train_disruption_infeasible = try_to_reroute_train_via_different_nodes(train_disruption_infeasible, infra_graph,
                                                                                parameters)
 
-        if hasattr(train_disruption_infeasible, 'reroute'):
+        if hasattr(train_disruption_infeasible, 'reroute_path'):
             rerouted_train = viriato_interface.reroute_train(train_disruption_infeasible,
                                                              train_disruption_infeasible.reroute_path,
                                                              train_disruption_infeasible.index_reroute, track_info,
@@ -1568,8 +1568,8 @@ def restore_disruption_feasibility(infra_graph, track_info, parameters):
                                                        train_disruption_infeasible.cancel_train_after)
 
             # Cancel the train partially on Viriato
-            train_disruption_infeasible = \
-                viriato_interface.cancel_train_after(train_disruption_infeasible.cancel_train_after)
+            train_canceled_partially = \
+                viriato_interface.cancel_train_after(train_id, train_disruption_infeasible.cancel_train_after)
 
             # Update the changed trains list
             changed_trains[train_id] = {'train_id': train_id,
@@ -1684,7 +1684,7 @@ def try_to_reroute_train_via_different_nodes(train, infra_graph, parameters):
     try:
         # With the cutoff of the weight_closed_tracks we make sure the path via this edges is not considered
         path = nx.single_source_dijkstra(infra_graph, reroute_from_node.node_id, reroute_to_node.node_id,
-                                         cutoff=(parameters.weight_closed_tracks-1))
+                                         cutoff=100000)
         path_found = True
         train.reroute = True
         train.reroute_path = path
@@ -1705,7 +1705,7 @@ def try_to_reroute_train_via_different_nodes(train, infra_graph, parameters):
         first_node_after_closure = train.train_path_nodes[n].node_id
         try:
             path = nx.single_source_dijkstra(infra_graph, reroute_from_node.node_id, first_node_after_closure,
-                                             cutoff=parameters.weight_closed_tracks)
+                                             cutoff=100000)
             index_reroute[1] = n
             viriato_node_rerouted_to = viriato_interface.get_node_info(first_node_after_closure)
             path_found = True
