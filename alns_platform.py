@@ -399,6 +399,18 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Print the selected operator
             print(f'Selected operator: {operator}')
 
+            # Create a new timetable with the current solution but without flow
+            timetable_prime_graph = timetable_solution_graph.graph
+
+            # Create a dict of edges that combines origin to stations and stations to destination edges
+            edges_o_stations_d = helpers.CopyEdgesOriginStationDestination(timetable_solution_graph.edges_o_stations_d)
+
+            # Create a new empty solution
+            timetable_solution_prime_graph = helpers.Solution()
+
+            # Apply the operator on the current solution
+            print('Apply the operator on the current solution.')
+
             # to debug
             pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
             pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
@@ -443,17 +455,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             pickle_results(weights, 'output/pickle/debug/_'+str(n_iteration)+'.pkl')
             pickle_results(temperature_it, 'output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl')
 
-            # Create a new timetable with the current solution but without flow
-            timetable_prime_graph = timetable_solution_graph.graph
-
-            # Create a dict of edges that combines origin to stations and stations to destination edges
-            edges_o_stations_d = helpers.CopyEdgesOriginStationDestination(timetable_solution_graph.edges_o_stations_d)
-
-            # Create a new empty solution
-            timetable_solution_prime_graph = helpers.Solution()
-
-            # Apply the operator on the current solution
-            print('Apply the operator on the current solution.')
             timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
             odt_facing_neighbourhood_operator, odt_priority_list_original = \
                 apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,

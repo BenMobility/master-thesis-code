@@ -6,10 +6,10 @@ import neighbourhood_operators
 import timetable_graph
 
 np.random.seed(42)
-n_iteration = 1
+n_iteration = 3
 
 infra_graph = np.load('output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
-# operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
+operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
 changed_trains = np.load('output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl', allow_pickle=True)
 trains_timetable = np.load('output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl', allow_pickle=True)
 edges_o_stations_d = np.load('output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl', allow_pickle=True)
@@ -44,25 +44,23 @@ probabilities = np.load('output/pickle/debug/probabilities_'+str(n_iteration)+'.
 # weights = np.load('output/pickle/debug/weights_'+str(n_iteration)+'.pkl', allow_pickle=True)
 temperature_it = np.load('output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl', allow_pickle=True)
 
-# Compute the total travel time
-i = -1
-while i != len(odt_priority_list_original) - 1:
-    i += 1
-    travel_time = 0
-    try:
-        for j in range(len(odt_priority_list_original[i][4]) - 1):
-            starting_node = odt_priority_list_original[i][4][j]
-            ending_node = odt_priority_list_original[i][4][j + 1]
-            travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
-        # Add the penalty if it has a penalty because it did not reach the destination (either 0 or penalty)
-        travel_time += odt_priority_list_original[i][5]
-        odt_priority_list_original[i][6] = travel_time
-    # When there is no path from the beginning, it is assign None hence type error
-    except (TypeError, KeyError):
-        travel_time = odt_priority_list_original[i][5]
-        odt_priority_list_original[i][6] = travel_time
+timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
+            odt_facing_neighbourhood_operator, odt_priority_list_original = \
+                alns_platform.apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
+                                            track_info, infra_graph, edges_o_stations_d, parameters,
+                                            odt_priority_list_original)
 
-total_traveltime = sum([item[6] for item in odt_priority_list_original])
+# Set the timetable_solution_graph parameters
+timetable_solution_prime_graph.edges_o_stations_d = edges_o_stations_d
+timetable_solution_prime_graph.timetable = trains_timetable
+timetable_solution_prime_graph.graph = timetable_prime_graph
+timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_original = \
+    alns_platform.find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph,
+                                                     parameters,
+                                                     timetable_solution_prime_graph,
+                                                     edges_o_stations_d,
+                                                     odt_priority_list_original,
+                                                     odt_facing_neighbourhood_operator)
 
 # alns_platform.pickle_results(changed_trains, 'output/pickle/debug/changed_trains.pkl')
 # alns_platform.pickle_results(trains_timetable,'output/pickle/debug/trains_timetable.pkl')
@@ -107,4 +105,7 @@ total_traveltime = sum([item[6] for item in odt_priority_list_original])
 # alns_platform.pickle_results(weights,'output/pickle/debug/weights.pkl')
 # alns_platform.pickle_results(temperature_it,'output/pickle/debug/temperature_it.pkl')
 
+# alns_platform.pickle_results(parameters,'output/pickle/debug/parameters_08_06.pkl')
+# alns_platform.pickle_results(odt_facing_capacity_constraint,'output/pickle/debug/odt_facing_capacity_constraint_08_06.pkl')
+# alns_platform.pickle_results(timetable_initial_graph,'output/pickle/debug/timetable_initial_graph_08_06.pkl')
 

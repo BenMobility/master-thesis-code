@@ -106,11 +106,26 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                     index_last_node_on_path_before_capacity = extract_odt_path.index(
                                                         p[j])
 
-                                                    # Split the path into delete and keep path
-                                                    odt_path_to_delete = extract_odt_path[
-                                                                         index_last_node_on_path_before_capacity:]
-                                                    odt_path_to_keep = extract_odt_path[
-                                                                       :index_last_node_on_path_before_capacity]
+                                                    # Find the last station (commercial stop) before the cancellation
+                                                    try:
+                                                        v = 0
+                                                        while extract_odt_path[
+                                                            index_last_node_on_path_before_capacity - v][3] != 'a':
+                                                            v += 1
+                                                        # get that index
+                                                        index_last_station =\
+                                                            index_last_node_on_path_before_capacity - v + 1
+                                                    except IndexError:
+                                                        index_last_station = 0
+
+                                                    if index_last_station == 0:
+                                                        odt_path_to_keep = extract_odt_path[0]
+                                                        # Delete the flow and the odt_assigned
+                                                        odt_path_to_delete = extract_odt_path
+                                                    else:
+                                                        odt_path_to_keep = extract_odt_path[:index_last_station]
+                                                        # Delete the flow and the odt_assigned
+                                                        odt_path_to_delete = extract_odt_path[index_last_station - 1:]
 
                                                     # Modify the original path and erase the length, needs to be
                                                     # recomputed
@@ -349,13 +364,29 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             index_last_node_on_path_before_capacity = \
                                                                 extract_odt_path.index(p[j])
 
-                                                            # Split the path into delete and keep path
-                                                            odt_path_to_delete = \
-                                                                extract_odt_path[
-                                                                index_last_node_on_path_before_capacity:]
+                                                            # Find the last station (commercial stop) before the
+                                                            # capacity
+                                                            try:
+                                                                v = 0
+                                                                while extract_odt_path[
+                                                                    index_last_node_on_path_before_capacity - v][3] \
+                                                                        != 'a':
+                                                                    v += 1
+                                                                # get that index
+                                                                index_last_station = \
+                                                                    index_last_node_on_path_before_capacity - v + 1
+                                                            except IndexError:
+                                                                index_last_station = 0
 
-                                                            odt_path_to_keep = extract_odt_path[
-                                                                               :index_last_node_on_path_before_capacity]
+                                                            if index_last_station == 0:
+                                                                odt_path_to_keep = extract_odt_path[0]
+                                                                # Delete the flow and the odt_assigned
+                                                                odt_path_to_delete = extract_odt_path
+                                                            else:
+                                                                odt_path_to_keep = extract_odt_path[:index_last_station]
+                                                                # Delete the flow and the odt_assigned
+                                                                odt_path_to_delete = extract_odt_path[
+                                                                                     index_last_station - 1:]
 
                                                             # Modify the original path and erase the length, needs to be
                                                             # recomputed
@@ -637,7 +668,9 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                         odt_priority_list_original[index_in_original_list][5] = 0
 
                 # If there is no path, it raises an error. Record the none path and add the penalty
-                except nx.exception.NetworkXNoPath:
+                except (nx.exception.NetworkXNoPath, nx.exception.NodeNotFound):
+                    # Need to put back to the previous weight
+                    timetable_initial_graph[odt[2][0]][odt[2][1]]['weight'] = initial_weight
                     # Extract the odt to get the recorded path from the original
                     # priority list
                     extract_odt = [item for item in odt_priority_list_original
@@ -793,13 +826,29 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                             index_last_node_on_path_before_capacity = \
                                                                 extract_odt_path.index(p[j])
 
-                                                            # Split the path into delete and keep path
-                                                            odt_path_to_delete = \
-                                                                extract_odt_path[
-                                                                index_last_node_on_path_before_capacity:]
+                                                            # Find the last station (commercial stop) before the cancellation
+                                                            try:
+                                                                j = 0
+                                                                while extract_odt_path[
+                                                                    index_last_node_on_path_before_capacity - j][3] \
+                                                                        != 'a':
+                                                                    j += 1
+                                                                # get that index
+                                                                index_last_station = \
+                                                                    index_last_node_on_path_before_capacity - j + 1
+                                                            except IndexError:
+                                                                j = 0
+                                                                index_last_station = 0
 
-                                                            odt_path_to_keep = extract_odt_path[
-                                                                               :index_last_node_on_path_before_capacity]
+                                                            if index_last_station == 0:
+                                                                odt_path_to_keep = extract_odt_path[0]
+                                                                # Delete the flow and the odt_assigned
+                                                                odt_path_to_delete = extract_odt_path
+                                                            else:
+                                                                odt_path_to_keep = extract_odt_path[:index_last_station]
+                                                                # Delete the flow and the odt_assigned
+                                                                odt_path_to_delete = extract_odt_path[
+                                                                                     index_last_station - 1:]
 
                                                             # Modify the original path and erase the length, needs to be
                                                             # recomputed
@@ -1306,24 +1355,28 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
                            and abs(item[2] - current_odt[2]) < 0.0001
                            and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
-            index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
-            index_previous = index_last_node_on_path_before_disruption - 1
+            index_last_node_on_path_before_delay = extract_odt_path.index(departure_node)
 
-            odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Delete the flow and the odt_assigned
-            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
-
-            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
-            # needs to be deleted for further assignment
+            # Find the last station (commercial stop) before the cancellation
             try:
-                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
-                        and extract_odt_path[index_previous][3] == 'd':
-                    odt_path_to_keep = extract_odt_path[:index_previous]
-                    # Delete the flow and the odt_assigned
-                    odt_path_to_delete = extract_odt_path[index_previous:]
-            # If it is already the first node, it will show an index error obviously
+                j = 0
+                while extract_odt_path[index_last_node_on_path_before_delay - j][3] != 'a':
+                    j += 1
+                # get that index
+                index_last_station = index_last_node_on_path_before_delay - j + 1
             except IndexError:
-                continue
+                j = 0
+                index_last_station = 0
+
+            if index_last_station == 0:
+                odt_path_to_keep = extract_odt_path[0]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path
+            else:
+                odt_path_to_keep = extract_odt_path[:index_last_station]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path[
+                                     index_last_station - 1:]
 
             # Get the index from original list for future update
             index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1342,11 +1395,11 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = 0
+            number_iteration = extract_odt[0][5]
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
                                  list(odt_path_to_keep),
-                                 [departure_node, arrival_node],
+                                 [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
@@ -1394,24 +1447,28 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
                            and abs(item[2] - current_odt[2]) < 0.0001
                            and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
-            index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
-            index_previous = index_last_node_on_path_before_disruption - 1
+            index_last_node_on_path_before_delay = extract_odt_path.index(departure_node)
 
-            odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Delete the flow and the odt_assigned
-            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
-
-            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
-            # needs to be deleted for further assignment
+            # Find the last station (commercial stop) before the cancellation
             try:
-                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
-                        and extract_odt_path[index_previous][3] == 'd':
-                    odt_path_to_keep = extract_odt_path[:index_previous]
-                    # Delete the flow and the odt_assigned
-                    odt_path_to_delete = extract_odt_path[index_previous:]
-            # If it is already the first node, it will show an index error obviously
+                j = 0
+                while extract_odt_path[index_last_node_on_path_before_delay - j][3] != 'a':
+                    j += 1
+                # get that index
+                index_last_station = index_last_node_on_path_before_delay - j + 1
             except IndexError:
-                continue
+                j = 0
+                index_last_station = 0
+
+            if index_last_station == 0:
+                odt_path_to_keep = extract_odt_path[0]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path
+            else:
+                odt_path_to_keep = extract_odt_path[:index_last_station]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path[
+                                     index_last_station - 1:]
 
             # Get the index from original list for future update
             index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1430,11 +1487,11 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = 0
+            number_iteration = extract_odt[0][5]
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
                                  list(odt_path_to_keep),
-                                 [departure_node, arrival_node],
+                                 [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
@@ -1484,24 +1541,28 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
                            and abs(item[2] - current_odt[2]) < 0.0001
                            and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
-            index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
-            index_previous = index_last_node_on_path_before_disruption - 1
+            index_last_node_on_path_before_cancellation = extract_odt_path.index(departure_node)
 
-            odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Delete the flow and the odt_assigned
-            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
-
-            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
-            # needs to be deleted for further assignment
+            # Find the last station (commercial stop) before the cancellation
             try:
-                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
-                        and extract_odt_path[index_previous][3] == 'd':
-                    odt_path_to_keep = extract_odt_path[:index_previous]
-                    # Delete the flow and the odt_assigned
-                    odt_path_to_delete = extract_odt_path[index_previous:]
-            # If it is already the first node, it will show an index error obviously
+                j = 0
+                while extract_odt_path[index_last_node_on_path_before_cancellation - j][3] != 'a':
+                    j += 1
+                # get that index
+                index_last_station = index_last_node_on_path_before_cancellation - j + 1
             except IndexError:
-                continue
+                j = 0
+                index_last_station = 0
+
+            if index_last_station == 0:
+                odt_path_to_keep = extract_odt_path[0]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path
+            else:
+                odt_path_to_keep = extract_odt_path[:index_last_station]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path[
+                                     index_last_station - 1:]
 
             # Get the index from original list for future update
             index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1520,11 +1581,11 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = 0
+            number_iteration = extract_odt[0][5]
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
                                  list(odt_path_to_keep),
-                                 [departure_node, arrival_node],
+                                 [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
@@ -1565,25 +1626,28 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
                            and abs(item[2] - current_odt[2]) < 0.0001
                            and item[3] == current_odt[3]]
             extract_odt_path = extract_odt[0][4]
-            index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
+            index_last_node_on_path_before_cancellation = extract_odt_path.index(departure_node)
 
-            index_previous = index_last_node_on_path_before_disruption - 1
-
-            odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-            # Delete the flow and the odt_assigned
-            odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
-
-            # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
-            # needs to be deleted for further assignment
+            # Find the last station (commercial stop) before the cancellation
             try:
-                if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
-                        and extract_odt_path[index_previous][3] == 'd':
-                    odt_path_to_keep = extract_odt_path[:index_previous]
-                    # Delete the flow and the odt_assigned
-                    odt_path_to_delete = extract_odt_path[index_previous:]
-            # If it is already the first node, it will show an index error obviously
+                j = 0
+                while extract_odt_path[index_last_node_on_path_before_cancellation - j][3] != 'a':
+                    j += 1
+                # get that index
+                index_last_station = index_last_node_on_path_before_cancellation - j + 1
             except IndexError:
-                continue
+                j = 0
+                index_last_station = 1
+
+            if index_last_station == 0:
+                odt_path_to_keep = extract_odt_path[0]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path
+            else:
+                odt_path_to_keep = extract_odt_path[:index_last_station]
+                # Delete the flow and the odt_assigned
+                odt_path_to_delete = extract_odt_path[
+                                     index_last_station - 1:]
 
             # Get the index from original list for future update
             index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1601,11 +1665,11 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = 0
+            number_iteration = extract_odt[0][5]
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
                                  list(odt_path_to_keep),
-                                 [departure_node, arrival_node],
+                                 [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
@@ -1642,24 +1706,27 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
                        and abs(item[2] - current_odt[2]) < 0.0001
                        and item[3] == current_odt[3]]
         extract_odt_path = extract_odt[0][4]
-        index_last_node_on_path_before_disruption = extract_odt_path.index(departure_node)
-        index_previous = index_last_node_on_path_before_disruption - 1
-
-        odt_path_to_keep = extract_odt_path[:index_last_node_on_path_before_disruption]
-        # Delete the flow and the odt_assigned
-        odt_path_to_delete = extract_odt_path[index_last_node_on_path_before_disruption:]
-
-        # Need to check if the last node to keep is a departure node and if it is a transfer. In a cancel case, it
-        # needs to be deleted for further assignment
+        index_last_node_on_path_before_bus = extract_odt_path.index(departure_node)
+        # Find the last station (commercial stop) before the cancellation
         try:
-            if extract_odt_path[index_previous][2] != extract_odt_path[index_previous - 1][2] \
-                    and extract_odt_path[index_previous][3] == 'd':
-                odt_path_to_keep = extract_odt_path[:index_previous]
-                # Delete the flow and the odt_assigned
-                odt_path_to_delete = extract_odt_path[index_previous:]
-        # If it is already the first node, it will show an index error obviously
+            j = 0
+            while extract_odt_path[index_last_node_on_path_before_bus - j][3] != 'a':
+                j += 1
+            # get that index
+            index_last_station = index_last_node_on_path_before_bus - j + 1
         except IndexError:
-            continue
+            j = 0
+            index_last_station = 0
+
+        if index_last_station == 0:
+            odt_path_to_keep = extract_odt_path[0]
+            # Delete the flow and the odt_assigned
+            odt_path_to_delete = extract_odt_path
+        else:
+            odt_path_to_keep = extract_odt_path[:index_last_station]
+            # Delete the flow and the odt_assigned
+            odt_path_to_delete = extract_odt_path[
+                                 index_last_station - 1:]
 
         # Get the index from original list for future update
         index_in_original_list = odt_priority_list_original.index(extract_odt[0])
@@ -1682,7 +1749,7 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
         # Transform the odt on the odt facing disruption format
         odt_facing_format = [extract_odt[0][0:4],
                              list(odt_path_to_keep),
-                             [departure_node, arrival_node],
+                             [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                              number_iteration + 1]
         odt_facing_neighbourhood_operator.append(odt_facing_format)
         # Update the original list with the new path and set to 0 if it was the penalty value

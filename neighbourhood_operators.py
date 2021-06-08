@@ -64,9 +64,47 @@ def short_turn_train_viriato_preselection(parameters, train_to_short_turn, train
 
 def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_info, edges_o_stations_d, parameters,
                     odt_priority_list_original):
-    # Get random train indices
-    random_train_idx = np.random.randint(0, len(trains_timetable))
-    train_to_cancel = trains_timetable[random_train_idx]
+    # Initialize
+    train_found = False
+    list_cancel_candidates = list(set(parameters.set_of_trains_for_operator['Cancel']))
+    # When the number of candidates is greater than 3, start the loop until the train is found
+    if len(list_cancel_candidates) >= 3:
+        n_it = 0
+        while not train_found and n_it <= 5:
+            n_it += 1
+            train_id_to_cancel = list_cancel_candidates[np.random.randint(0, len(list_cancel_candidates))]
+            i = 0
+            try:
+                while trains_timetable[i].id != train_id_to_cancel:
+                    i += 1
+                train_to_cancel = trains_timetable[i]
+            except IndexError:
+                continue
+            comm_stops = 0
+            # Check if there is more than 3 commercial stops to make partial cancel valid
+            for train_path_node in train_to_cancel.train_path_nodes:
+                if train_path_node.stop_status.name == 'commercial_stop':
+                    comm_stops += 1
+                if comm_stops > 3:
+                    train_found = True
+
+    if not train_found:
+        # Select randomly a train from all trains
+        while not train_found:
+            train_id_to_cancel = trains_timetable[np.random.randint(0, len(trains_timetable))].id
+            i = 0
+            while trains_timetable[i].id != train_id_to_cancel:
+                i += 1
+            train_to_cancel = trains_timetable[i]
+            comm_stops = 0
+            # Check if there is more than 3 commercial stops to make partial cancel valid
+            for train_path_node in train_to_cancel.train_path_nodes:
+                if train_path_node.stop_status.name == 'commercial_stop':
+                    comm_stops += 1
+                if comm_stops > 3:
+                    train_found = True
+
+    # Get the train id to cancel from the train to cancel
     train_id_to_cancel = train_to_cancel.id  # Train object from viriato
 
     # Check if the train id is an emergency train/bus
@@ -95,25 +133,25 @@ def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_inf
     # Update the attribute to cancel an emergency bus
     if bus:
         changed_trains[train_id_to_cancel] = {'train_id': train_id_to_cancel,
-                                              'DebugString': trains_timetable[random_train_idx].debug_string,
+                                              'DebugString': train_to_cancel['DebugString'],
                                               'Action': 'Cancel',
                                               'EmergencyBus': True}
 
     # Update the attribute to cancel a train
     elif not emergency_train and not bus:
         changed_trains[train_id_to_cancel] = {'train_id': train_id_to_cancel,
-                                              'DebugString': trains_timetable[random_train_idx].debug_string,
+                                              'DebugString': train_to_cancel.debug_string,
                                               'Action': 'Cancel'}
 
     # Update the attribute to cancel a emergency train
     elif emergency_train:
         changed_trains[train_id_to_cancel] = {'train_id': train_id_to_cancel,
-                                              'DebugString': trains_timetable[random_train_idx].debug_string,
+                                              'DebugString': train_to_cancel.debug_string,
                                               'Action': 'Cancel',
                                               'EmergencyTrain': True}
 
     # Delete the train from the trains timetable
-    del trains_timetable[random_train_idx]
+    del trains_timetable[i]
 
     return changed_trains, prime_timetable, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator, \
            odt_priority_list_original
