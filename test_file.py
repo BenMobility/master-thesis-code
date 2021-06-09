@@ -145,15 +145,57 @@ import networkx as nx
 #                                                     timetable_initial_graph,
 #                                                     parameters)
 # %% Start ALNS
-timetable_initial_graph = np.load('output/pickle/timetable_alns.pkl', allow_pickle=True)
-parameters = np.load('output/pickle/parameters_alns.pkl', allow_pickle=True)
-infra_graph = np.load('output/pickle/infra_graph_for_alns.pkl', allow_pickle=True)
-trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_pickle=True)
 
-np.random.seed(42)
+# timetable_prime_graph = np.load('output/pickle/debug/timetable_prime_graph_09_06.pkl', allow_pickle=True)
+# timetable_solution_prime_graph = np.load('output/pickle/debug/timetable_solution_prime_graph_09_06.pkl', allow_pickle=True)
+# edges_o_stations_d = np.load('output/pickle/debug/edges_o_stations_d_09_06.pkl', allow_pickle=True)
+# parameters = np.load('output/pickle/debug/parameters_09_06.pkl', allow_pickle=True)
 
-set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
+parameters = np.load('output/pickle/debug/parameters_passenger.pkl', allow_pickle=True)
+odt_facing_capacity_constraint = np.load('output/pickle/debug/odt_facing_capacity_constraint_passenger.pkl', allow_pickle=True)
+timetable_prime_graph = np.load('output/pickle/debug/timetable_prime_graph_passenger.pkl', allow_pickle=True)
 
+# # to debug
+# alns_platform.pickle_results(parameters, 'output/pickle/debug/parameters_passenger.pkl')
+# alns_platform.pickle_results(odt_facing_capacity_constraint, 'output/pickle/debug/odt_facing_capacity_constraint_passenger.pkl')
+# alns_platform.pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_passenger.pkl')
+
+
+timetable_prime_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
+    passenger_assignment.capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint,
+                                                      timetable_prime_graph)
+
+# Compute the total travel time
+i = -1
+while i != len(odt_priority_list_original) - 1:
+    i += 1
+    travel_time = 0
+    try:
+        for j in range(len(odt_priority_list_original[i][4]) - 1):
+            starting_node = odt_priority_list_original[i][4][j]
+            ending_node = odt_priority_list_original[i][4][j + 1]
+            try:
+                travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
+            except KeyError:
+                print(starting_node, ending_node)
+        # Need to add the penalty if the odt has a path but do not reach the destination
+        travel_time += odt_priority_list_original[i][5]
+        odt_priority_list_original[i].append(travel_time)
+    # No path found from the beginning, it will results with a type error
+    except TypeError:
+        travel_time = odt_priority_list_original[i][5]
+        odt_priority_list_original[i].append(travel_time)
+total_traveltime = sum([item[6] for item in odt_priority_list_original])
+
+
+
+
+
+
+
+# weird thing
+# ['54_08:00', 26111, 0.19899213, 25, ['5', '4', '_', '0', '8', ':', '0', '0'], 120]
+# ['14_07:20', 26109, 0.7682734, 9, ['1', '4', '_', '0', '7', ':', '2', '0'], 120]
 # arr_dep_nodes_train = [n for n, v in prime_timetable.nodes(data=True) if v['type'] in
 #                            ['arrivalNode', 'departureNode',
 #                             'arrivalNodePassing', 'departureNodePassing'] and v['train'] == train_to_delay.id]

@@ -130,8 +130,16 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                     # Modify the original path and erase the length, needs to be
                                                     # recomputed
                                                     try:
-                                                        odt_priority_list_original[
-                                                            index_in_original_list][4] = odt_path_to_keep
+                                                        # If the path to keep is only the origin, needs to list
+                                                        # as a whole
+                                                        if isinstance(odt_path_to_keep, str):
+                                                            odt_priority_list_original[
+                                                                index_in_original_list][4] = [odt_path_to_keep]
+                                                        else:
+                                                            odt_priority_list_original[
+                                                                index_in_original_list][4] = \
+                                                                list(odt_path_to_keep)
+
                                                         odt_priority_list_original[index_in_original_list][5] = 0
                                                     except ValueError:
                                                         print(f'{odt_priority_list_original[index_in_original_list][0]}'
@@ -155,16 +163,28 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                                             continue
 
                                                     if 'odt_facing_capacity_constrain' in locals():
+                                                        # If the path to keep is only the origin, needs to
+                                                        # list as a whole
+                                                        if isinstance(odt_path_to_keep, str):
+                                                            odt_info_path_to_keep = [odt_path_to_keep]
+                                                        else:
+                                                            odt_info_path_to_keep = odt_path_to_keep
                                                         # Record the odt with the last node before capacity constraint.
                                                         # [odt, odt path to keep, edge full, number of trial]
                                                         odt_info = [odt_with_lower_priority,
-                                                                    odt_path_to_keep,
+                                                                    odt_info_path_to_keep,
                                                                     odt_path_to_delete[0:2],
                                                                     1]
                                                         odt_facing_capacity_constrain.append(odt_info)
                                                     else:
+                                                        # If the path to keep is only the origin, needs to
+                                                        # list as a whole
+                                                        if isinstance(odt_path_to_keep, str):
+                                                            odt_info_path_to_keep = [odt_path_to_keep]
+                                                        else:
+                                                            odt_info_path_to_keep = odt_path_to_keep
                                                         odt_facing_capacity_constrain = [[odt_with_lower_priority,
-                                                                                         odt_path_to_keep,
+                                                                                         odt_info_path_to_keep,
                                                                                          odt_path_to_delete[0:2],
                                                                                          1]]
 
@@ -185,19 +205,30 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                                         break
                             else:
                                 if 'odt_facing_capacity_constrain' in locals():
+                                    # If the path to keep is only the origin, needs to
+                                    # list as a whole
+                                    if isinstance(p[:j], str):
+                                        odt_info_path_to_keep = [p[:j]]
+                                    else:
+                                        odt_info_path_to_keep = p[:j]
                                     # Record the odt with the last node before capacity constraint.
                                     # [odt, last node, index, edge, new path, number of trial]
-                                    odt_info = [odt[0:4], p[:j], [p[j], p[j + 1]], 1]
+                                    odt_info = [odt[0:4], odt_info_path_to_keep, [p[j], p[j + 1]], 1]
                                     odt_facing_capacity_constrain.append(odt_info)
                                 else:
-                                    odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
+                                    if isinstance(p[:j], str):
+                                        odt_info_path_to_keep = [p[:j]]
+                                    else:
+                                        odt_info_path_to_keep = p[:j]
+                                    odt_facing_capacity_constrain = [[odt[0:4],
+                                                                      odt_info_path_to_keep, [p[j], p[j + 1]], 1]]
 
                                 # Done for this odt, update the path on the original list
                                 # Find the index on the original list
                                 index_in_original_list = odt_priority_list_original.index(odt)
 
                                 # Update the new path
-                                odt_priority_list_original[index_in_original_list][4] = p[:j]
+                                odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                                 # do not need to continue to assign further. go to the next one
                                 break
 
@@ -205,12 +236,22 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                         # hence the passenger is not seated in the train
                         except IndexError:
                             if 'odt_facing_capacity_constrain' in locals():
+                                # If the path to keep is only the origin, needs to
+                                # list as a whole
+                                if isinstance(p[:j], str):
+                                    odt_info_path_to_keep = [p[:j]]
+                                else:
+                                    odt_info_path_to_keep = p[:j]
                                 # Record the odt with the last node before capacity constraint.
                                 # [odt, last node, index, edge, new path, number of trial]
-                                odt_info = [odt[0:4], p[:j], [p[j], p[j + 1]], 1]
+                                odt_info = [odt[0:4], odt_info_path_to_keep, [p[j], p[j + 1]], 1]
                                 odt_facing_capacity_constrain.append(odt_info)
                             else:
-                                odt_facing_capacity_constrain = [[odt[0:4], p[:j], [p[j], p[j + 1]], 1]]
+                                if isinstance(p[:j], str):
+                                    odt_info_path_to_keep = [p[:j]]
+                                else:
+                                    odt_info_path_to_keep = p[:j]
+                                odt_facing_capacity_constrain = [[odt[0:4], odt_info_path_to_keep, [p[j], p[j + 1]], 1]]
 
                             # Done for this odt, do not need to continue to assign further. go to the next one
                             # But before need to assign the path to the original list
@@ -218,7 +259,7 @@ def capacity_constraint_1st_loop(parameters, timetable_initial_graph):
                             index_in_original_list = odt_priority_list_original.index(odt)
 
                             # Update the new path
-                            odt_priority_list_original[index_in_original_list][4] = p[:j]
+                            odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                             break
                     else:
                         timetable_initial_graph[p[j]][p[j + 1]]['flow'].append(odt[3])
@@ -391,8 +432,15 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             # Modify the original path and erase the length, needs to be
                                                             # recomputed
                                                             try:
-                                                                odt_priority_list_original[
-                                                                    index_in_original_list][4] = list(odt_path_to_keep)
+                                                                # If the path to keep is only the origin, needs to list
+                                                                # as a whole
+                                                                if isinstance(odt_path_to_keep, str):
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = [odt_path_to_keep]
+                                                                else:
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = \
+                                                                        list(odt_path_to_keep)
                                                                 odt_priority_list_original[
                                                                     index_in_original_list][5] = 0
                                                             except ValueError:
@@ -440,8 +488,16 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                             # system from the last point on their trip
                                                             if number_of_iteration[0] + 1 > \
                                                                     parameters.max_iteration_recompute_path:
-                                                                odt_priority_list_original[
-                                                                    index_in_original_list][4] = list(odt_path_to_keep)
+                                                                # If the path to keep is only the origin, needs to list
+                                                                # as a whole
+                                                                if isinstance(odt_path_to_keep, str):
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = [odt_path_to_keep]
+                                                                else:
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = \
+                                                                        list(odt_path_to_keep)
+
                                                                 odt_priority_list_original[
                                                                     index_in_original_list][5] = \
                                                                     parameters.penalty_no_path
@@ -452,25 +508,42 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                                     # in the next list
                                                                     odt_new_list = \
                                                                         odt_facing_capacity_dict_for_iteration[m+1]
+                                                                    # If the path to keep is only the origin, needs to
+                                                                    # list as a whole
+                                                                    if isinstance(odt_path_to_keep, str):
+                                                                        odt_info_path_to_keep = [odt_path_to_keep]
+                                                                    else:
+                                                                        odt_info_path_to_keep = odt_path_to_keep
+
                                                                     odt_info = [odt_with_lower_priority,  # ODT name
-                                                                                odt_path_to_keep,  # ODT path keep
+                                                                                odt_info_path_to_keep,  # ODT path keep
                                                                                 odt_path_to_delete[0:2],    # Edge full
                                                                                 number_of_iteration[0]+1]
                                                                     odt_facing_capacity_dict_for_iteration[
                                                                         m + 1].append(odt_info)
                                                                 except KeyError:
+                                                                    # If the path to keep is only the origin, needs to
+                                                                    # list as a whole
+                                                                    if isinstance(odt_path_to_keep, str):
+                                                                        odt_info_path_to_keep = [odt_path_to_keep]
+                                                                    else:
+                                                                        odt_info_path_to_keep = odt_path_to_keep
+
                                                                     odt_facing_capacity_dict_for_iteration[m+1] =\
                                                                         list([[odt_with_lower_priority,
-                                                                               odt_path_to_keep,
+                                                                               odt_info_path_to_keep,
                                                                                odt_path_to_delete[0:2],
                                                                                number_of_iteration[0]+1]])
 
                                                             # Check if the odt_with_lower priority is in the odt facing
                                                             # capacity constraint list. If it does, need to delete it
                                                             try:
-                                                                extract_odt_facing_capacity_constraint = \
+                                                                extract_odt_facing_capacity_constraint =\
                                                                     [item for item in odt_list[i:]
-                                                                     if item[0][0:4] == odt_with_lower_priority[0:4]]
+                                                                     if item[0][0:2] == odt_with_lower_priority[0:2]
+                                                                     and abs(item[0][2] - odt_with_lower_priority[2])
+                                                                     < 0.001
+                                                                     and item[0][3] == odt_with_lower_priority[3]]
 
                                                                 index_in_odt_list = odt_list.index(
                                                                     extract_odt_facing_capacity_constraint[0])
@@ -517,9 +590,14 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                             index_in_original_list = odt_priority_list_original.index(
                                                 extract_odt[0])
 
+                                            if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                             # Update the original with the penalty
                                             odt_priority_list_original[index_in_original_list][4] = \
-                                                list(odt_list[i][1][:-(len(p)-j)])  # Keep the assigned path
+                                                odt_info_path_to_keep  # Keep the assigned path
                                             odt_priority_list_original[index_in_original_list][5] = \
                                                 parameters.penalty_no_path
 
@@ -533,15 +611,26 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                                 # in the next list
                                                 odt_new_list = \
                                                     odt_facing_capacity_dict_for_iteration[m + 1]
+
+                                                if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                    odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                                else:
+                                                    odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                                 odt_info = [odt[0],                         # ODT name
-                                                            odt_list[i][1][:-(len(p)-j)],  # ODT path to keep
+                                                            odt_info_path_to_keep,  # ODT path to keep
                                                             [p[j], p[j + 1]],               # Edge full
                                                             odt[3]+1]                       # Number of iteration
                                                 odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                             except KeyError:
+                                                if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                    odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                                else:
+                                                    odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                                 odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                     list([[odt[0],
-                                                           odt_list[i][1][:-(len(p)-j)],
+                                                           odt_info_path_to_keep,
                                                            [p[j], p[j + 1]],
                                                            odt[3]+1]])
 
@@ -562,10 +651,15 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                         index_in_original_list = \
                                             odt_priority_list_original.index(odt_with_original_format)
 
+                                        if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                            odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                        else:
+                                            odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                         # Update the new path and set the value to 0. In case the previous iteration,
                                         # the odt was consider with a penalty but now finds a way
                                         odt_priority_list_original[index_in_original_list][4] = \
-                                            list(odt_list[i][1][:-(len(p)-j)])
+                                            odt_info_path_to_keep
                                         odt_priority_list_original[index_in_original_list][5] = 0
 
                                         # Do not need to go further. Next odt please.
@@ -587,9 +681,14 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                         index_in_original_list = odt_priority_list_original.index(
                                             extract_odt[0])
 
+                                        if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                            odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                        else:
+                                            odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                         # Update the original with the penalty
                                         odt_priority_list_original[index_in_original_list][4] = \
-                                            list(odt_list[i][1][:-(len(p) - j)])  # Keep the assigned path
+                                            odt_info_path_to_keep  # Keep the assigned path
                                         odt_priority_list_original[index_in_original_list][5] = \
                                             parameters.penalty_no_path
 
@@ -615,15 +714,25 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                             # in the next list
                                             odt_new_list = \
                                                 odt_facing_capacity_dict_for_iteration[m + 1]
+
+                                            if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                             odt_info = [odt[0],  # ODT name
-                                                        odt_list[i][1][:-(len(p) - j)],  # ODT path to keep
+                                                        odt_info_path_to_keep,  # ODT path to keep
                                                         [p[j], p[j + 1]],  # Edge full
                                                         number_of_iteration[0]+1]  # Number of iteration
                                             odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                         except KeyError:
+                                            if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
                                             odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                 [[odt[0],
-                                                 odt_list[i][1][:-(len(p) - j)],
+                                                 odt_info_path_to_keep,
                                                  [p[j], p[j + 1]],
                                                  number_of_iteration[0]+1]]
 
@@ -632,8 +741,12 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                                     # Find the index on the original list
                                     index_in_original_list = odt_priority_list_original.index(odt)
 
+                                    if isinstance(p[:j], str):
+                                        odt_info_path_to_keep = [p[:j]]
+                                    else:
+                                        odt_info_path_to_keep = list(p[:j])
                                     # Update the new path
-                                    odt_priority_list_original[index_in_original_list][4] = list(p[:j])
+                                    odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                                     odt_priority_list_original[index_in_original_list][5] = 0
 
                                     # Do not need to go further. Next odt please.
@@ -661,8 +774,12 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                         index_in_original_list = odt_priority_list_original.index(
                             extract_odt[0])
 
+                        if isinstance(odt_list[i][1], str):
+                            odt_info_path_to_keep = [odt_list[i][1]]
+                        else:
+                            odt_info_path_to_keep = list(odt_list[i][1])
                         # Update the original odt with the new path
-                        odt_priority_list_original[index_in_original_list][4] = list(odt_list[i][1])
+                        odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
 
                         # Keep to zero if no penalty
                         odt_priority_list_original[index_in_original_list][5] = 0
@@ -681,7 +798,12 @@ def capacity_constraint_2nd_loop(parameters, odt_facing_capacity_constraint, tim
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])
 
-                    odt_priority_list_original[index_in_original_list][4] = list(odt[1])
+                    if isinstance(odt[1], str):
+                        odt_info_path_to_keep = [odt[1]]
+                    else:
+                        odt_info_path_to_keep = list(odt[1])
+
+                    odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                     try:
                         odt_priority_list_original[index_in_original_list][5] = parameters.penalty_no_path
                     except IndexError:
@@ -853,8 +975,15 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                             # Modify the original path and erase the length, needs to be
                                                             # recomputed
                                                             try:
-                                                                odt_priority_list_original[
-                                                                    index_in_original_list][4] = list(odt_path_to_keep)
+                                                                # If the path to keep is only the origin, needs to list
+                                                                # as a whole
+                                                                if isinstance(odt_path_to_keep, str):
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = [odt_path_to_keep]
+                                                                else:
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = \
+                                                                        list(odt_path_to_keep)
                                                                 odt_priority_list_original[
                                                                     index_in_original_list][5] = 0
                                                             except ValueError:
@@ -902,8 +1031,15 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                             # system from the last point on their trip
                                                             if number_of_iteration[0] + 1 > \
                                                                     parameters.max_iteration_recompute_path:
-                                                                odt_priority_list_original[
-                                                                    index_in_original_list][4] = list(odt_path_to_keep)
+                                                                # If the path to keep is only the origin, needs to list
+                                                                # as a whole
+                                                                if isinstance(odt_path_to_keep, str):
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = [odt_path_to_keep]
+                                                                else:
+                                                                    odt_priority_list_original[
+                                                                        index_in_original_list][4] = \
+                                                                        list(odt_path_to_keep)
                                                                 odt_priority_list_original[
                                                                     index_in_original_list][5] = \
                                                                     parameters.penalty_no_path
@@ -914,16 +1050,31 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                                     # in the next list
                                                                     odt_new_list = \
                                                                         odt_facing_capacity_dict_for_iteration[m+1]
+
+                                                                    # If the path to keep is only the origin, needs to list
+                                                                    # as a whole
+                                                                    if isinstance(odt_path_to_keep, str):
+                                                                        odt_info_path_to_keep = [odt_path_to_keep]
+                                                                    else:
+                                                                        odt_info_path_to_keep = odt_path_to_keep
+
                                                                     odt_info = [odt_with_lower_priority,  # ODT name
-                                                                                odt_path_to_keep,  # ODT path keep
+                                                                                odt_info_path_to_keep,  # ODT path keep
                                                                                 odt_path_to_delete[0:2],    # Edge full
                                                                                 number_of_iteration[0]+1]
                                                                     odt_facing_capacity_dict_for_iteration[
                                                                         m + 1].append(odt_info)
                                                                 except KeyError:
+                                                                    # If the path to keep is only the origin, needs to
+                                                                    # list  as a whole
+                                                                    if isinstance(odt_path_to_keep, str):
+                                                                        odt_info_path_to_keep = [odt_path_to_keep]
+                                                                    else:
+                                                                        odt_info_path_to_keep = odt_path_to_keep
+
                                                                     odt_facing_capacity_dict_for_iteration[m+1] =\
                                                                         list([[odt_with_lower_priority,
-                                                                               odt_path_to_keep,
+                                                                               odt_info_path_to_keep,
                                                                                odt_path_to_delete[0:2],
                                                                                number_of_iteration[0]+1]])
 
@@ -981,9 +1132,16 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                             index_in_original_list = odt_priority_list_original.index(
                                                 extract_odt[0])
 
+                                            # If the path to keep is only the origin, needs to
+                                            # list  as a whole
+                                            if isinstance(odt_list[i][1][:-(len(p)-j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p)-j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p)-j)])
+
                                             # Update the original with the penalty
                                             odt_priority_list_original[index_in_original_list][4] = \
-                                                list(odt_list[i][1][:-(len(p)-j)])  # Keep the assigned path
+                                                odt_info_path_to_keep  # Keep the assigned path
                                             odt_priority_list_original[index_in_original_list][5] = \
                                                 parameters.penalty_no_path
 
@@ -997,15 +1155,30 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                 # in the next list
                                                 odt_new_list = \
                                                     odt_facing_capacity_dict_for_iteration[m + 1]
+
+                                                # If the path to keep is only the origin, needs to
+                                                # list  as a whole
+                                                if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                    odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                                else:
+                                                    odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                                 odt_info = [odt[0],                         # ODT name
-                                                            odt_list[i][1][:-(len(p)-j)],  # ODT path to keep
+                                                            odt_info_path_to_keep,  # ODT path to keep
                                                             [p[j], p[j + 1]],               # Edge full
                                                             odt[3]+1]                       # Number of iteration
                                                 odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                             except KeyError:
+                                                # If the path to keep is only the origin, needs to
+                                                # list  as a whole
+                                                if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                    odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                                else:
+                                                    odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                                 odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                     list([[odt[0],
-                                                           odt_list[i][1][:-(len(p)-j)],
+                                                           odt_info_path_to_keep,
                                                            [p[j], p[j + 1]],
                                                            odt[3]+1]])
 
@@ -1016,23 +1189,34 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                         length_on_original_path = len(odt[1]) - len(p[1:])
 
                                         # Transform the odt to have the same format
-                                        try:
-                                            odt_with_original_format = [odt[0][0],
-                                                                        odt[0][1],
-                                                                        odt[0][2],
-                                                                        odt[0][3],
-                                                                        list(odt[1][:length_on_original_path]),
-                                                                        0]
-                                        except ValueError:
-                                            print(odt)
+                                        odt_with_original_format = [odt[0][0],
+                                                                    odt[0][1],
+                                                                    odt[0][2],
+                                                                    odt[0][3],
+                                                                    list(odt[1][:length_on_original_path]),
+                                                                    0]
+
+                                        # Extract the odt to get the recorded path from the original
+                                        # priority list
+                                        extract_odt_original = [item for item in odt_priority_list_original
+                                                                if item[0:2] == odt_with_original_format[0:2]
+                                                                and abs(item[2] - odt_with_original_format[2]) < 0.0001
+                                                                and item[3] == odt_with_original_format[3]]
 
                                         index_in_original_list = \
-                                            odt_priority_list_original.index(odt_with_original_format)
+                                            odt_priority_list_original.index(extract_odt_original[0])
+
+                                        # If the path to keep is only the origin, needs to
+                                        # list  as a whole
+                                        if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                            odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                        else:
+                                            odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
 
                                         # Update the new path and set the value to 0. In case the previous iteration,
                                         # the odt was consider with a penalty but now finds a way
                                         odt_priority_list_original[index_in_original_list][4] = \
-                                            list(odt_list[i][1][:-(len(p)-j)])
+                                            odt_info_path_to_keep
                                         odt_priority_list_original[index_in_original_list][5] = 0
 
                                         # Do not need to go further. Next odt please.
@@ -1054,9 +1238,16 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                         index_in_original_list = odt_priority_list_original.index(
                                             extract_odt[0])
 
+                                        # If the path to keep is only the origin, needs to
+                                        # list  as a whole
+                                        if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                            odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                        else:
+                                            odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                         # Update the original with the penalty
                                         odt_priority_list_original[index_in_original_list][4] = \
-                                            list(odt_list[i][1][:-(len(p) - j)])  # Keep the assigned path
+                                            odt_info_path_to_keep  # Keep the assigned path
                                         odt_priority_list_original[index_in_original_list][5] = \
                                             parameters.penalty_no_path
 
@@ -1082,25 +1273,52 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                             # in the next list
                                             odt_new_list = \
                                                 odt_facing_capacity_dict_for_iteration[m + 1]
+
+                                            # If the path to keep is only the origin, needs to
+                                            # list  as a whole
+                                            if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                             odt_info = [odt[0],  # ODT name
-                                                        odt_list[i][1][:-(len(p) - j)],  # ODT path to keep
+                                                        odt_info_path_to_keep,  # ODT path to keep
                                                         [p[j], p[j + 1]],  # Edge full
                                                         number_of_iteration[0]+1]  # Number of iteration
                                             odt_facing_capacity_dict_for_iteration[m + 1].append(odt_info)
                                         except KeyError:
+                                            # If the path to keep is only the origin, needs to
+                                            # list  as a whole
+                                            if isinstance(odt_list[i][1][:-(len(p) - j)], str):
+                                                odt_info_path_to_keep = [odt_list[i][1][:-(len(p) - j)]]
+                                            else:
+                                                odt_info_path_to_keep = list(odt_list[i][1][:-(len(p) - j)])
+
                                             odt_facing_capacity_dict_for_iteration[m + 1] = \
                                                 [[odt[0],
-                                                 odt_list[i][1][:-(len(p) - j)],
+                                                 odt_info_path_to_keep,
                                                  [p[j], p[j + 1]],
                                                  number_of_iteration[0]+1]]
 
                                     # Done for this odt, do not need to continue to assign further. go to the next one
                                     # But before need to assign the path to the original list
                                     # Find the index on the original list
-                                    index_in_original_list = odt_priority_list_original.index(odt)
+                                    extract_odt = [item for item in odt_priority_list_original
+                                                   if item[0:2] == odt[0][0:2]
+                                                   and abs(item[2] - odt[0][2]) < 0.0001
+                                                   and item[3] == odt[0][3]]
+
+                                    index_in_original_list = odt_priority_list_original.index(extract_odt[0])
+
+                                    # If the path to keep is only the origin, needs to
+                                    # list  as a whole
+                                    if isinstance(p[:j], str):
+                                        odt_info_path_to_keep = [p[:j]]
+                                    else:
+                                        odt_info_path_to_keep = list(p[:j])
 
                                     # Update the new path
-                                    odt_priority_list_original[index_in_original_list][4] = list(p[:j])
+                                    odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                                     odt_priority_list_original[index_in_original_list][5] = 0
 
                                     # Do not need to go further. Next odt please.
@@ -1128,8 +1346,15 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                         index_in_original_list = odt_priority_list_original.index(
                             extract_odt[0])
 
+                        # If the path to keep is only the origin, needs to
+                        # list  as a whole
+                        if isinstance(odt_list[i][1], str):
+                            odt_info_path_to_keep = [odt_list[i][1]]
+                        else:
+                            odt_info_path_to_keep = list(odt_list[i][1])
+
                         # Update the original odt with the new path
-                        odt_priority_list_original[index_in_original_list][4] = list(odt_list[i][1])
+                        odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
 
                         # Keep to zero if no penalty
                         odt_priority_list_original[index_in_original_list][5] = 0
@@ -1146,7 +1371,14 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                     # Find the index on the original list
                     index_in_original_list = odt_priority_list_original.index(extract_odt[0])
 
-                    odt_priority_list_original[index_in_original_list][4] = list(odt[1])
+                    # If the path to keep is only the origin, needs to
+                    # list  as a whole
+                    if isinstance(odt[1], str):
+                        odt_info_path_to_keep = [odt[1]]
+                    else:
+                        odt_info_path_to_keep = list(odt[1])
+
+                    odt_priority_list_original[index_in_original_list][4] = odt_info_path_to_keep
                     try:
                         odt_priority_list_original[index_in_original_list][5] = parameters.penalty_no_path
                     except IndexError:
@@ -1198,10 +1430,24 @@ def remove_the_duplicates(odt_facing_capacity_constraint):
 
         # If the item has been already seen in the list. One of them has faced a train with full capacity earlier. Need
         # to keep that one only
-        if item[0][0:4] in seen.values():
-            index_odt_list_in_seen = list(seen.keys())[list(seen.values()).index(item[0][0:4])]
-            length_in_seen = len(odt_facing_capacity_constraint[index_odt_list_in_seen][1])
-            length_current_item = len(item[1])
+        extract_item = [value for value in seen.values()
+                        if value[0:2] == item[0][0:2]
+                        and abs(value[2] - item[0][2]) < 0.0001
+                        and value[3] == item[0][3]]
+        if len(extract_item) != 0:
+            index_odt_list_in_seen = list(seen.keys())[list(seen.values()).index(extract_item[0][0:4])]
+
+            # Need to check if it is a string to avoid counting letters as length of the path
+            if isinstance(odt_facing_capacity_constraint[index_odt_list_in_seen][1], str):
+                length_in_seen = 1  # Means that the path is starting and ends at home... no path found from home yet
+            else:
+                length_in_seen = len(odt_facing_capacity_constraint[index_odt_list_in_seen][1])
+
+            # Need to check if it is a string to avoid counting letters as length of the path
+            if isinstance(item[1], str):
+                length_current_item = 1  # Means that the path is starting and ends at home...
+            else:
+                length_current_item = len(item[1])
 
             # Check which one is the earliest one based on the length of their path. If the earliest is the item, we
             # Need to remove the other one from the seen list and replace it by the item. If not, save the index of the
@@ -1309,17 +1555,22 @@ def create_list_odt_facing_disruption(edges_on_closed_tracks, timetable_initial_
             #     if any(item[0][0] == extract_odt[0][0:4] for item in odt_list_capacity):
             #         number_iteration = [item[0][3] for item in odt_list_capacity if item[0][0] == extract_odt[0][0:4]]
             #         break
-
+            # If the path to keep is only the origin, needs to list
+            # as a whole
+            if isinstance(odt_path_to_keep, str):
+                path_to_keep = [odt_path_to_keep]
+            else:
+                path_to_keep = list(odt_path_to_keep)
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
-                                 list(odt_path_to_keep),
+                                 path_to_keep,
                                  [departure_node, arrival_node],
                                  number_iteration + 1]
 
             odt_facing_disruption.append(odt_facing_format)
 
             # Update the original list with the new path and set to 0 if it was the penalty value
-            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][4] = path_to_keep
             odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_disruption
@@ -1395,15 +1646,22 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = extract_odt[0][5]
+            number_iteration = 0
+            # If the path to keep is only the origin, needs to list
+            # as a whole
+            if isinstance(odt_path_to_keep, str):
+                path_to_keep = [odt_path_to_keep]
+            else:
+                path_to_keep = list(odt_path_to_keep)
+
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
-                                 list(odt_path_to_keep),
+                                 path_to_keep,
                                  [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
-            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][4] = path_to_keep
             odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original
@@ -1487,15 +1745,21 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = extract_odt[0][5]
+            number_iteration = 0
+            # If the path to keep is only the origin, needs to list
+            # as a whole
+            if isinstance(odt_path_to_keep, str):
+                path_to_keep = [odt_path_to_keep]
+            else:
+                path_to_keep = list(odt_path_to_keep)
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
-                                 list(odt_path_to_keep),
+                                 path_to_keep,
                                  [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
-            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][4] = path_to_keep
             odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original
@@ -1581,15 +1845,22 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = extract_odt[0][5]
+            number_iteration = 0
+
+            # If the path to keep is only the origin, needs to list
+            # as a whole
+            if isinstance(odt_path_to_keep, str):
+                path_to_keep = [odt_path_to_keep]
+            else:
+                path_to_keep = list(odt_path_to_keep)
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
-                                 list(odt_path_to_keep),
+                                 path_to_keep,
                                  [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
-            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][4] = path_to_keep
             odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original
@@ -1665,15 +1936,22 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
                     # already removed from the edge. How? good question.
                     continue
             # Check number of iteration from the previous odt_facing_capacity
-            number_iteration = extract_odt[0][5]
+            number_iteration = 0
+
+            # If the path to keep is only the origin, needs to list
+            # as a whole
+            if isinstance(odt_path_to_keep, str):
+                path_to_keep = [odt_path_to_keep]
+            else:
+                path_to_keep = list(odt_path_to_keep)
             # Transform the odt on the odt facing disruption format
             odt_facing_format = [extract_odt[0][0:4],
-                                 list(odt_path_to_keep),
+                                 path_to_keep,
                                  [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                                  number_iteration + 1]
             odt_facing_neighbourhood_operator.append(odt_facing_format)
             # Update the original list with the new path and set to 0 if it was the penalty value
-            odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+            odt_priority_list_original[index_in_original_list][4] = path_to_keep
             odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original
@@ -1745,15 +2023,21 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
                 # already removed from the edge. How? good question.
                 continue
         # Check number of iteration from the previous odt_facing_capacity
-        number_iteration = extract_odt[0][5]
+        number_iteration = 0
+        # If the path to keep is only the origin, needs to list
+        # as a whole
+        if isinstance(odt_path_to_keep, str):
+            path_to_keep = [odt_path_to_keep]
+        else:
+            path_to_keep = list(odt_path_to_keep)
         # Transform the odt on the odt facing disruption format
         odt_facing_format = [extract_odt[0][0:4],
-                             list(odt_path_to_keep),
+                             path_to_keep,
                              [extract_odt_path[index_last_station - 1], extract_odt_path[index_last_station]],
                              number_iteration + 1]
         odt_facing_neighbourhood_operator.append(odt_facing_format)
         # Update the original list with the new path and set to 0 if it was the penalty value
-        odt_priority_list_original[index_in_original_list][4] = list(odt_path_to_keep)
+        odt_priority_list_original[index_in_original_list][4] = path_to_keep
         odt_priority_list_original[index_in_original_list][5] = 0
 
     return odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original

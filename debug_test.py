@@ -23,7 +23,7 @@ z_op_current = np.load('output/pickle/debug/z_op_current_'+str(n_iteration)+'.pk
 z_de_reroute_current = np.load('output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
 z_de_cancel_current = np.load('output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
 z_tt_current = np.load('output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
-# timetable_solution_graph = np.load('output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
+timetable_solution_graph = np.load('output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
 scores = np.load('output/pickle/debug/scores_'+str(n_iteration)+'.pkl', allow_pickle=True)
 temp_i = np.load('output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl', allow_pickle=True)
 solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
@@ -61,6 +61,36 @@ timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_origina
                                                      edges_o_stations_d,
                                                      odt_priority_list_original,
                                                      odt_facing_neighbourhood_operator)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # alns_platform.pickle_results(changed_trains, 'output/pickle/debug/changed_trains.pkl')
 # alns_platform.pickle_results(trains_timetable,'output/pickle/debug/trains_timetable.pkl')

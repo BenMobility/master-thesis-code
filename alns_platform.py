@@ -560,11 +560,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             timetable_solution_prime_graph = helpers.Solution()
             timetable_solution_prime_graph.timetable = copy.deepcopy(trains_timetable)
 
-            # Passenger assignment and compute the objective for passenger
-            solutions, timetable_prime_graph, odt_priority_list_original =\
-                find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solution_prime_graph,
-                                          edges_o_stations_d)
-
             # to debug
             pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
             pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
@@ -572,7 +567,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
             pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
             pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
-            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
             pickle_results(infra_graph, 'output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl')
             pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
             pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
@@ -580,7 +574,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
             pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
             pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
-            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
             pickle_results(timetable_solution_prime_graph, 'output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl')
             pickle_results(initial_timetable, 'output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl')
             pickle_results(z_op_current, 'output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl')
@@ -606,6 +599,11 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             pickle_results(probabilities, 'output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl')
             pickle_results(weights, 'output/pickle/debug/_'+str(n_iteration)+'.pkl')
             pickle_results(temperature_it, 'output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl')
+
+            # Passenger assignment and compute the objective for passenger
+            solutions, timetable_prime_graph, odt_priority_list_original =\
+                find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solution_prime_graph,
+                                          edges_o_stations_d)
 
             # Record the results of the current solution timetable
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
