@@ -6,6 +6,8 @@ Created on Sun May  09 2021
 Passenger assignment with capacity constraint
 """
 import networkx as nx
+import networkx.exception
+
 import shortest_path
 import copy
 
@@ -875,11 +877,14 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
 
                 # Compute the shortest path with dijkstra
                 try:
-                    # First make sure that they won't use the path with closed tracks
-                    _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
-                                                                odt[1][-1],
-                                                                odt[0][1],
-                                                                cutoff=1000)
+                    try:
+                        # First make sure that they won't use the path with closed tracks
+                        _, p = shortest_path.single_source_dijkstra(timetable_initial_graph,
+                                                                    odt[1][-1],
+                                                                    odt[0][1],
+                                                                    cutoff=1000)
+                    except networkx.exception.NodeNotFound:
+                        print(odt)
                     # Save the path, origin to destination with the new path
                     odt_list[i][1] = odt_list[i][1] + p[1:]
 
@@ -945,12 +950,15 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
 
                                                             # Get the index of the last node before the full capacity
                                                             # train
-                                                            index_last_node_on_path_before_capacity = \
-                                                                extract_odt_path.index(p[j])
+                                                            try:
+                                                                index_last_node_on_path_before_capacity = \
+                                                                    extract_odt_path.index(p[j])
+                                                            except ValueError:
+                                                                print(odt)
 
                                                             # Find the last station (commercial stop) before the cancellation
                                                             try:
-                                                                j = 0
+                                                                j= 100
                                                                 while extract_odt_path[
                                                                     index_last_node_on_path_before_capacity - j][3] \
                                                                         != 'a':
@@ -959,7 +967,7 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                                                 index_last_station = \
                                                                     index_last_node_on_path_before_capacity - j + 1
                                                             except IndexError:
-                                                                j = 0
+                                                                j= 100
                                                                 index_last_station = 0
 
                                                             if index_last_station == 0:
@@ -1610,13 +1618,12 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
 
             # Find the last station (commercial stop) before the cancellation
             try:
-                j = 0
+                j= 100
                 while extract_odt_path[index_last_node_on_path_before_delay - j][3] != 'a':
                     j += 1
                 # get that index
                 index_last_station = index_last_node_on_path_before_delay - j + 1
             except IndexError:
-                j = 0
                 index_last_station = 0
 
             if index_last_station == 0:
@@ -1709,13 +1716,13 @@ def find_passenger_affected_by_part_delay(prime_timetable, train_to_delay, tpn_p
 
             # Find the last station (commercial stop) before the cancellation
             try:
-                j = 0
+                j= 100
                 while extract_odt_path[index_last_node_on_path_before_delay - j][3] != 'a':
                     j += 1
                 # get that index
                 index_last_station = index_last_node_on_path_before_delay - j + 1
             except IndexError:
-                j = 0
+                j= 100
                 index_last_station = 0
 
             if index_last_station == 0:
@@ -1809,13 +1816,13 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
 
             # Find the last station (commercial stop) before the cancellation
             try:
-                j = 0
+                j= 100
                 while extract_odt_path[index_last_node_on_path_before_cancellation - j][3] != 'a':
                     j += 1
                 # get that index
                 index_last_station = index_last_node_on_path_before_cancellation - j + 1
             except IndexError:
-                j = 0
+                j= 100
                 index_last_station = 0
 
             if index_last_station == 0:
@@ -1901,13 +1908,13 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
 
             # Find the last station (commercial stop) before the cancellation
             try:
-                j = 0
+                j= 100
                 while extract_odt_path[index_last_node_on_path_before_cancellation - j][3] != 'a':
                     j += 1
                 # get that index
                 index_last_station = index_last_node_on_path_before_cancellation - j + 1
             except IndexError:
-                j = 0
+                j= 100
                 index_last_station = 1
 
             if index_last_station == 0:
@@ -1987,13 +1994,13 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
         index_last_node_on_path_before_bus = extract_odt_path.index(departure_node)
         # Find the last station (commercial stop) before the cancellation
         try:
-            j = 0
+            j= 100
             while extract_odt_path[index_last_node_on_path_before_bus - j][3] != 'a':
                 j += 1
             # get that index
             index_last_station = index_last_node_on_path_before_bus - j + 1
         except IndexError:
-            j = 0
+            j= 100
             index_last_station = 0
 
         if index_last_station == 0:

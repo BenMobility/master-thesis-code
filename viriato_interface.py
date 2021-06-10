@@ -284,6 +284,14 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         """
         return algorithm_interface.get_trains_driving_any_node(time_window, node_ids)
 
+    def get_emergency_train():
+        """
+        Methods that calls an emergency train from Viriato
+        :return: an emergency train object from viriato
+        """
+        emergency_train = algorithm_interface.get_algorithm_train_parameter('emergency_train')
+        emergency_train = algorithm_interface.clone_train(emergency_train.id)
+        return emergency_train
 
     def cancel_train(train_id):
         """

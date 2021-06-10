@@ -515,6 +515,75 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
            odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
+def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_train, trains_timetable, track_info,
+                             infra_graph, edges_o_stations_d, parameters, odt_priority_list_original):
+
+    train_id_et = emergency_train.id
+
+    # Add an attribute for emergency train (it will be checked in neighbourhood selection like cancel
+    emergency_train.emergency_train = True
+
+    odt_facing_neighbourhood_operator = None
+
+    # Get the time window duration to add an emergency train (it will be the time window of disruption)
+    time_window_duration = round((parameters.disruption_time[1] - parameters.disruption_time[0]).seconds / 60, 0)
+
+    # template train starts at 06:00, so just delay the start of the train by random time delay
+    dep_time_delay = np.random.randint(0, time_window_duration)
+
+    tpns = [tpn_id.id for tpn_id in emergency_train.train_path_nodes]
+
+    # update the train times and index starts at the beginning
+    idx_tpn_delay_from = 0
+    emergency_train = update_train_times_feasible_path_delay_operator(emergency_train,
+                                                                      dep_time_delay,
+                                                                      track_info,
+                                                                      infra_graph,
+                                                                      idx_tpn_delay_from,
+                                                                      parameters)
+
+    if emergency_train.delay == 'infeasible':
+        return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d
+
+    # add the entries to the tpn_information and update the time of the delayed train
+    add_entries_to_tpn_information_and_update_tpns_of_emergency_train(track_info, emergency_train, idx_start_delay=0)
+
+    # create and add driving and waiting edges and nodes to the Graph
+    nodes_edges_dict = timetable_graph.create_transit_edges_nodes_single_train(emergency_train,
+                                                                               infra_graph,
+                                                                               idx_start_delay=0)
+
+    timetable_graph.add_transit_nodes_edges_single_train_to_graph(timetable_prime_graph, nodes_edges_dict, bus=False)
+
+    # create and add transfer edges to the Graph
+    transfer_edges, transfer_edges_attribute, arrival_departure_nodes_train =\
+        timetable_graph.transfer_edges_single_train(timetable_prime_graph,
+                                                    emergency_train,
+                                                    parameters,
+                                                    tpns)
+
+    timetable_prime_graph.add_weighted_edges_from(transfer_edges)
+    nx.set_edge_attributes(timetable_prime_graph, transfer_edges_attribute)
+
+    # update the list of edges from origin to destination
+    edges_o_stations_d = timetable_graph.add_edges_of_train_from_o_stations_d(edges_o_stations_d,
+                                                                              emergency_train,
+                                                                              timetable_prime_graph,
+                                                                              parameters,
+                                                                              0,
+                                                                              tpns)
+
+    # update the changed trains method
+    changed_trains[train_id_et] = {'train_id': train_id_et,
+                                   'DebugString': emergency_train.debug_string,
+                                   'Action': 'EmergencyTrain',
+                                   'body_message': emergency_train['body_message'],
+                                   'EmergencyTrain': True}
+
+    trains_timetable.append(emergency_train)
+
+    return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator, odt_priority_list_original
+
 def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetable, track_info, edges_o_stations_d,
                            parameters, odt_priority_list_original):
     # Initiate the bus identification number
@@ -2442,3 +2511,20 @@ def short_turn_train(parameters, train_disruption_infeasible):
     # Cancel the original train
     train_disruption_infeasible = viriato_interface.cancel_train(train_disruption_infeasible.id)
     return cloned_train1, cloned_train2
+
+
+def add_entries_to_tpn_information_and_update_tpns_of_emergency_train(track_info, train_to_delay, idx_start_delay):
+    for train_path_node in train_to_delay.train_path_nodes[idx_start_delay:]:
+        train_path_node = update_delayed_train_path_node(
+            train_to_delay.runtime_delay_feasible[train_path_node.id], train_path_node)
+
+    # Update track info
+    alns_platform.used_tracks_single_train(track_info.trains_on_closed_tracks,
+                                           track_info.nr_usage_tracks,
+                                           track_info.tpn_information,
+                                           track_info.track_sequences_of_TPN,
+                                           train_to_delay,
+                                           track_info.trains_on_closed_tracks,
+                                           track_info.tuple_key_value_of_tpn_ID_arrival,
+                                           track_info.tuple_key_value_of_tpn_ID_departure,
+                                           idx_start_delay)

@@ -5,8 +5,8 @@ import helpers
 import neighbourhood_operators
 import timetable_graph
 
-np.random.seed(42)
-n_iteration = 3
+np.random.seed(46)
+n_iteration = 7
 
 infra_graph = np.load('output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
 operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
@@ -44,6 +44,8 @@ probabilities = np.load('output/pickle/debug/probabilities_'+str(n_iteration)+'.
 # weights = np.load('output/pickle/debug/weights_'+str(n_iteration)+'.pkl', allow_pickle=True)
 temperature_it = np.load('output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl', allow_pickle=True)
 
+operator = 'EmergencyTrain'
+
 timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
             odt_facing_neighbourhood_operator, odt_priority_list_original = \
                 alns_platform.apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
@@ -62,8 +64,8 @@ timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_origina
                                                      odt_priority_list_original,
                                                      odt_facing_neighbourhood_operator)
 
-
-
+# (203, '2005-05-10T08:03:54', 6790153, 'd')
+# (601, '2005-05-10T07:20:06', 8598001, 'a')
 
 
 
