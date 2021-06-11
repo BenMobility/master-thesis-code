@@ -13,6 +13,7 @@ import passenger_assignment
 import helpers
 import alns_platform
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 # %% Debug main
@@ -151,18 +152,51 @@ import networkx as nx
 # edges_o_stations_d = np.load('output/pickle/debug/edges_o_stations_d_09_06.pkl', allow_pickle=True)
 # parameters = np.load('output/pickle/debug/parameters_09_06.pkl', allow_pickle=True)
 
-parameters = np.load('output/pickle/parameters_alns.pkl', allow_pickle=True)
-timetable_initial_graph = np.load('output/pickle/timetable_alns.pkl', allow_pickle=True)
-infra_graph = np.load('output/pickle/infra_graph_for_alns.pkl', allow_pickle=True)
-trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_pickle=True)
+# parameters = np.load('output/pickle/parameters_alns.pkl', allow_pickle=True)
+# timetable_initial_graph = np.load('output/pickle/timetable_alns.pkl', allow_pickle=True)
+# infra_graph = np.load('output/pickle/infra_graph_for_alns.pkl', allow_pickle=True)
+# trains_timetable = np.load('output/pickle/trains_timetable_for_alns.pkl', allow_pickle=True)
+#
+# parameters.train_capacity = 1500
+#
+# set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
-parameters.train_capacity = 1500
+n_iteration = 6
+solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
 
-set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
+# %%
 
+par_obj = [(p.total_traveltime, p.total_dist_train) for p in solution_archive]
+par_x, par_y = zip(*par_obj)
 
+# %%
 
+# con_obj = [p.objectives for p in pareto.considered]
+# con_x, con_y = zip(*con_obj)
+#
+# # %%
+#
+# rem_obj = [p.objectives for p in pareto.removed]
+# rem_x, rem_y = zip(*rem_obj)
 
+# %%
+
+x_buffer = 10
+y_buffer = 0.1
+
+# %%
+
+plt.axis([min(par_x) - x_buffer,
+          max(par_x) + x_buffer,
+          min(par_y) - y_buffer,
+          max(par_y) + y_buffer])
+plt.plot(par_x, par_y, 'o', label='Pareto')
+# plt.plot(rem_x, rem_y, 'x', label='Removed')
+# plt.plot(con_x, con_y, ',', label='Considered')
+plt.xlabel('Total travel time [min]')
+plt.ylabel('Total distance [km]')
+plt.legend()
+plt.show()
 
 
 

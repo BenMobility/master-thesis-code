@@ -1460,7 +1460,7 @@ def remove_the_duplicates(odt_facing_capacity_constraint):
             # Check which one is the earliest one based on the length of their path. If the earliest is the item, we
             # Need to remove the other one from the seen list and replace it by the item. If not, save the index of the
             # other
-            if length_in_seen > length_current_item:
+            if length_in_seen >= length_current_item:
                 duplicates_to_delete.append(index_odt_list_in_seen)
                 seen.pop(index_odt_list_in_seen)
                 seen[i] = item[0][0:4]
@@ -1983,6 +1983,10 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
     # Create the empty list
     odt_facing_neighbourhood_operator = []
 
+    # Remove duplicates
+    odt_assigned_to_arrive_at_station_with_a_bus = \
+        list(remove_the_duplicates(odt_assigned_to_arrive_at_station_with_a_bus))
+
     # Go through all the edges where the odt are assigned. record them, erase them on the edge.
     for current_odt, departure_node, arrival_node in odt_assigned_to_arrive_at_station_with_a_bus:
         # Get the information from the first list
@@ -1991,7 +1995,10 @@ def find_passenger_affected_by_emergency_bus(prime_timetable, transfer_edges, od
                        and abs(item[2] - current_odt[2]) < 0.0001
                        and item[3] == current_odt[3]]
         extract_odt_path = extract_odt[0][4]
-        index_last_node_on_path_before_bus = extract_odt_path.index(departure_node)
+        try:
+            index_last_node_on_path_before_bus = extract_odt_path.index(departure_node)
+        except ValueError:
+            print(f'The odt {current_odt} has a different path than the extracted one. Please check')
         # Find the last station (commercial stop) before the cancellation
         try:
             j= 100

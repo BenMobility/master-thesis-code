@@ -1365,7 +1365,13 @@ def add_edges_of_train_from_o_stations_d(edges_o_stations_d, train, prime_timeta
         station = transit_node[0]
         if attr['type'] == 'arrivalNode':
             if not transit_node[2] == first_arrival_of_train and tpn_idx_start_delay == 0:
-                zones_to_connect = zone_candidates[station]
+                try:
+                    zones_to_connect = zone_candidates[station]
+                except KeyError:
+                    if hasattr(train, 'emergency_train') and train.emergency_train is True:
+                        continue
+                    else:
+                        print(f'the station {station} is not in the area of interest, but how')
                 for zone, tt_to_zone in zones_to_connect.items():
                     edge = [transit_node, zone, tt_to_zone]
                     if zone in edges_o_stations_d.edges_stations_d_dict.keys():
@@ -1376,7 +1382,13 @@ def add_edges_of_train_from_o_stations_d(edges_o_stations_d, train, prime_timeta
 
         elif attr['type'] == 'departureNode':
             if not transit_node[2] == last_departure_of_train:
-                zones_to_connect = zone_candidates[station]
+                try:
+                    zones_to_connect = zone_candidates[station]
+                except KeyError:
+                    if hasattr(train, 'emergency_train') and train.emergency_train is True:
+                        continue
+                    else:
+                        print(f'the station {station} is not in the area of interest, but how')
                 for zone, tt_to_zone in zones_to_connect.items():
                     if zone not in odt_by_origin.keys():
                         continue

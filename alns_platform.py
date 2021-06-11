@@ -922,8 +922,8 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
                                                         odt_priority_list_original)
 
     elif operator == 'EmergencyTrain':
-        # emergency_train = viriato_interface.get_emergency_train()
-        emergency_train = copy.deepcopy(trains_timetable[0])
+        emergency_train = viriato_interface.get_emergency_train()
+
         changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
         odt_facing_neighbourhood_operator, odt_priority_list_original = \
             neighbourhood_operators.operator_emergency_train(timetable_prime_graph,

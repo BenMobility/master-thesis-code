@@ -518,18 +518,26 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
 def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_train, trains_timetable, track_info,
                              infra_graph, edges_o_stations_d, parameters, odt_priority_list_original):
 
-    train_id_et = emergency_train.id
+    emergency_train._HasID__id = -len(changed_trains)
+
+    # get the number of emergency train already implemented and one more - number to the id
+    train_id_et = -len(changed_trains)
 
     # Add an attribute for emergency train (it will be checked in neighbourhood selection like cancel
     emergency_train.emergency_train = True
 
     odt_facing_neighbourhood_operator = None
 
+    # Get the departure time of emergency train, from that I get the interval dep_time_delay which inside the time
+    # window of disruption
+    min_dep_time_delay = \
+        round((parameters.disruption_time[0] - emergency_train.train_path_nodes[0].departure_time).seconds / 60, 0)
+
     # Get the time window duration to add an emergency train (it will be the time window of disruption)
     time_window_duration = round((parameters.disruption_time[1] - parameters.disruption_time[0]).seconds / 60, 0)
 
     # template train starts at 06:00, so just delay the start of the train by random time delay
-    dep_time_delay = np.random.randint(0, time_window_duration)
+    dep_time_delay = np.random.randint(min_dep_time_delay, time_window_duration + min_dep_time_delay)
 
     tpns = [tpn_id.id for tpn_id in emergency_train.train_path_nodes]
 
@@ -543,7 +551,8 @@ def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_tr
                                                                       parameters)
 
     if emergency_train.delay == 'infeasible':
-        return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d
+        return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d, \
+               odt_facing_neighbourhood_operator, odt_priority_list_original
 
     # add the entries to the tpn_information and update the time of the delayed train
     add_entries_to_tpn_information_and_update_tpns_of_emergency_train(track_info, emergency_train, idx_start_delay=0)
@@ -565,6 +574,12 @@ def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_tr
     timetable_prime_graph.add_weighted_edges_from(transfer_edges)
     nx.set_edge_attributes(timetable_prime_graph, transfer_edges_attribute)
 
+    # Get the list of odt facing the neighbourhood operator (same for emergency train and bus)
+    odt_facing_neighbourhood_operator, timetable_prime_graph, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_emergency_bus(timetable_prime_graph,
+                                                                      transfer_edges,
+                                                                      odt_priority_list_original)
+
     # update the list of edges from origin to destination
     edges_o_stations_d = timetable_graph.add_edges_of_train_from_o_stations_d(edges_o_stations_d,
                                                                               emergency_train,
@@ -577,12 +592,12 @@ def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_tr
     changed_trains[train_id_et] = {'train_id': train_id_et,
                                    'DebugString': emergency_train.debug_string,
                                    'Action': 'EmergencyTrain',
-                                   'body_message': emergency_train['body_message'],
                                    'EmergencyTrain': True}
 
     trains_timetable.append(emergency_train)
 
     return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator, odt_priority_list_original
+
 
 def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetable, track_info, edges_o_stations_d,
                            parameters, odt_priority_list_original):

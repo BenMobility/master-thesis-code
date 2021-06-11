@@ -290,7 +290,10 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         :return: an emergency train object from viriato
         """
         emergency_train = algorithm_interface.get_algorithm_train_parameter('emergency_train')
-        emergency_train = algorithm_interface.clone_train(emergency_train.id)
+        emergency_train = copy.deepcopy(emergency_train)
+
+        # deepcopy instead of clone_train... at the end of the alns only
+        # emergency_train = algorithm_interface.clone_train(emergency_train.id)
         return emergency_train
 
     def cancel_train(train_id):

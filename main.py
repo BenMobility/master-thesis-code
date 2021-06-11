@@ -15,6 +15,7 @@ import timetable_graph
 import alns_platform
 import passenger_assignment
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Viriato
 base_url = 'http://localhost:8080'  # Viriato localhost
@@ -226,3 +227,38 @@ if start_alns:
     # todo: Store the solution to viriato
     print('end of algorithm  \n total running time in [sec] : see profiler')
     # todo: I want to make sure the code follow each steps. and to compute time effort for each one of them
+
+    # %%
+
+    par_obj = [(p.total_traveltime, p.total_dist_train) for p in set_solutions]
+    par_x, par_y = zip(*par_obj)
+
+    # %%
+
+    # con_obj = [p.objectives for p in pareto.considered]
+    # con_x, con_y = zip(*con_obj)
+    #
+    # # %%
+    #
+    # rem_obj = [p.objectives for p in pareto.removed]
+    # rem_x, rem_y = zip(*rem_obj)
+
+    # %%
+
+    x_buffer = 10
+    y_buffer = 0.1
+
+    # %%
+
+    plt.axis([min(par_x) - x_buffer,
+              max(par_x) + x_buffer,
+              min(par_y) - y_buffer,
+              max(par_y) + y_buffer])
+    plt.plot(par_x, par_y, 'o', label='Pareto')
+    # plt.plot(rem_x, rem_y, 'x', label='Removed')
+    # plt.plot(con_x, con_y, ',', label='Considered')
+    plt.xlabel('Total travel time [min]')
+    plt.ylabel('Total distance [km]')
+    plt.legend()
+    plt.show()
+
