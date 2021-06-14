@@ -599,6 +599,114 @@ def operator_emergency_train(timetable_prime_graph, changed_trains, emergency_tr
     return changed_trains, timetable_prime_graph, train_id_et, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator, odt_priority_list_original
 
 
+def operator_return_train_to_initial_timetable(G, changed_trains, cut_trains_to_area, track_info, G_infra,
+                                               edges_o_stations_d, parameters, odt_priority_list_original):
+
+    list_return_candidates = candidates_for_return_operator(changed_trains, parameters)
+    if len(list_return_candidates) <= 3:
+        train_id_to_return = None
+        odt_facing_neighbourhood_operator = None
+        print('empty_changed_trains')
+        return changed_trains, G, train_id_to_return, track_info, edges_o_stations_d,\
+               odt_facing_neighbourhood_operator, odt_priority_list_original
+    try:
+        train_id_to_return = list_return_candidates[np.random.randint(0, len(list_return_candidates) - 1)]
+    except ValueError:
+        print('what went wrong?')
+
+    action_to_revert = changed_trains[train_id_to_return]['Action']
+    print(' trainID', train_id_to_return, changed_trains[train_id_to_return]['DebugString'],
+          ' action to revert :', action_to_revert)
+    if action_to_revert is not 'Cancel':
+        # if not cancel, remove the information of train still in cut trains
+        idx_train_in_timetable_prime = 0
+        while cut_trains_to_area[idx_train_in_timetable_prime].id != train_id_to_return:
+            idx_train_in_timetable_prime += 1
+
+        train_timetable_prime = cut_trains_to_area[idx_train_in_timetable_prime]  # ['TrainPathNodes']
+
+        edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_timetable_prime, G)
+        nodes_attr_train, edges_of_train = remove_nodes_edges_of_train(G, train_id_to_return)
+
+        remove_entries_from_track_sequences(track_info, train_timetable_prime)
+    else:
+        train_timetable_prime = None
+
+    # get the train from initial timetable
+    try:
+        i = 0
+        while parameters.initial_timetable_feasible[i].id != train_id_to_return:
+            i += 1
+        train_initial_updated = copy.deepcopy(parameters.initial_timetable_feasible[i])
+    except IndexError:
+        print('Train not found')
+
+    # update the train times
+    train_before_update = copy.deepcopy(train_initial_updated)
+    time_to_delay = int(0)
+    idx_tpn_delay_from = 0
+    train_initial_updated = update_train_times_feasible_path_delay_operator(train_initial_updated,
+                                                                            time_to_delay,
+                                                                            track_info,
+                                                                            G_infra,
+                                                                            idx_tpn_delay_from,
+                                                                            parameters)
+
+    train_update_feasible = False
+    if train_initial_updated.delay == 'feasible':
+        train_update_feasible = True
+        # remove the entries in the tpn_information and update the time of the delayed train
+        remove_entries_in_tpn_information_and_update_tpns_of_return_train(track_info, train_initial_updated,
+                                                                          train_timetable_prime, action_to_revert)
+    else:
+        train_initial_updated = train_before_update
+
+    if action_to_revert == 'Cancel':
+        cut_trains_to_area.append(train_initial_updated)
+    else:
+        cut_trains_to_area[idx_train_in_timetable_prime] = train_initial_updated
+
+    # create and add driving and waiting edges and nodes to the Graph
+    nodes_edges_dict = timetable_graph.create_transit_edges_nodes_single_train(train_initial_updated,
+                                                                               G_infra,
+                                                                               idx_start_delay=0)
+
+    timetable_graph.add_transit_nodes_edges_single_train_to_graph(G, nodes_edges_dict, bus=False)
+    # create and add transfer edges to the Graph
+    tpns = [tpn_id.id for tpn_id in train_initial_updated.train_path_nodes]
+    transfer_edges, transfer_edges_attribute, arrival_departure_nodes_train =\
+        timetable_graph.transfer_edges_single_train(G,
+                                                    train_initial_updated,
+                                                    parameters,
+                                                    tpns)
+    G.add_weighted_edges_from(transfer_edges)
+    nx.set_edge_attributes(G, transfer_edges_attribute)
+
+    # Get the list of odt facing the neighbourhood operator
+    odt_facing_neighbourhood_operator, G, odt_priority_list_original = \
+        passenger_assignment.find_passenger_affected_by_emergency_bus(G,
+                                                                      transfer_edges,
+                                                                      odt_priority_list_original)
+    # update the list of edges from origin to destination
+
+    edges_o_stations_d = timetable_graph.add_edges_of_train_from_o_stations_d(edges_o_stations_d,
+                                                                              train_initial_updated,
+                                                                              G,
+                                                                              parameters,
+                                                                              0,
+                                                                              tpns)
+
+    # update the changed trains method
+    if train_update_feasible:
+        changed_trains[train_id_to_return] = {'train_id': train_id_to_return,
+                                              'DebugString': train_initial_updated.debug_string,
+                                              'Action': 'Return'}
+
+    print(action_to_revert)
+    return changed_trains, G, train_id_to_return, track_info, edges_o_stations_d, odt_facing_neighbourhood_operator,\
+           odt_priority_list_original
+
+
 def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetable, track_info, edges_o_stations_d,
                            parameters, odt_priority_list_original):
     # Initiate the bus identification number
@@ -664,6 +772,50 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
 
     return changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d,\
            odt_facing_neighbourhood_operator, odt_priority_list_original
+
+
+def candidates_for_return_operator(changed_trains, parameters):
+    no_action = ['EmergencyTrain', 'EmergencyBus', 'Return', 'Reroute']
+    list_return_candidates = [trainID for trainID, attr in changed_trains.items() if attr['Action'] not in
+                              no_action and
+                              trainID not in parameters.trains_on_closed_track_initial_timetable_infeasible
+                              and trainID in parameters.train_ids_initial_timetable_infeasible]
+    return list_return_candidates
+
+
+def remove_entries_in_tpn_information_and_update_tpns_of_return_train(track_info, train_initial_updated,
+                                                                      train_timetable_prime, action_to_revert):
+    if action_to_revert == 'Cancel':
+        for tpn in train_initial_updated.train_path_nodes:
+            tpn = update_delayed_tpn(train_initial_updated.runtime_delay_feasible[tpn.id], tpn)
+
+    else:
+        train_timetable_prime_dict = \
+            helpers.build_dict_from_viriato_object_train_id(train_timetable_prime.train_path_nodes)
+        for tpn in train_initial_updated.train_path_nodes:
+            if tpn.id in train_timetable_prime_dict.keys():
+                tuple_key_value_arr = track_info.tuple_key_value_of_tpn_ID_arrival.pop(tpn.id)
+                tuple_key_value_dep = track_info.tuple_key_value_of_tpn_ID_departure.pop(tpn.id)
+                tpn_info = track_info.tpn_information.pop(tpn.id)
+
+            tpn = update_delayed_tpn(train_initial_updated.runtime_delay_feasible[tpn.id], tpn)
+
+    # Update track info
+    alns_platform.used_tracks_single_train(track_info.trains_on_closed_tracks,
+                                           track_info.nr_usage_tracks,
+                                           track_info.tpn_information,
+                                           track_info.track_sequences_of_TPN,
+                                           train_initial_updated,
+                                           track_info.trains_on_closed_tracks,
+                                           track_info.tuple_key_value_of_tpn_ID_arrival,
+                                           track_info.tuple_key_value_of_tpn_ID_departure,
+                                           0)
+
+
+def update_delayed_tpn(runtime_delay_feasible, tpn):
+    tpn._AlgorithmTrainPathNode__departure_time = runtime_delay_feasible['DepartureTime']
+    tpn._AlgorithmTrainPathNode__arrival_time = runtime_delay_feasible['ArrivalTime']
+    return tpn
 
 
 def bus_add_bus_path_nodes(bus_id, departure_time, parameters):

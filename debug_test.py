@@ -5,8 +5,8 @@ import helpers
 import neighbourhood_operators
 import timetable_graph
 
-np.random.seed(46)
-n_iteration = 7
+np.random.seed(42)
+n_iteration = 20
 
 infra_graph = np.load('output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
 operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
@@ -44,7 +44,7 @@ probabilities = np.load('output/pickle/debug/probabilities_'+str(n_iteration)+'.
 # weights = np.load('output/pickle/debug/weights_'+str(n_iteration)+'.pkl', allow_pickle=True)
 temperature_it = np.load('output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl', allow_pickle=True)
 
-operator = 'EmergencyTrain'
+operator = 'Return'
 
 timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
             odt_facing_neighbourhood_operator, odt_priority_list_original = \

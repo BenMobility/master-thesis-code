@@ -948,10 +948,17 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
                                                            odt_priority_list_original)
 
     elif operator == 'Return':
-        odt_facing_neighbourhood_operator = None
-        # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d = \
-        #     operator_return_train_to_initial_timetable(timetable_prime_graph, changed_trains, trains_timetable, track_info, infra_graph,
-        #                                                edges_o_stations_d, parameters)
+
+        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
+        odt_facing_neighbourhood_operator, odt_priority_list_original = \
+            neighbourhood_operators.operator_return_train_to_initial_timetable(timetable_prime_graph,
+                                                                               changed_trains,
+                                                                               trains_timetable,
+                                                                               track_info,
+                                                                               infra_graph,
+                                                                               edges_o_stations_d,
+                                                                               parameters,
+                                                                               odt_priority_list_original)
 
     return timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator,\
            odt_facing_neighbourhood_operator, odt_priority_list_original
