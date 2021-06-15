@@ -93,8 +93,11 @@ def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_inf
         while not train_found:
             train_id_to_cancel = trains_timetable[np.random.randint(0, len(trains_timetable))].id
             i = 0
-            while trains_timetable[i].id != train_id_to_cancel:
-                i += 1
+            try:
+                while trains_timetable[i].id != train_id_to_cancel:
+                    i += 1
+            except (IndexError, AttributeError):
+                continue
             train_to_cancel = trains_timetable[i]
             comm_stops = 0
             # Check if there is more than 3 commercial stops to make partial cancel valid
@@ -173,7 +176,9 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
                 while trains_timetable[i].id != train_id_to_cancel_from:
                     i += 1
                 train_to_cancel_from = trains_timetable[i]
-            except IndexError:
+            # Index means there a no train in the list that matches, the attribute error means it is a bus and we cannot
+            # cancel from
+            except (IndexError, AttributeError):
                 continue
             comm_stops = 0
             # Check if there is more than 3 commercial stops to make partial cancel valid
@@ -187,8 +192,11 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
         while not train_found:
             train_id_to_cancel_from = trains_timetable[np.random.randint(0, len(trains_timetable))].id
             i = 0
-            while trains_timetable[i].id != train_id_to_cancel_from:
-                i += 1
+            try:
+                while trains_timetable[i].id != train_id_to_cancel_from:
+                    i += 1
+            except AttributeError:
+                continue
             train_to_cancel_from = trains_timetable[i]
             comm_stops = 0
             # Check if there is more than 3 commercial stops to make partial cancel valid
@@ -617,7 +625,7 @@ def operator_return_train_to_initial_timetable(G, changed_trains, cut_trains_to_
     action_to_revert = changed_trains[train_id_to_return]['Action']
     print(' trainID', train_id_to_return, changed_trains[train_id_to_return]['DebugString'],
           ' action to revert :', action_to_revert)
-    if action_to_revert is not 'Cancel':
+    if action_to_revert != 'Cancel':
         # if not cancel, remove the information of train still in cut trains
         idx_train_in_timetable_prime = 0
         while cut_trains_to_area[idx_train_in_timetable_prime].id != train_id_to_return:
@@ -731,7 +739,7 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
     emergency_bus = bus_add_bus_path_nodes(bus_id, departure_time_bus, parameters)
 
     # Get the train path nodes of the bus for the timetable graph
-    tpns_bus = [tpn_id['ID'] for tpn_id in emergency_bus['TrainPathNodes']]
+    tpns_bus = [tpn_id.id for tpn_id in emergency_bus.train_path_nodes]
 
     # Create and add driving and waiting edges and nodes to the timetable graph
     nodes_edges_dict = timetable_graph.create_transit_edges_nodes_emergency_bus(emergency_bus)
@@ -762,7 +770,7 @@ def operator_emergency_bus(timetable_prime_graph, changed_trains, trains_timetab
 
     # Update the changed trains method
     changed_trains[bus_id] = {'train_id': bus_id,
-                              'DebugString': emergency_bus['DebugString'],
+                              'DebugString': emergency_bus.debug_string,
                               'Action': 'EmergencyBus',
                               'body_message': None,
                               'EmergencyTrain': True}
@@ -819,15 +827,9 @@ def update_delayed_tpn(runtime_delay_feasible, tpn):
 
 
 def bus_add_bus_path_nodes(bus_id, departure_time, parameters):
-    # Initiate the bus dictionary
-    bus = {}
 
     # Get the arrival time
     arrival_time = departure_time + datetime.timedelta(minutes=10)
-
-    # Save the bus id in the dictionary
-    bus['ID'] = bus_id
-    bus['EmergencyBus'] = True
 
     # Scenario low traffic, hence the bus needs to serve between Walisellen and Dietlikon. Direction is chosen randomly
     if np.random.uniform(0.0, 1.0) < 0.5:
@@ -837,34 +839,28 @@ def bus_add_bus_path_nodes(bus_id, departure_time, parameters):
         start = parameters.stations_on_closed_tracks[0]
         end = parameters.stations_on_closed_tracks[1]
 
-    # Save the the bus path nodes
-    bus['TrainPathNodes'] = [{
-            "ID": bus_id + str(1),
-            "SectionTrackID": None,
-            "IsSectionTrackAscending": None,
-            "NodeID": start,
-            "NodeTrackID": None,
-            "ArrivalTime": departure_time,
-            "DepartureTime": departure_time,
-            "MinimumRunTime": datetime.timedelta(seconds=0),
-            "MinimumStopTime": datetime.timedelta(seconds=0),
-            "StopStatus": "commercial_stop",
-            "SequenceNumber": 0
-        },
-        {
-            "ID": bus_id + str(2),
-            "SectionTrackID": None,
-            "IsSectionTrackAscending": None,
-            "NodeID": end,
-            "NodeTrackID": None,
-            "ArrivalTime": arrival_time,
-            "DepartureTime": arrival_time,
-            "MinimumRunTime": datetime.timedelta(minutes=10),
-            "MinimumStopTime": datetime.timedelta(seconds=0),
-            "StopStatus": "commercial_stop",
-            "SequenceNumber": 1
-        }]
-    bus['DebugString'] = "EmergencyBus"
+    # Save the first bus path node
+    first_bus_path_node = helpers.BusPathNode()
+    first_bus_path_node.id = bus_id + str(1)
+    first_bus_path_node.node_id = start
+    first_bus_path_node.arrival_time = departure_time
+    first_bus_path_node.departure_time = departure_time
+    first_bus_path_node.sequence_number = 0
+
+    # Save the second bus path node
+    second_bus_path_node = helpers.BusPathNode()
+    second_bus_path_node.id = bus_id + str(2)
+    second_bus_path_node.node_id = end
+    second_bus_path_node.arrival_time = arrival_time
+    second_bus_path_node.departure_time = arrival_time
+    second_bus_path_node.minimum_run_time = datetime.timedelta(minutes=10)
+    second_bus_path_node.sequence_number = 1
+
+    # build a list for bus path node like the train path nodes
+    train_path_nodes = [first_bus_path_node, second_bus_path_node]
+    bus = helpers.EmergencyBus(train_path_nodes)
+    bus.id = bus_id
+
     return bus
 
 

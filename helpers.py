@@ -256,6 +256,35 @@ class Solution:
         self.set_of_trains_for_operator = {}
 
 
+# class object for emergency bus
+class EmergencyBus:
+    def __init__(self, train_path_nodes):
+        self.name = 'emergency_bus'
+
+        self.id = None
+        self.debug_string = 'EmergencyBus'
+        self.train_path_nodes = train_path_nodes
+        self.emergency_bus = True
+
+
+# class object for emergency bus path node
+class BusPathNode:
+    def __init__(self):
+        self.name = 'emergency_bus_path_node'
+
+        self.id = None
+        self.section_track_id = None
+        self.is_section_track_ascending = None
+        self.node_id = None
+        self.node_track_id = None
+        self.arrival_time = None
+        self.departure_time = None
+        self.minimum_run_time = datetime.timedelta(seconds=0)
+        self.minimum_stop_time = datetime.timedelta(seconds=0)
+        self.stop_status = 'commercial_stop'
+        self.sequence_number = None
+
+
 def add_field_com_stop(sbb_nodes, stations_with_commercial_stop):
     """
     function that add commercial stop attributes in the sbb nodes.

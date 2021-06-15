@@ -1145,8 +1145,8 @@ def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
     zhHB_code = [611, 638, 13]
 
     # Create a dictionary for the commercial stop of the bus
-    comm_stops_of_bus = {node['ID']: node['NodeID'] for node in bus['TrainPathNodes']
-                         if node['StopStatus'] == 'commercial_stop' and node['ID'] in tpns_bus}
+    comm_stops_of_bus = {node.id: node.node_id for node in bus.train_path_nodes
+                         if node.stop_status == 'commercial_stop' and node.id in tpns_bus}
 
     # List of zurich train station code
     zh_station_helper = []
@@ -1160,7 +1160,7 @@ def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
     arrival_nodes_bus = dict()
     for x, y in timetable_graph.nodes(data=True):
         try:
-            if y['train'] == bus['ID']:
+            if y['train'] == bus.id:
                 if y['type'] == 'arrivalNode' and x[2] in tpns_bus:
                     arrival_nodes_bus[x[2]] = (x, y)
                 elif y['type'] == 'departureNode' and x[2] in tpns_bus:
@@ -1194,8 +1194,8 @@ def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
     transfer_edges_attributes = dict()
 
     # Identify all arrival nodes
-    for tpn in bus['TrainPathNodes']:
-        station = tpn['NodeID']
+    for tpn in bus.train_path_nodes:
+        station = tpn.node_id
 
         # Select dep and arr candidates of trains if there are any
         arrivals_at_station = []
@@ -1219,22 +1219,22 @@ def transfer_edges_single_bus(timetable_graph, bus, M, m, tpns_bus, parameters):
         # Skip the starting node of a train for arrival of train to departure transfer
 
         # Transfer edges from arrival of the bus to all departures of other trains
-        if tpn['SequenceNumber'] == 1:
+        if tpn.sequence_number == 1:
             for label, attr in departures_at_station:
-                delta_t = attr['departureTime'] - arrival_nodes_bus[tpn['ID']][1]['arrivalTime']
+                delta_t = attr['departureTime'] - arrival_nodes_bus[tpn.id][1]['arrivalTime']
                 if m < delta_t < M:
                     weight = delta_t * parameters.beta_waiting + datetime.timedelta(minutes=parameters.beta_transfer)
-                    transfer_edges.append([arrival_nodes_bus[tpn['ID']][0], label, float(weight.seconds / 60)])
-                    transfer_edges_attributes[arrival_nodes_bus[tpn['ID']][0], label] = {'type': 'transfer'}
+                    transfer_edges.append([arrival_nodes_bus[tpn.id][0], label, float(weight.seconds / 60)])
+                    transfer_edges_attributes[arrival_nodes_bus[tpn.id][0], label] = {'type': 'transfer'}
 
-        elif tpn['SequenceNumber'] == 0:
+        elif tpn.sequence_number == 0:
             # Only edges from arrival of trains to departure of bus
             for label, attr in arrivals_at_station:
-                delta_t = departure_nodes_bus[tpn['ID']][1]['departureTime'] - attr['arrivalTime']
+                delta_t = departure_nodes_bus[tpn.id][1]['departureTime'] - attr['arrivalTime']
                 if m < delta_t < M:
                     weight = delta_t * parameters.beta_waiting + datetime.timedelta(minutes=parameters.beta_transfer)
-                    transfer_edges.append([label, departure_nodes_bus[tpn['ID']][0], float(weight.seconds / 60)])
-                    transfer_edges_attributes[label, departure_nodes_bus[tpn['ID']][0]] = {'type': 'transfer'}
+                    transfer_edges.append([label, departure_nodes_bus[tpn.id][0], float(weight.seconds / 60)])
+                    transfer_edges_attributes[label, departure_nodes_bus[tpn.id][0]] = {'type': 'transfer'}
 
     return transfer_edges, transfer_edges_attributes, [arrival_nodes_bus, departure_nodes_bus]
 
@@ -1409,7 +1409,7 @@ def add_edges_of_train_from_o_stations_d(edges_o_stations_d, train, prime_timeta
 
 def add_edges_of_bus_from_o_stations_d(edges_o_stations_d, bus, prime_timetable, parameters):
     # Get the arrival and departure node of the bus
-    arr_dep_nodes_bus = [(n, v) for n, v in prime_timetable.nodes(data=True) if v['train'] == bus['ID']
+    arr_dep_nodes_bus = [(n, v) for n, v in prime_timetable.nodes(data=True) if v['train'] == bus.id
                          and v['type'] in ['arrivalNode', 'departureNode']]
 
     # Get the OD time from the parameters and the zone candidates as well
@@ -1465,25 +1465,25 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
     # Loop through all path nodes of a bus
     n = 0
-    for train_path_node in bus['TrainPathNodes']:
+    for train_path_node in bus.train_path_nodes:
         n += 1
 
         # Update time and node
-        arrival_time_this_node = train_path_node['ArrivalTime']
-        arrival_node_this_node = train_path_node['NodeID']
-        departure_time_this_node = train_path_node['DepartureTime']
-        departure_node_this_node = train_path_node['NodeID']
+        arrival_time_this_node = train_path_node.arrival_time
+        arrival_node_this_node = train_path_node.node_id
+        departure_time_this_node = train_path_node.departure_time
+        departure_node_this_node = train_path_node.node_id
 
         # First node
         if n == 1:
-            departure_time_str = datetime.datetime.strftime(train_path_node['DepartureTime'], "%Y-%m-%dT%H:%M:%S")
+            departure_time_str = datetime.datetime.strftime(train_path_node.departure_time, "%Y-%m-%dT%H:%M:%S")
             node_name_dep_this = (departure_node_this_node,
                                   departure_time_str,
-                                  train_path_node['ID'],
+                                  train_path_node.id,
                                   'd')
             departure_nodes.append(node_name_dep_this)
-            attributes = {'train': bus['ID'], 'type': 'departureNode', 'departureTime': departure_time_this_node,
-                          'StopStatus': train_path_node['StopStatus'], 'bus': 'EmergencyBus'}
+            attributes = {'train': bus.id, 'type': 'departureNode', 'departureTime': departure_time_this_node,
+                          'StopStatus': train_path_node.stop_status, 'bus': 'EmergencyBus'}
             departure_nodes_attributes[node_name_dep_this] = attributes
             departure_time_last_node = departure_time_this_node
             departure_node_last_node = departure_node_this_node
@@ -1491,14 +1491,14 @@ def create_transit_edges_nodes_emergency_bus(bus):
 
         # End of the bus
         elif n == 2:
-            arrival_time_str = datetime.datetime.strftime(train_path_node['ArrivalTime'], "%Y-%m-%dT%H:%M:%S")
+            arrival_time_str = datetime.datetime.strftime(train_path_node.arrival_time, "%Y-%m-%dT%H:%M:%S")
             node_name_arr_this = (arrival_node_this_node,
                                   arrival_time_str,
-                                  train_path_node['ID'],
+                                  train_path_node.id,
                                   'a')
             arrival_nodes.append(node_name_arr_this)
-            attributes = {'train': bus['ID'], 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
-                          'StopStatus': train_path_node['StopStatus'], 'bus': 'EmergencyBus'}
+            attributes = {'train': bus.id, 'type': 'arrivalNode', 'arrivalTime': arrival_time_this_node,
+                          'StopStatus': train_path_node.stop_status, 'bus': 'EmergencyBus'}
 
             arrival_nodes_attributes[node_name_arr_this] = attributes
 
@@ -1507,7 +1507,7 @@ def create_transit_edges_nodes_emergency_bus(bus):
             driving_edges.append([departure_node_last_node_name, node_name_arr_this, float(run_time.seconds / 60)])
             driving_edges_attributes[departure_node_last_node_name, node_name_arr_this] = {'flow': [],
                                                                                            'type': 'driving',
-                                                                                           'bus_id': bus['ID'],
+                                                                                           'bus_id': bus.id,
                                                                                            'bus': True,
                                                                                            'odt_assigned': []}
 

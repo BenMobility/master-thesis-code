@@ -1100,15 +1100,12 @@ def distance_travelled_all_trains(trains_timetable, infra_graph, parameters):
             print('Train canceled ? (method: distance_travelled_all_trains, alns_platform.py)')
             continue
 
-        # Loop through all the nodes in the train path and add the distance in the total distance
-        try:
-            for tpn in train.train_path_nodes:
-                if tpn.section_track_id is not None:
-                    total_distance += infra_graph.graph['cache_trackID_dist'][tpn.section_track_id]
-        # It is a bus
-        except AttributeError:
-            # It is a bus that takes 10 minutes to do the run. Average of 50 km/hr, 12 km for 10 minutes. (decimeter)
-            total_distance += parameters.deviation_penalty_bus * 40000
+        for tpn in train.train_path_nodes:
+            if tpn.section_track_id is not None:
+                total_distance += infra_graph.graph['cache_trackID_dist'][tpn.section_track_id]
+            else:
+                total_distance += parameters.deviation_penalty_bus * 40000
+
     # The distance is in decimeter --> divide by 10 * 1000 to have it in km
     total_distance = round(total_distance / (10*1000), 1)
     return total_distance
@@ -1317,15 +1314,16 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
                         and timetable_prime[train_id].emergency_train is True:
 
                     # Add penalty for emergency train
-                    total_deviation = deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                                parameters)
+                    total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation,
+                                                                 train_id,
+                                                                 parameters)
                     continue
                 elif hasattr(timetable_prime[train_id], 'emergency_bus') \
                         and timetable_prime[train_id].emergency_bus is True:
 
                     # Add penalty for emergency bus
-                    total_deviation = deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id,
-                                                              parameters)
+                    total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id,
+                                                               parameters)
                     continue
             except KeyError:
                 print('Something went wrong with the deviation timetable and action delay or return.')
@@ -1347,7 +1345,8 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
             if hasattr(timetable_prime[train_id], 'emergency_train') \
                     and timetable_prime[train_id].emergency_train is True:
 
-                deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id, parameters)
+                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
+                                                             parameters)
                 continue
 
             max_delay_tpn, total_delay_train = deviation_delay_train(fmt, timetable_initial, timetable_prime, train_id)
@@ -1363,12 +1362,12 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
 
         # Check the action, if it is emergency train, update the deviation penalty
         elif action == 'EmergencyTrain':
-            total_deviation = deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                        parameters)
+            total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
+                                                         parameters)
 
         # Check the action, if it is emergency bus, update the deviation penalty
         elif action == 'EmergencyBus':
-            total_deviation = deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id, parameters)
+            total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id, parameters)
 
     return round(total_deviation, 1)
 
@@ -1381,10 +1380,6 @@ def deviation_emergency_train(timetable_prime, d_e, total_deviation, train_id, p
     # Add the penalty for deviation emergency train
     total_deviation += d_e * ((arr_time_end_train - dep_time_start).seconds / 60)
 
-    # Add the train for the set of trains for operator cancel and delay
-    parameters.set_of_trains_for_operator['Cancel'].append(train_id)
-    parameters.set_of_trains_for_operator['Delay'].append(train_id)
-
     return total_deviation
 
 
@@ -1395,9 +1390,6 @@ def deviation_emergency_bus(timetable_prime, d_b, total_deviation, train_id, par
 
     # Add deviation penalty for bus
     total_deviation += d_b + (arr_time_end_train - dep_time_start).seconds / 60
-
-    parameters.set_of_trains_for_operator['Cancel'].append(train_id)
-    parameters.set_of_trains_for_operator['Delay'].append(train_id)
 
     return total_deviation
 
