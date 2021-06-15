@@ -1608,6 +1608,16 @@ def find_passenger_affected_by_delay(prime_timetable, train_to_delay, odt_priori
     # Go through all the edges where the odt are assigned. record them, erase them on the edge.
     for i in reversed(range(len(arr_dep_nodes_train) - 1)):
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
+
+        try:
+            prime_timetable[departure_node][arrival_node]['odt_assigned']
+        except KeyError:
+            alns_platform.pickle_results(arr_dep_nodes_train,
+                                         'output/pickle/debug/key_error-nodes.pkl')
+            alns_platform.pickle_results(prime_timetable,
+                                         'output/pickle/debug/key_error_timetable.pkl')
+            alns_platform.pickle_results(train_to_delay,
+                                         'output/pickle/debug/key_error_train.pkl')
         try:
             for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
                 # Get the information from the first list
@@ -1820,6 +1830,17 @@ def find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from
     # Go through all the edges where the odt are assigned. record them, erase them on the edge.
     for i in reversed(range(len(arr_dep_nodes_train) - 1)):
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
+
+        try:
+            prime_timetable[departure_node][arrival_node]['odt_assigned']
+        except KeyError:
+            alns_platform.pickle_results(arr_dep_nodes_train,
+                                         'output/pickle/debug/key_error-nodes.pkl')
+            alns_platform.pickle_results(prime_timetable,
+                                         'output/pickle/debug/key_error_timetable.pkl')
+            alns_platform.pickle_results(train_to_cancel_from,
+                                         'output/pickle/debug/key_error_train.pkl')
+
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list
             extract_odt = [item for item in odt_priority_list_original
@@ -1911,6 +1932,17 @@ def find_passenger_affected_by_complete_cancel(prime_timetable, train_to_cancel,
     # Go through all the edges where the odt are assigned. record them, erase them on the edge.
     for i in reversed(range(len(arr_dep_nodes_train) - 1)):
         departure_node, arrival_node = arr_dep_nodes_train[i], arr_dep_nodes_train[i + 1]
+
+        try:
+            prime_timetable[departure_node][arrival_node]['odt_assigned']
+        except KeyError:
+            alns_platform.pickle_results(arr_dep_nodes_train,
+                                         'output/pickle/debug/key_error-nodes.pkl')
+            alns_platform.pickle_results(prime_timetable,
+                                         'output/pickle/debug/key_error_timetable.pkl')
+            alns_platform.pickle_results(train_to_cancel,
+                                         'output/pickle/debug/key_error_train.pkl')
+
         for current_odt in prime_timetable[departure_node][arrival_node]['odt_assigned']:
             # Get the information from the first list, due the fact of error in rounding. We can verify the priority
             # with the absolute difference.

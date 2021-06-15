@@ -1115,10 +1115,11 @@ def update_train_times_feasible_path_delay_operator(train_to_delay, time_to_dela
             else:
                 try:
                     arr_time_tpn = runtime_delayed_train_feasible[node.id]['ArrivalTime']
+                    arr_time_train_path_node = arr_time_tpn
+                    dep_time_train_path_node = arr_time_train_path_node + \
+                                               train_path_nodes_train[node.id].minimum_stop_time
                 except KeyError:
                     pass
-                arr_time_train_path_node = arr_time_tpn
-                dep_time_train_path_node = arr_time_train_path_node + train_path_nodes_train[node.id].minimum_stop_time
 
             # Find the free capacity for all nodes until next station in tracks_used_in_section
             section_clear = False

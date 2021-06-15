@@ -281,8 +281,16 @@ class BusPathNode:
         self.departure_time = None
         self.minimum_run_time = datetime.timedelta(seconds=0)
         self.minimum_stop_time = datetime.timedelta(seconds=0)
-        self.stop_status = 'commercial_stop'
+        self.stop_status = StopStatus()
         self.sequence_number = None
+
+
+# class object for emergency bus path node
+class StopStatus:
+    def __init__(self):
+        self.name = 'commercial_stop'
+        self.stop = None
+        self.test = 0
 
 
 def add_field_com_stop(sbb_nodes, stations_with_commercial_stop):

@@ -210,12 +210,12 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-print('Save the output before the alns.')
-# And save the output of the passengers assignment
-alns_platform.pickle_results(parameters, 'output/pickle/parameters_alns.pkl')
-alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_alns.pkl')
-alns_platform.pickle_results(infra_graph, 'output/pickle/infra_graph_for_alns.pkl')
-alns_platform.pickle_results(trains_timetable, 'output/pickle/trains_timetable_for_alns.pkl')
+# print('Save the output before the alns.')
+# # And save the output of the passengers assignment
+# alns_platform.pickle_results(parameters, 'output/pickle/parameters_alns.pkl')
+# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_alns.pkl')
+# alns_platform.pickle_results(infra_graph, 'output/pickle/infra_graph_for_alns.pkl')
+# alns_platform.pickle_results(trains_timetable, 'output/pickle/trains_timetable_for_alns.pkl')
 
 # %% Run the ALNS
 if start_alns:
