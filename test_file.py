@@ -15,6 +15,11 @@ import alns_platform
 import networkx as nx
 import matplotlib.pyplot as plt
 
+arr_dep_nodes_train = np.load('output/pickle/debug/key_error-nodes.pkl', allow_pickle=True)
+prime_timetable = np.load('output/pickle/debug/key_error_timetable.pkl', allow_pickle=True)
+train_to_delay = np.load('output/pickle/debug/key_error_train.pkl', allow_pickle=True)
+
+print(arr_dep_nodes_train)
 
 # %% Debug main
 # timetable_initial_graph = np.load('output/pickle/initial_timetable_m0_M90_threshold_8000.pickle', allow_pickle=True)
@@ -160,46 +165,46 @@ import matplotlib.pyplot as plt
 # parameters.train_capacity = 1500
 #
 # set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
-
-n_iteration = 6
-solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
-
-# %%
-
-par_obj = [(p.total_traveltime, p.total_dist_train) for p in solution_archive]
-par_x, par_y = zip(*par_obj)
-
-# %%
-
-# con_obj = [p.objectives for p in pareto.considered]
-# con_x, con_y = zip(*con_obj)
+#
+# n_iteration = 52
+# solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
 #
 # # %%
 #
-# rem_obj = [p.objectives for p in pareto.removed]
-# rem_x, rem_y = zip(*rem_obj)
-
-# %%
-
-x_buffer = 10
-y_buffer = 0.1
-
-# %%
-
-plt.axis([min(par_x) - x_buffer,
-          max(par_x) + x_buffer,
-          min(par_y) - y_buffer,
-          max(par_y) + y_buffer])
-plt.plot(par_x, par_y, 'o', label='Pareto')
-# plt.plot(rem_x, rem_y, 'x', label='Removed')
-# plt.plot(con_x, con_y, ',', label='Considered')
-plt.xlabel('Total travel time [min]')
-plt.ylabel('Total distance [km]')
-plt.legend()
-plt.show()
-
-
-
+# par_obj = [(p.total_traveltime, p.total_dist_train) for p in solution_archive]
+# par_x, par_y = zip(*par_obj)
+#
+# # %%
+#
+# # con_obj = [p.objectives for p in pareto.considered]
+# # con_x, con_y = zip(*con_obj)
+# #
+# # # %%
+# #
+# # rem_obj = [p.objectives for p in pareto.removed]
+# # rem_x, rem_y = zip(*rem_obj)
+#
+# # %%
+#
+# x_buffer = 10
+# y_buffer = 0.1
+#
+# # %%
+#
+# plt.axis([min(par_x) - x_buffer,
+#           max(par_x) + x_buffer,
+#           min(par_y) - y_buffer,
+#           max(par_y) + y_buffer])
+# plt.plot(par_x, par_y, 'o', label='Pareto')
+# # plt.plot(rem_x, rem_y, 'x', label='Removed')
+# # plt.plot(con_x, con_y, ',', label='Considered')
+# plt.xlabel('Total travel time [min]')
+# plt.ylabel('Total distance [km]')
+# plt.legend()
+# plt.show()
+#
+#
+#
 
 
 
