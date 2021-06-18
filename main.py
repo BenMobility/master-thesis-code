@@ -5,27 +5,24 @@ Created on Mon Jan  25 2021
 
 Main code for repair scheduling in railways
 """
-# %% Imports
+# %% Usual Imports
 import datetime
-
 import infrastructure_graph
 import viriato_interface
 import helpers
 import timetable_graph
 import alns_platform
-import passenger_assignment
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Viriato
 base_url = 'http://localhost:8080'  # Viriato localhost
-random_seed = 42
-np.random.seed(random_seed)  # Random seed for the main code
+random_seed = 42  # Random seed for the main code
+np.random.seed(random_seed)
 
-# %% filter, alns
+# %% debug modes
 filter_passengers = False
-start_alns = True
-debug_mode_passenger = False
+debug_mode_passenger = False        # It will probably have an error with the shortest path and destination nodes
 debug_mode_train = False
 
 if debug_mode_passenger:
@@ -36,35 +33,35 @@ if debug_mode_train:
 # %% Parameters initialization
 
 # Parameters
-th_zone_selection = 8000  # Threshold of the zone selection in meters [0]
-nb_zones_to_connect = 1  # Number of zones to connect in total [1]
-nb_stations_to_connect = 2  # Number of stations to connect (in euclidean) [2]
-min_nb_passenger = 0  # Minimum number of passenger [3]
-min_transfer_time = 2  # Original: 2 min Minimum transfer time (m) in minutes [4]
-max_transfer_time = 20  # Original: 20 min  Maximum transfer time (M) in minutes [5]
-min_transfer_time_bus = 1  # Minimum transfer time in minutes for emergency buses [6]
-max_transfer_time_bus = 20  # Maximum transfer time in minutes for emergency buses [7]
-origin_train_departure_min_time = 2  # (2 min) Minimum waiting time in minutes for the origin train departure [8]
-origin_train_departure_max_time = 20  # (20 min)Maximum waiting time in minutes for the origin train departure [9]
-beta_transfer = 10  # Beta for transfer edges minutes [10]
-beta_waiting = 2.5  # Beta for waiting edges min/min [11]
-penalty_edge = 1000  # Penalty edge for not assigned passengers in the system [12] todo: change for something else
-score_1 = 10  # Score for the ALNS algorithm, accepted solution. [13]
-score_2 = 2  # Score for the ALNS algorithm, accepted solution, yet worsened solution. [14]
-score_3 = 0  # Score for the ALNS algorithm, rejected solution. [15]
-t_start_op = 10 ** 6  # Starting temperature for Simulated Annealing on the operation objective [16]
-t_start_de_reroute = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [17]
-t_start_de_cancel = 10 ** 6  # Starting temperature for Simulated Annealing on the deviation objective [56]
-t_start_tt = 10 ** 6  # Starting temperature for Simulated Annealing on the travel time objective [18]
-weight_closed_tracks = 10e9  # Weight for closed tracks edges [19]
-train_capacity = 1500  # Number of passenger per train [20]
-bus_capacity = 100  # Number of passenger per bus in Zurich [21]
-penalty_no_path = 120  # Penalty of no assignment equals duration in minutes [22] todo: define better
-delayTime_to_consider_cancel = 30  # Delay time to consider for full cancel in minutes [23]
-delayTime_to_consider_partCancel = 10  # Delay time to consider for part cancel in minutes [24]
-commercial_stops = 1  # Threshold for a train to be considered in the timetable [25]
-time_discretization = 10  # Time steps for the passenger grouping [26]
-group_size_passenger = 80  # Size of each passenger group (number of passengers) [27]
+th_zone_selection = 8000                # Threshold of the zone selection in meters [0]
+nb_zones_to_connect = 1                 # Number of zones to connect in total [1]
+nb_stations_to_connect = 2              # Number of stations to connect (in euclidean) [2]
+min_nb_passenger = 0                    # Minimum number of passenger [3]
+min_transfer_time = 2                   # Original: 2 min Minimum transfer time (m) in minutes [4]
+max_transfer_time = 20                  # Original: 20 min  Maximum transfer time (M) in minutes [5]
+min_transfer_time_bus = 1               # Minimum transfer time in minutes for emergency buses [6]
+max_transfer_time_bus = 20              # Maximum transfer time in minutes for emergency buses [7]
+origin_train_departure_min_time = 2     # (2 min) Minimum waiting time in minutes for the origin train departure [8]
+origin_train_departure_max_time = 20    # (20 min)Maximum waiting time in minutes for the origin train departure [9]
+beta_transfer = 10                      # Beta for transfer edges minutes [10]
+beta_waiting = 1                        # Beta for waiting edges min/min [11]
+penalty_edge = 1000                     # Penalty edge for not assigned passengers in the system [12] todo: to modify
+score_1 = 10                            # Score for the ALNS algorithm, accepted solution. [13]
+score_2 = 2                             # Score for the ALNS algorithm, accepted solution, yet worsened solution. [14]
+score_3 = 0                             # Score for the ALNS algorithm, rejected solution. [15]
+t_start_op = 10 ** 6                    # Starting temperature for Simulated Annealing on the operation objective [16]
+t_start_de_reroute = 10 ** 6            # Starting temperature for Simulated Annealing on the deviation objective [17]
+t_start_de_cancel = 10 ** 6             # Starting temperature for Simulated Annealing on the deviation objective [56]
+t_start_tt = 10 ** 6                    # Starting temperature for Simulated Annealing on the travel time objective [18]
+weight_closed_tracks = 10e9             # Weight for closed tracks edges [19]
+train_capacity = 500                   # Number of passenger per train [20]
+bus_capacity = 100                      # Number of passenger per bus in Zurich [21]
+penalty_no_path = 120                   # Penalty of no assignment equals duration in minutes [22] todo: define better
+delayTime_to_consider_cancel = 30       # Delay time to consider for full cancel in minutes [23]
+delayTime_to_consider_partCancel = 10   # Delay time to consider for part cancel in minutes [24]
+commercial_stops = 1                    # Threshold for a train to be considered in the timetable [25]
+time_discretization = 10                # Time steps for the passenger grouping [26]
+group_size_passenger = 80               # Size of each passenger group (number of passengers) [27]
 od_desired_departure_time_start = datetime.datetime(year=2005, month=5, day=10, hour=6, minute=0, second=0)  # [54]
 od_desired_departure_time_end = datetime.datetime(year=2005, month=5, day=10, hour=8, minute=0, second=0)  # [55]
 
@@ -81,7 +78,7 @@ read_od_departure_time_file = True  # False, if you want to make it from scratch
 create_group_passengers = True  # True, if you want to group the passengers for the assignment [30]
 max_iteration_recompute_path = 3  # The limit of recomputing the passenger path [31]
 read_selected_zones_demand_and_travel_time = True  # True, if you want to read csv files of demand and travel time [32]
-capacity_constraint = False  # False, if capacity constraint is included or not in the passenger assign. [53]
+capacity_constraint = False  # This boolean is not used for this algorithm [53]
 assign_passenger = True  # True, makes assign passenger during the shortest path algorithm in ALNS [38]
 
 #  ALNS Neighbourhood search
@@ -97,17 +94,17 @@ deviation_penalty_bus = 1.2  # Penalty for deviated the initial timetable with a
 deviation_penalty_rerouted = 10  # Penalty for deviated the initial timetable with a rerouted train [43]
 
 # Acceptance or rejection solutions
-reaction_factor_operation = 1  # Factor for acceptance probability of operation objective [44]
-reaction_factor_deviation = 1  # Factor for acceptance probability of deviation objective [45]
-warm_up_phase = 100  # Initial phase for the update temperature in the simulated annealing [46]
-iterations_temperature_level = 20  # Iterations for changing temperature level [47]
-number_of_temperature_change = 60  # Max iterations for the temperature change [48]
-reaction_factor_return_archive = 0.9  # Factor to return into the archive to select a solution [49]
-reaction_factor_weights = 0.5  # Factor to update the weights for each operator [50]
+reaction_factor_operation = 1           # Factor for acceptance probability of operation objective [44]
+reaction_factor_deviation = 1           # Factor for acceptance probability of deviation objective [45]
+warm_up_phase = 100                     # Initial phase for the update temperature in the simulated annealing [46]
+iterations_temperature_level = 20       # Iterations for changing temperature level [47]
+number_of_temperature_change = 60       # Max iterations for the temperature change [48]
+reaction_factor_return_archive = 0.9    # Factor to return into the archive to select a solution [49]
+reaction_factor_weights = 0.5           # Factor to update the weights for each operator [50]
 
 # Greedy feasibility check train insertion
-max_iteration_feasibility_check = 15  # Maximum number of iterations for the greedy feasibility check [51]
-max_iteration_section_check = 3  # Maximum number of iterations for the section feasibility check [52]
+max_iteration_feasibility_check = 15    # Maximum number of iterations for the greedy feasibility check [51]
+max_iteration_section_check = 3         # Maximum number of iterations for the section feasibility check [52]
 
 # Save all the parameters in a list to store after in a class
 list_parameters = [th_zone_selection, nb_zones_to_connect, nb_stations_to_connect, min_nb_passenger,
@@ -210,55 +207,43 @@ if debug_mode_passenger:
 [x.append([]) for x in odt_list]
 parameters.odt_as_list = odt_list
 
-# print('Save the output before the alns.')
-# # And save the output of the passengers assignment
-# alns_platform.pickle_results(parameters, 'output/pickle/parameters_alns.pkl')
-# alns_platform.pickle_results(timetable_initial_graph, 'output/pickle/timetable_alns.pkl')
-# alns_platform.pickle_results(infra_graph, 'output/pickle/infra_graph_for_alns.pkl')
-# alns_platform.pickle_results(trains_timetable, 'output/pickle/trains_timetable_for_alns.pkl')
-
 # %% Run the ALNS
-if start_alns:
-    set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
+
+set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
 # %% Print the results
-if start_alns:
-    picked_solution = helpers.pick_best_solution(set_solutions)
-    # todo: Store the solution to viriato
-    print('end of algorithm  \n total running time in [sec] : see profiler')
-    # todo: I want to make sure the code follow each steps. and to compute time effort for each one of them
 
-    # %%
+picked_solution = helpers.pick_best_solution(set_solutions)
+# todo: Store the solution to viriato
+print('end of algorithm')
+# todo: I want to make sure the code follow each steps. and to compute time effort for each one of them
 
-    par_obj = [(p.total_traveltime, p.total_dist_train) for p in set_solutions]
-    par_x, par_y = zip(*par_obj)
+# %% Print the solution
 
-    # %%
+par_obj = [(p.total_traveltime, p.total_dist_train) for p in set_solutions]
+par_x, par_y = zip(*par_obj)
 
-    # con_obj = [p.objectives for p in pareto.considered]
-    # con_x, con_y = zip(*con_obj)
-    #
-    # # %%
-    #
-    # rem_obj = [p.objectives for p in pareto.removed]
-    # rem_x, rem_y = zip(*rem_obj)
+# con_obj = [p.objectives for p in pareto.considered]
+# con_x, con_y = zip(*con_obj)
+#
+# # %%
+#
+# rem_obj = [p.objectives for p in pareto.removed]
+# rem_x, rem_y = zip(*rem_obj)
 
-    # %%
+x_buffer = 10
+y_buffer = 0.1
 
-    x_buffer = 10
-    y_buffer = 0.1
 
-    # %%
-
-    plt.axis([min(par_x) - x_buffer,
-              max(par_x) + x_buffer,
-              min(par_y) - y_buffer,
-              max(par_y) + y_buffer])
-    plt.plot(par_x, par_y, 'o', label='Pareto')
-    # plt.plot(rem_x, rem_y, 'x', label='Removed')
-    # plt.plot(con_x, con_y, ',', label='Considered')
-    plt.xlabel('Total travel time [min]')
-    plt.ylabel('Total distance [km]')
-    plt.legend()
-    plt.show()
+plt.axis([min(par_x) - x_buffer,
+          max(par_x) + x_buffer,
+          min(par_y) - y_buffer,
+          max(par_y) + y_buffer])
+plt.plot(par_x, par_y, 'o', label='Pareto')
+# plt.plot(rem_x, rem_y, 'x', label='Removed')
+# plt.plot(con_x, con_y, ',', label='Considered')
+plt.xlabel('Total travel time [min]')
+plt.ylabel('Total distance [km]')
+plt.legend()
+plt.show()
 

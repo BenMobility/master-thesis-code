@@ -396,10 +396,14 @@ def _dijkstra_multisource(timetable_graph, sources, weight, pred=None, paths=Non
                 seen[u] = vu_dist
 
                 if target is not None:
-                    if timetable_graph.nodes[u]['type'] != 'origin' or timetable_graph.nodes[u]['type'] != 'destination':
-                        push(fringe, (vu_dist, next(c), u))  # add the node to the queue, if its no home
-                    elif u == target:
-                        push(fringe, (vu_dist, next(c), u))  # add the node to the queue, if it is target
+                    try:
+                        if timetable_graph.nodes[u]['type'] != 'origin' or timetable_graph.nodes[u]['type'] != 'destination':
+                            push(fringe, (vu_dist, next(c), u))  # add the node to the queue, if its no home
+                        elif u == target:
+                            push(fringe, (vu_dist, next(c), u))  # add the node to the queue, if it is target
+                    except KeyError:
+                        print(u)
+
                 else:
                     if timetable_graph.nodes[u]['type'] != 'origin' or timetable_graph.nodes[u]['type'] != 'destination':
                         push(fringe, (vu_dist, next(c), u))  # add the node to the queue, if its no home

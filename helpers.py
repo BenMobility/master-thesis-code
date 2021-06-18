@@ -137,9 +137,9 @@ class Weights:
         # self.rr = 1  # Rerouting
         self.cc = 1  # complete cancel
         self.pc = 1  # partial cancel
-        self.cd = 1  # complete delay
-        self.pd = 1  # partial delay
-        self.et = 1  # emergency train
+        self.cd = 0  # complete delay
+        self.pd = 0  # partial delay
+        self.et = 0  # emergency train
         self.eb = 1  # emergency bus
         self.ret = 1  # return to initial train
 
@@ -180,13 +180,13 @@ class Probabilities:
         self.name = 'probabilities'
         # self.rr = weights.rr / weights.sum  # Rerouting
         min_prob = 0.05
-        remaining_prob = 1 - 7 * min_prob
+        remaining_prob = 1 - 4 * min_prob
         self.cc = min_prob + (weights.cc / weights.sum) * remaining_prob   # complete cancel
         self.pc = min_prob + self.cc + (weights.pc / weights.sum) * remaining_prob  # partial cancel
-        self.cd = min_prob + self.pc + (weights.cd / weights.sum) * remaining_prob  # complete delay
-        self.pd = min_prob + self.cd + (weights.pd / weights.sum) * remaining_prob  # partial delay
-        self.et = min_prob + self.pd + (weights.et / weights.sum) * remaining_prob  # emergency train
-        self.eb = min_prob + self.et + (weights.eb / weights.sum) * remaining_prob  # emergency bus
+        # self.cd = min_prob + self.pc + (weights.cd / weights.sum) * remaining_prob  # complete delay
+        # self.pd = min_prob + self.cd + (weights.pd / weights.sum) * remaining_prob  # partial delay
+        # self.et = min_prob + self.pd + (weights.et / weights.sum) * remaining_prob  # emergency train
+        self.eb = min_prob + self.pc + (weights.eb / weights.sum) * remaining_prob  # emergency bus
         self.ret = min_prob + self.eb + (weights.ret / weights.sum) * remaining_prob   # return to initial train
 
 
@@ -237,6 +237,18 @@ class CopyEdgesOriginStationDestination:
         for destination, transfers in edges_o_stations_d.edges_stations_d_dict.items():
             copy_dict[destination] = transfers.copy()
         self.edges_stations_d_dict = copy_dict  # key destination, value edges connecting to
+
+        # Dictionary edges origin to stations
+        copy_dict = {}
+        for origin, transfers in edges_o_stations_d.destination_nodes_attributes.items():
+            copy_dict[origin] = transfers.copy()
+        self.destination_nodes_attributes = copy_dict  # key origin, value edges connecting to train nodes
+
+        # Dictionary edges stations to destination
+        copy_dict = {}
+        for destination, transfers in edges_o_stations_d.origin_nodes_attributes.items():
+            copy_dict[destination] = transfers.copy()
+        self.origin_nodes_attributes = copy_dict  # key destination, value edges connecting to
 
 
 class Solution:
@@ -314,6 +326,19 @@ def add_field_com_stop(sbb_nodes, stations_with_commercial_stop):
     return sbb_nodes
 
 
+def compute_assigned_not_assigned(odt_priority_list_original):
+    assigned = 0
+    unassigned = 0
+    count_assigned = 0
+    count_unassigned = 0
+    for odt in odt_priority_list_original:
+        if odt[5] == 0:
+            assigned += odt[3]
+            count_assigned += 1
+        else:
+            unassigned += odt[3]
+            count_unassigned += 1
+    return assigned, unassigned
 # %% Upload centroid zones
 
 def reading_demand_zones_travel_time(sbb_nodes, parameters):

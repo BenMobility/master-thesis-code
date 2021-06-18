@@ -10,7 +10,6 @@ import viriato_interface
 import helpers
 import datetime
 import copy
-import time
 import cProfile
 import io
 from operator import itemgetter
@@ -18,7 +17,6 @@ import networkx as nx
 import numpy as np
 import pstats
 import neighbourhood_operators
-import shortest_path
 import math
 import timetable_graph
 import pickle
@@ -408,58 +406,20 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Create a new empty solution
             timetable_solution_prime_graph = helpers.Solution()
 
+            # Debug timetable graph
+            print(f'Number of nodes in the timetable graph before operator = {len(timetable_prime_graph)}')
+
             # Apply the operator on the current solution
             print('Apply the operator on the current solution.')
-
-            # to debug
-            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
-            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
-            pickle_results(edges_o_stations_d, 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
-            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
-            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
-            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
-            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
-            pickle_results(infra_graph, 'output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl')
-            pickle_results(operator, 'output/pickle/debug/operator_'+str(n_iteration)+'.pkl')
-            pickle_results(changed_trains, 'output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl')
-            pickle_results(trains_timetable, 'output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl')
-            pickle_results(edges_o_stations_d , 'output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl')
-            pickle_results(track_info, 'output/pickle/debug/track_info_'+str(n_iteration)+'.pkl')
-            pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl')
-            pickle_results(parameters, 'output/pickle/debug/parameters_'+str(n_iteration)+'.pkl')
-            pickle_results(odt_priority_list_original, 'output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl')
-            pickle_results(timetable_solution_prime_graph, 'output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl')
-            pickle_results(initial_timetable, 'output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl')
-            pickle_results(z_op_current, 'output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl')
-            pickle_results(z_de_reroute_current, 'output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl')
-            pickle_results(z_de_cancel_current, 'output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl')
-            pickle_results(z_tt_current, 'output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl')
-            pickle_results(timetable_solution_graph, 'output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl')
-            pickle_results(scores, 'output/pickle/debug/scores_'+str(n_iteration)+'.pkl')
-            pickle_results(temp_i, 'output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl')
-            pickle_results(solution_archive, 'output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl')
-            pickle_results(z_cur_accepted, 'output/pickle/debug/z_cur_accepted_'+str(n_iteration)+'.pkl')
-            pickle_results(z_cur_archived, 'output/pickle/debug/z_cur_archived_'+str(n_iteration)+'.pkl')
-            pickle_results(z_op_accepted, 'output/pickle/debug/z_op_accepted_'+str(n_iteration)+'.pkl')
-            pickle_results(z_de_reroute_accepted, 'output/pickle/debug/z_de_reroute_accepted_'+str(n_iteration)+'.pkl')
-            pickle_results(z_de_cancel_accepted, 'output/pickle/debug/z_de_cancel_accepted_'+str(n_iteration)+'.pkl')
-            pickle_results(z_tt_accepted, 'output/pickle/debug/z_tt_accepted_'+str(n_iteration)+'.pkl')
-            pickle_results(z_for_pickle, 'output/pickle/debug/z_for_pickle_'+str(n_iteration)+'.pkl')
-            pickle_results(n_iteration, 'output/pickle/debug/n_iteration_'+str(n_iteration)+'.pkl')
-            pickle_results(number_temperature_changes, 'output/pickle/debug/number_temperature_changes_'+str(n_iteration)+'.pkl')
-            pickle_results(all_accepted_solutions, 'output/pickle/debug/all_accepted_solutions_'+str(n_iteration)+'.pkl')
-            pickle_results(return_to_archive_at_iteration, 'output/pickle/debug/return_to_archive_at_iteration_'+str(n_iteration)+'.pkl')
-            pickle_results(iterations_until_return_archives, 'output/pickle/debug/iterations_until_return_archives_'+str(n_iteration)+'.pkl')
-            pickle_results(number_usage, 'output/pickle/debug/number_usage_'+str(n_iteration)+'.pkl')
-            pickle_results(probabilities, 'output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl')
-            pickle_results(weights, 'output/pickle/debug/_'+str(n_iteration)+'.pkl')
-            pickle_results(temperature_it, 'output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl')
 
             timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
             odt_facing_neighbourhood_operator, odt_priority_list_original = \
                 apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
                                             track_info, infra_graph, edges_o_stations_d, parameters,
                                             odt_priority_list_original)
+
+            # Debug timetable graph
+            print(f'Number of nodes in the timetable graph after operator = {len(timetable_prime_graph)}')
 
             # Set the timetable_solution_graph parameters
             timetable_solution_prime_graph.edges_o_stations_d = edges_o_stations_d
@@ -693,7 +653,7 @@ def identify_candidates_for_operators(trains_timetable, parameters, timetable_so
                                                        'avg_flow': sum(attr['flow'])}
                 # If it contains, only add the flow, add +1 edge for this bus and compute the average again
                 else:
-                    train_flow = all_train_flows[attr['train_id']]  # todo: make sure if it should not be bus id
+                    train_flow = all_train_flows[attr['bus_id']]  # todo: make sure if it should not be bus id
                     train_flow['total_flow'] += sum(attr['flow'])
                     train_flow['nb_of_edges_with_flow'] += 1
                     train_flow['avg_flow'] = train_flow['total_flow'] / train_flow['nb_of_edges_with_flow']
@@ -754,19 +714,19 @@ def select_operator(probabilities, number_usages, changed_trains, track_info, pa
             number_usages.pc += 1
             operator = 'CancelFrom'
 
-        elif probabilities.cc < rd <= probabilities.cd:  # delay
-            number_usages.cd += 1
-            operator = 'Delay'
+        # elif probabilities.cc < rd <= probabilities.cd:  # delay
+        #     number_usages.cd += 1
+        #     operator = 'Delay'
+        #
+        # elif probabilities.cd < rd <= probabilities.pd:  # partial delay
+        #     number_usages.pd += 1
+        #     operator = 'DelayFrom'
+        #
+        # elif probabilities.pd < rd <= probabilities.et:  # emergency train
+        #     number_usages.et += 1
+        #     operator = 'EmergencyTrain'
 
-        elif probabilities.cd < rd <= probabilities.pd:  # partial delay
-            number_usages.pd += 1
-            operator = 'DelayFrom'
-
-        elif probabilities.pd < rd <= probabilities.et:  # emergency train
-            number_usages.et += 1
-            operator = 'EmergencyTrain'
-
-        elif probabilities.et < rd <= probabilities.eb:  # emergency bus
+        elif probabilities.pc < rd <= probabilities.eb:  # emergency bus
             number_usages.eb += 1
             operator = 'EmergencyBus'
 
@@ -858,43 +818,53 @@ def apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains,
 
     elif operator == 'Delay':
         # Delay random train
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
-        odt_facing_neighbourhood_operator, odt_priority_list_original = \
-            neighbourhood_operators.operator_complete_delay(timetable_prime_graph,
-                                                            changed_trains,
-                                                            trains_timetable,
-                                                            track_info,
-                                                            infra_graph,
-                                                            edges_o_stations_d,
-                                                            parameters,
-                                                            odt_priority_list_original)
+        print('Delay is not implemented')
+        odt_facing_neighbourhood_operator = None
+        # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
+        # odt_facing_neighbourhood_operator, odt_priority_list_original = \
+        #     neighbourhood_operators.operator_complete_delay(timetable_prime_graph,
+        #                                                     changed_trains,
+        #                                                     trains_timetable,
+        #                                                     track_info,
+        #                                                     infra_graph,
+        #                                                     edges_o_stations_d,
+        #                                                     parameters,
+        #                                                     odt_priority_list_original)
 
     elif operator == 'DelayFrom':
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d,\
-        odt_facing_neighbourhood_operator, odt_priority_list_original = \
-            neighbourhood_operators.operator_part_delay(timetable_prime_graph,
-                                                        changed_trains,
-                                                        trains_timetable,
-                                                        track_info,
-                                                        infra_graph,
-                                                        edges_o_stations_d,
-                                                        parameters,
-                                                        odt_priority_list_original)
+
+        print('Delay is not implemented')
+        odt_facing_neighbourhood_operator = None
+
+        # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d,\
+        # odt_facing_neighbourhood_operator, odt_priority_list_original = \
+        #     neighbourhood_operators.operator_part_delay(timetable_prime_graph,
+        #                                                 changed_trains,
+        #                                                 trains_timetable,
+        #                                                 track_info,
+        #                                                 infra_graph,
+        #                                                 edges_o_stations_d,
+        #                                                 parameters,
+        #                                                 odt_priority_list_original)
 
     elif operator == 'EmergencyTrain':
-        emergency_train = viriato_interface.get_emergency_train()
 
-        changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
-        odt_facing_neighbourhood_operator, odt_priority_list_original = \
-            neighbourhood_operators.operator_emergency_train(timetable_prime_graph,
-                                                             changed_trains,
-                                                             emergency_train,
-                                                             trains_timetable,
-                                                             track_info,
-                                                             infra_graph,
-                                                             edges_o_stations_d,
-                                                             parameters,
-                                                             odt_priority_list_original)
+        print('EmergencyTrain is not implemented')
+        odt_facing_neighbourhood_operator = None
+
+        # emergency_train = viriato_interface.get_emergency_train()
+        #
+        # changed_trains, timetable_prime_graph, train_id_to_delay, track_info, edges_o_stations_d, \
+        # odt_facing_neighbourhood_operator, odt_priority_list_original = \
+        #     neighbourhood_operators.operator_emergency_train(timetable_prime_graph,
+        #                                                      changed_trains,
+        #                                                      emergency_train,
+        #                                                      trains_timetable,
+        #                                                      track_info,
+        #                                                      infra_graph,
+        #                                                      edges_o_stations_d,
+        #                                                      parameters,
+        #                                                      odt_priority_list_original)
 
     elif operator == 'EmergencyBus':
         changed_trains, timetable_prime_graph, bus_id, track_info, edges_o_stations_d,\
@@ -949,13 +919,9 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
     odt_facing_capacity_constraint, parameters, timetable_prime_graph = \
         passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_full_graph)
 
-    # to debug
-    pickle_results(parameters, 'output/pickle/debug/parameters_passenger.pkl')
-    pickle_results(odt_facing_capacity_constraint, 'output/pickle/debug/odt_facing_capacity_constraint_passenger.pkl')
-    pickle_results(timetable_prime_graph, 'output/pickle/debug/timetable_prime_graph_passenger.pkl')
-
     if odt_facing_capacity_constraint is None:
         odt_priority_list_original = copy.deepcopy(parameters.odt_as_list)
+        assigned, unassigned = helpers.compute_assigned_not_assigned(odt_priority_list_original)
     else:
         timetable_prime_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration,\
         odt_priority_list_original = passenger_assignment.capacity_constraint_2nd_loop(parameters,
@@ -1012,6 +978,9 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
     timetable_full_graph.add_nodes_from(node_names_origin)
     nx.set_node_attributes(timetable_full_graph, node_types)
 
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph before assigning passenger = {len(timetable_full_graph)}')
+
     # Compute the shortest path with capacity constraint
     print('Assign the passenger on the timetable graph')
     timetable_full_graph, assigned_disruption, unassigned_disruption, odt_facing_disruption, \
@@ -1020,6 +989,9 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
                                                                odt_facing_neighbourhood_operator,
                                                                timetable_full_graph,
                                                                parameters)
+
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph after assigning passenger = {len(timetable_full_graph)}')
 
     # Compute the total travel time
     i = -1
@@ -1036,7 +1008,7 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
             odt_priority_list_original[i][6] = travel_time
         # When there is no path from the beginning, it is assign None hence type error
         except (TypeError, KeyError):
-            travel_time = odt_priority_list_original[i][5]
+            travel_time += odt_priority_list_original[i][5]
             odt_priority_list_original[i][6] = travel_time
 
     total_traveltime = sum([item[6] for item in odt_priority_list_original])

@@ -1526,16 +1526,17 @@ def create_graph_with_edges_o_stations_d(edges_o_stations_d, od=None, timetable_
     if timetable_graph is None:
         timetable_graph = nx.DiGraph()
 
-    edges_o_stations = edges_o_stations_d.edges_o_stations
-    edges_stations_d = edges_o_stations_d.edges_stations_d
-
     # Edges_o_stations_dict: key origin, value edges connecting to train nodes
     edges_o_stations_dict = edges_o_stations_d.edges_o_stations_dict
     edges_stations_d_dict = edges_o_stations_d.edges_stations_d_dict
 
     if od is None:
-        timetable_graph.add_weighted_edges_from(edges_o_stations)
-        timetable_graph.add_weighted_edges_from(edges_stations_d)
+        timetable_graph.add_weighted_edges_from(edges_o_stations_d.edges_o_stations)
+        timetable_graph.add_weighted_edges_from(edges_o_stations_d.edges_stations_d)
+        timetable_graph.add_nodes_from(edges_o_stations_d.destination_nodes_attributes)
+        timetable_graph.add_nodes_from(edges_o_stations_d.origin_nodes_attributes)
+        nx.set_node_attributes(timetable_graph, edges_o_stations_d.destination_nodes_attributes)
+        nx.set_node_attributes(timetable_graph, edges_o_stations_d.origin_nodes_attributes)
 
     else:
         origin = od[0]
@@ -1962,7 +1963,10 @@ def generate_edges_origin_station_destination(timetable_graph, parameters, retur
             # If the node name does not appear the origin nodes, add to the list
             if origin_node_name not in origin_nodes:
                 origin_nodes.append(origin_node_name)
-                attributes = {'zone': origin_zone, 'departure_time': desired_dep_time, 'type': 'origin'}
+                attributes = {'zone': origin_zone,
+                              'departure_time': desired_dep_time,
+                              'type': 'origin',
+                              'train': None}
                 origin_nodes_attributes[origin_node_name] = attributes
 
             # Edges for departure at origin
@@ -1996,7 +2000,9 @@ def generate_edges_origin_station_destination(timetable_graph, parameters, retur
                 continue
             else:  # Add the node to the list of nodes
                 destination_nodes.append(destination_node_name)
-                attributes = {'zone': destination_node_name, 'type': 'destination'}
+                attributes = {'zone': destination_node_name,
+                              'type': 'destination',
+                              'train': None}
                 destination_nodes_attributes[destination_node_name] = attributes
             for station_code, station_values in station_candidates[destination_node_name].items():
                 try:

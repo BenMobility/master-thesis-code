@@ -66,34 +66,33 @@ timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_origina
 # (203, '2005-05-10T08:03:54', 6790153, 'd')
 # (601, '2005-05-10T07:20:06', 8598001, 'a')
 
+# list_check_rerouted_trains = [name for name, train in changed_trains.items() if train['Action'] == 'Reroute']
+
+# [9042821, 7607647, 7618931, 7639982, 7651265, 7672316, 7683599, 7704650, 9063872, 9075155, 9096206, 9107489, 9128540,
+#  9139823, 9160874]
+
+# rerouted_trains_in_train_timetable = [train for train in trains_timetable if train.id in list_check_rerouted_trains]
+
+# len(rerouted_trains_in_train_timetable)
+# 15
+# len(list_check_rerouted_trains)
+# 15
+
+
+# timetable_nodes_for_rerouted_trains = {}
+# for train_id in list_check_rerouted_trains:
+#     list_nodes = [n for n, v in timetable_prime_graph.nodes(data=True) if v['type'] in
+#                   ['arrivalNode', 'departureNode',
+#                    'arrivalNodePassing', 'departureNodePassing'] and v['train'] == train_id]
+#     list_nodes.sort(key=lambda x: (x[1], x[2]))
+#     timetable_nodes_for_rerouted_trains[train_id] = list_nodes
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# alns_platform.pickle_results(changed_trains, 'output/pickle/debug/changed_trains.pkl')
+# # alns_platform.pickle_results(changed_trains, 'output/pickle/debug/changed_trains.pkl')
 # alns_platform.pickle_results(trains_timetable,'output/pickle/debug/trains_timetable.pkl')
 # alns_platform.pickle_results(edges_o_stations_d ,'output/pickle/debug/edges_o_stations_d.pkl')
 # alns_platform.pickle_results(track_info,'output/pickle/debug/track_info.pkl')

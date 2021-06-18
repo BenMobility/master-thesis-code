@@ -118,11 +118,17 @@ def operator_cancel(prime_timetable, changed_trains, trains_timetable, track_inf
     if hasattr(train_to_cancel, 'emergency_bus') and train_to_cancel.emergency_bus is True:
         bus = True
 
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph before finding passenger = {len(prime_timetable)}')
+
     # Get the list of odt facing the neighbourhood operator
     odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
         passenger_assignment.find_passenger_affected_by_complete_cancel(prime_timetable,
                                                                         train_to_cancel,
                                                                         odt_priority_list_original)
+
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph after finding passenger = {len(prime_timetable)}')
 
     # Remove the edges and nodes of the canceled train
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_cancel, prime_timetable)
@@ -215,11 +221,17 @@ def operator_cancel_from(prime_timetable, changed_trains, trains_timetable, trac
     idx_tpn_cancel_from = identify_last_departure_train_path_node_id_of_train_to_cancel_from(train_to_cancel_from)
     train_path_node_cancel_from = train_to_cancel_from.train_path_nodes[idx_tpn_cancel_from]
 
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph before finding passenger = {len(prime_timetable)}')
+
     # Get the list of odt facing the neighbourhood operator
     odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
         passenger_assignment.find_passenger_affected_by_cancel_from(prime_timetable, train_to_cancel_from,
                                                                     train_path_node_cancel_from,
                                                                     odt_priority_list_original)
+
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph after finding passenger = {len(prime_timetable)}')
 
     # Remove edges and nodes of the canceled train
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_cancel_from,
@@ -297,11 +309,17 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
     if hasattr(train_to_delay, 'emergency_train') and train_to_delay.emergency_train is True:
         emergency_train = True
 
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph before finding passenger = {len(prime_timetable)}')
+
     # Get the list of odt facing the neighbourhood operator
     odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
         passenger_assignment.find_passenger_affected_by_delay(prime_timetable,
                                                               train_to_delay,
                                                               odt_priority_list_original)
+
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph after finding passenger = {len(prime_timetable)}')
 
     # Remove the edges and nodes of train from origin to stations and stations to destination
     edges_o_stations_d = remove_edges_of_train_from_o_stations_d(edges_o_stations_d, train_to_delay, prime_timetable)
@@ -356,8 +374,7 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
     # If it is a bus
     else:
         edges_o_stations_d = timetable_graph.add_edges_of_bus_from_o_stations_d(edges_o_stations_d, train_to_delay,
-                                                                                prime_timetable, parameters, 0,
-                                                                                train_path_nodes)
+                                                                                prime_timetable, parameters)
 
     # Update the changed trains method
     if not bus and not emergency_train and train_update_feasible:
@@ -370,14 +387,14 @@ def operator_complete_delay(prime_timetable, changed_trains, trains_timetable, t
         changed_trains[train_id_to_delay] = {'train_id': train_id_to_delay,
                                              'DebugString': train_to_delay.debug_string,
                                              'Action': 'Delay',
-                                             'ViriatoUpdate': train_to_delay.viriato_update,
+                                             'ViriatoUpdate': None,
                                              'EmergencyBus': True}
 
     elif emergency_train:
         changed_trains[train_id_to_delay] = {'train_id': train_id_to_delay,
                                              'DebugString': train_to_delay.debug_string,
                                              'Action': 'Delay',
-                                             'ViriatoUpdate': train_to_delay.viriato_update,
+                                             'ViriatoUpdate': None,
                                              'EmergencyTrain': True}
 
     elif not train_update_feasible:
@@ -441,12 +458,18 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
     idx_tpn_delay_from = identify_departure_train_path_node_id_of_train_to_delay_from(train_to_delay, parameters)
     tpn_delay_from = train_to_delay.train_path_nodes[idx_tpn_delay_from]
 
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph before finding passenger = {len(prime_timetable)}')
+
     # Get the list of odt facing the neighbourhood operator
     odt_facing_neighbourhood_operator, prime_timetable, odt_priority_list_original = \
         passenger_assignment.find_passenger_affected_by_part_delay(prime_timetable,
                                                                    train_to_delay,
                                                                    tpn_delay_from,
                                                                    odt_priority_list_original)
+
+    # Debug timetable graph
+    print(f'Number of nodes in the timetable graph after finding passenger = {len(prime_timetable)}')
 
     # Set emergency train to false and check that the train to delay is an emergency train
     emergency_train = False
@@ -485,6 +508,8 @@ def operator_part_delay(prime_timetable, changed_trains, trains_timetable, track
         remove_entries_in_tpn_information_and_update_tpn_of_delayed_train(track_info, train_to_delay,
                                                                           idx_tpn_delay_from)
     else:
+        print(f'Train {train_to_delay.debug_string} to delay is not feasible at'
+              f' {train_to_delay.train_path_nodes[0].departure_time}.')
         train_to_delay = train_before_update
 
     # Create and add driving and waiting edges and nodes to the graph
@@ -1415,7 +1440,7 @@ def check_tpn_departure_feasibility_delay_operator(dep_time_tpn, i, tpn, tpn_cle
 
     elif condition_pre and not condition_suc or not condition_pre and not condition_suc:
         # not feasible
-        dep_time_tpn = suc_tpn_info['DepartureTime'] + delta_hw_suc
+        dep_time_tpn = suc_tpn_info['DepartureTime'] - delta_hw_suc
         track_info.track_sequences_of_TPN[tuple_key].remove([tpn_id, dep_time_tpn_locked, train_id])
     elif not condition_pre and condition_suc:
         # not feasible
