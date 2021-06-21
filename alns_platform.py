@@ -928,24 +928,7 @@ def find_path_and_assign_pass(timetable_prime_graph, parameters, timetable_solut
                                                                                        odt_facing_capacity_constraint,
                                                                                        timetable_prime_graph)
 
-    # Compute the total travel time
-    i = -1
-    while i != len(odt_priority_list_original) - 1:
-        i += 1
-        travel_time = 0
-        try:
-            for j in range(len(odt_priority_list_original[i][4]) - 1):
-                starting_node = odt_priority_list_original[i][4][j]
-                ending_node = odt_priority_list_original[i][4][j + 1]
-                travel_time += timetable_prime_graph[starting_node][ending_node]['weight']
-            # Need to add the penalty if the odt has a path but do not reach the destination
-            travel_time += odt_priority_list_original[i][5]
-            odt_priority_list_original[i].append(travel_time)
-        # No path found from the beginning, it will results with a type error
-        except TypeError:
-            travel_time = odt_priority_list_original[i][5]
-            odt_priority_list_original[i].append(travel_time)
-    total_traveltime = sum([item[6] for item in odt_priority_list_original])
+    total_traveltime = helpers.compute_travel_time(odt_priority_list_original, timetable_full_graph, parameters)
 
     # Save the total travel time for the solution
     timetable_solution_graph.total_traveltime = round(total_traveltime, 1)
@@ -993,25 +976,7 @@ def find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph, para
     # Debug timetable graph
     print(f'Number of nodes in the timetable graph after assigning passenger = {len(timetable_full_graph)}')
 
-    # Compute the total travel time
-    i = -1
-    while i != len(odt_priority_list_original) - 1:
-        i += 1
-        travel_time = 0
-        try:
-            for j in range(len(odt_priority_list_original[i][4]) - 1):
-                starting_node = odt_priority_list_original[i][4][j]
-                ending_node = odt_priority_list_original[i][4][j + 1]
-                travel_time += timetable_full_graph[starting_node][ending_node]['weight']
-            # Add the penalty if it has a penalty because it did not reach the destination (either 0 or penalty)
-            travel_time += odt_priority_list_original[i][5]
-            odt_priority_list_original[i][6] = travel_time
-        # When there is no path from the beginning, it is assign None hence type error
-        except (TypeError, KeyError):
-            travel_time += odt_priority_list_original[i][5]
-            odt_priority_list_original[i][6] = travel_time
-
-    total_traveltime = sum([item[6] for item in odt_priority_list_original])
+    total_traveltime = helpers.compute_travel_time(odt_priority_list_original, timetable_full_graph, parameters)
 
     # Save the total travel time for the solution
     timetable_solution_graph.total_traveltime = round(total_traveltime, 1)

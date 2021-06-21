@@ -339,7 +339,50 @@ def compute_assigned_not_assigned(odt_priority_list_original):
             unassigned += odt[3]
             count_unassigned += 1
     return assigned, unassigned
+
+
+def compute_travel_time(odt_priority_list_original, timetable_full_graph, parameters):
+    travel_time_all = {}
+    # Compute the total travel time
+    i = -1
+    while i != len(odt_priority_list_original) - 1:
+        i += 1
+        travel_time = 0
+        ending_node = 0
+        try:
+            len(odt_priority_list_original[i][4])
+        except TypeError:
+            if odt_priority_list_original[i][4] is None:
+                odt_priority_list_original[i][4] = odt_priority_list_original[i][0]
+        try:
+            for j in range(len(odt_priority_list_original[i][4]) - 1):
+                starting_node = odt_priority_list_original[i][4][j]
+                ending_node = odt_priority_list_original[i][4][j + 1]
+                try:
+                    travel_time += timetable_full_graph[starting_node][ending_node]['weight']
+                # When there is no path from the beginning, it is assign None hence type error
+                except (TypeError, KeyError):
+                    continue
+        except IndexError:
+            continue
+        # Add the penalty if it has a penalty because it did not reach the destination (either 0 or penalty)
+        travel_time += odt_priority_list_original[i][5]
+        travel_time_all[i] = travel_time
+
+        if odt_priority_list_original[i][1] == ending_node:
+            travel_time += odt_priority_list_original[i][5]
+            travel_time_all[i] = travel_time
+        elif odt_priority_list_original[i][5] == parameters.penalty_no_path:
+            travel_time_all[i] = travel_time
+        else:
+            travel_time += parameters.penalty_no_path
+            travel_time_all[i] = travel_time
+        if travel_time_all[i] == 0:
+            travel_time_all[i] = parameters.penalty_no_path
+
+    return sum(travel_time_all.values())
 # %% Upload centroid zones
+
 
 def reading_demand_zones_travel_time(sbb_nodes, parameters):
     """

@@ -5,63 +5,115 @@ import helpers
 import neighbourhood_operators
 import timetable_graph
 
+
+import pandas as pd
+import plotly
+import plotly.graph_objs as go
+
+
+#Read cars data from csv
+data = pd.read_csv("cars.csv")
+
+#Set marker properties
+markersize = data['engine-size']/12
+markercolor = data['city-mpg']
+
+#Make Plotly figure
+fig1 = go.Scatter3d(x=data['curb-weight'],
+                    y=data['horsepower'],
+                    z=data['price'],
+                    marker=dict(size=markersize,
+                                color=markercolor,
+                                opacity=0.9,
+                                reversescale=True,
+                                colorscale='Blues'),
+                    line=dict (width=0.02),
+                    mode='markers')
+
+#Make Plot.ly Layout
+mylayout = go.Layout(scene=dict(xaxis=dict( title="curb-weight"),
+                                yaxis=dict( title="horsepower"),
+                                zaxis=dict(title="price")),)
+
+#Plot and save html
+plotly.offline.plot({"data": [fig1],
+                     "layout": mylayout},
+                     auto_open=True,
+                     filename=("5D Plot.html"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # np.random.seed(42)
-n_iteration = 47
-
-infra_graph = np.load('output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
-operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
-changed_trains = np.load('output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl', allow_pickle=True)
-trains_timetable = np.load('output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl', allow_pickle=True)
-edges_o_stations_d = np.load('output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl', allow_pickle=True)
-track_info = np.load('output/pickle/debug/track_info_'+str(n_iteration)+'.pkl', allow_pickle=True)
-timetable_prime_graph = np.load('output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
-parameters = np.load('output/pickle/debug/parameters_'+str(n_iteration)+'.pkl', allow_pickle=True)
-odt_priority_list_original = np.load('output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl', allow_pickle=True)
-timetable_solution_prime_graph = np.load('output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
-initial_timetable = np.load('output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_op_current = np.load('output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_de_reroute_current = np.load('output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_de_cancel_current = np.load('output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_tt_current = np.load('output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
-timetable_solution_graph = np.load('output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
-scores = np.load('output/pickle/debug/scores_'+str(n_iteration)+'.pkl', allow_pickle=True)
-temp_i = np.load('output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl', allow_pickle=True)
-solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_cur_accepted = np.load('output/pickle/debug/z_cur_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_cur_archived = np.load('output/pickle/debug/z_cur_archived_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_op_accepted = np.load('output/pickle/debug/z_op_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_de_reroute_accepted = np.load('output/pickle/debug/z_de_reroute_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_de_cancel_accepted = np.load('output/pickle/debug/z_de_cancel_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_tt_accepted = np.load('output/pickle/debug/z_tt_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
-z_for_pickle = np.load('output/pickle/debug/z_for_pickle_'+str(n_iteration)+'.pkl', allow_pickle=True)
-n_iteration = np.load('output/pickle/debug/n_iteration_'+str(n_iteration)+'.pkl', allow_pickle=True)
-number_temperature_changes = np.load('output/pickle/debug/number_temperature_changes_'+str(n_iteration)+'.pkl', allow_pickle=True)
-all_accepted_solutions = np.load('output/pickle/debug/all_accepted_solutions_'+str(n_iteration)+'.pkl', allow_pickle=True)
-return_to_archive_at_iteration = np.load('output/pickle/debug/return_to_archive_at_iteration_'+str(n_iteration)+'.pkl', allow_pickle=True)
-iterations_until_return_archives = np.load('output/pickle/debug/iterations_until_return_archives_'+str(n_iteration)+'.pkl', allow_pickle=True)
-number_usage = np.load('output/pickle/debug/number_usage_'+str(n_iteration)+'.pkl', allow_pickle=True)
-probabilities = np.load('output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl', allow_pickle=True)
-# weights = np.load('output/pickle/debug/weights_'+str(n_iteration)+'.pkl', allow_pickle=True)
-temperature_it = np.load('output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl', allow_pickle=True)
-
-operator = 'EmergencyBus'
-timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
-            odt_facing_neighbourhood_operator, odt_priority_list_original = \
-                alns_platform.apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
-                                            track_info, infra_graph, edges_o_stations_d, parameters,
-                                            odt_priority_list_original)
-
-# Set the timetable_solution_graph parameters
-timetable_solution_prime_graph.edges_o_stations_d = edges_o_stations_d
-timetable_solution_prime_graph.timetable = trains_timetable
-timetable_solution_prime_graph.graph = timetable_prime_graph
-timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_original = \
-    alns_platform.find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph,
-                                                     parameters,
-                                                     timetable_solution_prime_graph,
-                                                     edges_o_stations_d,
-                                                     odt_priority_list_original,
-                                                     odt_facing_neighbourhood_operator)
+# n_iteration = 47
+#
+# infra_graph = np.load('output/pickle/debug/infra_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# operator = np.load('output/pickle/debug/operator_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# changed_trains = np.load('output/pickle/debug/changed_trains_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# trains_timetable = np.load('output/pickle/debug/trains_timetable_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# edges_o_stations_d = np.load('output/pickle/debug/edges_o_stations_d_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# track_info = np.load('output/pickle/debug/track_info_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# timetable_prime_graph = np.load('output/pickle/debug/timetable_prime_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# parameters = np.load('output/pickle/debug/parameters_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# odt_priority_list_original = np.load('output/pickle/debug/odt_priority_list_original_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# timetable_solution_prime_graph = np.load('output/pickle/debug/timetable_solution_prime_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# initial_timetable = np.load('output/pickle/debug/initial_timetable_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_op_current = np.load('output/pickle/debug/z_op_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_de_reroute_current = np.load('output/pickle/debug/z_de_reroute_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_de_cancel_current = np.load('output/pickle/debug/z_de_cancel_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_tt_current = np.load('output/pickle/debug/z_tt_current_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# timetable_solution_graph = np.load('output/pickle/debug/timetable_solution_graph_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# scores = np.load('output/pickle/debug/scores_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# temp_i = np.load('output/pickle/debug/temp_i_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# solution_archive = np.load('output/pickle/debug/solution_archive_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_cur_accepted = np.load('output/pickle/debug/z_cur_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_cur_archived = np.load('output/pickle/debug/z_cur_archived_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_op_accepted = np.load('output/pickle/debug/z_op_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_de_reroute_accepted = np.load('output/pickle/debug/z_de_reroute_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_de_cancel_accepted = np.load('output/pickle/debug/z_de_cancel_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_tt_accepted = np.load('output/pickle/debug/z_tt_accepted_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# z_for_pickle = np.load('output/pickle/debug/z_for_pickle_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# n_iteration = np.load('output/pickle/debug/n_iteration_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# number_temperature_changes = np.load('output/pickle/debug/number_temperature_changes_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# all_accepted_solutions = np.load('output/pickle/debug/all_accepted_solutions_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# return_to_archive_at_iteration = np.load('output/pickle/debug/return_to_archive_at_iteration_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# iterations_until_return_archives = np.load('output/pickle/debug/iterations_until_return_archives_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# number_usage = np.load('output/pickle/debug/number_usage_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# probabilities = np.load('output/pickle/debug/probabilities_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# # weights = np.load('output/pickle/debug/weights_'+str(n_iteration)+'.pkl', allow_pickle=True)
+# temperature_it = np.load('output/pickle/debug/temperature_it_'+str(n_iteration)+'.pkl', allow_pickle=True)
+#
+# operator = 'EmergencyBus'
+# timetable_prime_graph, track_info, edges_o_stations_d, changed_trains, operator, \
+#             odt_facing_neighbourhood_operator, odt_priority_list_original = \
+#                 alns_platform.apply_operator_to_timetable(operator, timetable_prime_graph, changed_trains, trains_timetable,
+#                                             track_info, infra_graph, edges_o_stations_d, parameters,
+#                                             odt_priority_list_original)
+#
+# # Set the timetable_solution_graph parameters
+# timetable_solution_prime_graph.edges_o_stations_d = edges_o_stations_d
+# timetable_solution_prime_graph.timetable = trains_timetable
+# timetable_solution_prime_graph.graph = timetable_prime_graph
+# timetable_solution_prime_graph, timetable_prime_graph, odt_priority_list_original = \
+#     alns_platform.find_path_and_assign_pass_neighbourhood_operator(timetable_prime_graph,
+#                                                      parameters,
+#                                                      timetable_solution_prime_graph,
+#                                                      edges_o_stations_d,
+#                                                      odt_priority_list_original,
+#                                                      odt_facing_neighbourhood_operator)
 
 # (203, '2005-05-10T08:03:54', 6790153, 'd')
 # (601, '2005-05-10T07:20:06', 8598001, 'a')

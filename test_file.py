@@ -15,9 +15,16 @@ import alns_platform
 import networkx as nx
 import matplotlib.pyplot as plt
 
-arr_dep_nodes_train = np.load('output/pickle/debug/key_error-nodes.pkl', allow_pickle=True)
-prime_timetable = np.load('output/pickle/debug/key_error_timetable.pkl', allow_pickle=True)
-train_to_delay = np.load('output/pickle/debug/key_error_train.pkl', allow_pickle=True)
+# arr_dep_nodes_train = np.load('output/pickle/debug/key_error-nodes.pkl', allow_pickle=True)
+# prime_timetable = np.load('output/pickle/debug/key_error_timetable.pkl', allow_pickle=True)
+# train_to_delay = np.load('output/pickle/debug/key_error_train.pkl', allow_pickle=True)
+
+timetable_initial_graph = np.load('output/pickle/initial_timetable_m0_M90_threshold_8000.pickle', allow_pickle=True)
+parameters = np.load('output/pickle/parameters_debug.pkl', allow_pickle=True)
+odt_priority_list_original = np.load('output/pickle/debug/test.pkl', allow_pickle=True)
+parameters.penalty_no_path = 120
+
+total_travel = helpers.compute_travel_time(odt_priority_list_original, timetable_initial_graph, parameters)
 
 print(arr_dep_nodes_train)
 
