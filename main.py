@@ -13,7 +13,7 @@ import helpers
 import timetable_graph
 import alns_platform
 import numpy as np
-import matplotlib.pyplot as plt
+import passenger_assignment
 
 # Viriato
 base_url = 'http://localhost:8080'  # Viriato localhost
@@ -209,41 +209,20 @@ parameters.odt_as_list = odt_list
 
 # %% Run the ALNS
 
+# odt_facing_capacity_constraint, parameters, timetable_initial_graph = \
+#     passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_initial_graph)
+#
+# timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
+#     passenger_assignment.capacity_constraint_2nd_loop(parameters,
+#                                                       odt_facing_capacity_constraint,
+#                                                       timetable_initial_graph)
+
 set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
 # %% Print the results
+# picked_solution = helpers.pick_best_solution(set_solutions)
 
-picked_solution = helpers.pick_best_solution(set_solutions)
-# todo: Store the solution to viriato
 print('end of algorithm')
-# todo: I want to make sure the code follow each steps. and to compute time effort for each one of them
-
-# %% Print the solution
-
-par_obj = [(p.total_traveltime, p.total_dist_train) for p in set_solutions]
-par_x, par_y = zip(*par_obj)
-
-# con_obj = [p.objectives for p in pareto.considered]
-# con_x, con_y = zip(*con_obj)
-#
-# # %%
-#
-# rem_obj = [p.objectives for p in pareto.removed]
-# rem_x, rem_y = zip(*rem_obj)
-
-x_buffer = 10
-y_buffer = 0.1
 
 
-plt.axis([min(par_x) - x_buffer,
-          max(par_x) + x_buffer,
-          min(par_y) - y_buffer,
-          max(par_y) + y_buffer])
-plt.plot(par_x, par_y, 'o', label='Pareto')
-# plt.plot(rem_x, rem_y, 'x', label='Removed')
-# plt.plot(con_x, con_y, ',', label='Considered')
-plt.xlabel('Total travel time [min]')
-plt.ylabel('Total distance [km]')
-plt.legend()
-plt.show()
 

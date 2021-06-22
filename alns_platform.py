@@ -432,6 +432,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
                                                                  edges_o_stations_d,
                                                                  odt_priority_list_original,
                                                                  odt_facing_neighbourhood_operator)
+            timetable_solution_prime_graph.odt_priority_list_original = copy.deepcopy(odt_priority_list_original)
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
@@ -526,6 +527,7 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
                                           edges_o_stations_d)
 
             # Record the results of the current solution timetable
+            timetable_solution_prime_graph.odt_priority_list_original = copy.deepcopy(odt_priority_list_original)
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,

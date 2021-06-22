@@ -36,12 +36,12 @@ fig2 = go.Scatter(x=[item/60 for item in z_pickle['z_tt_acc']],
                                         color='DarkSlateGrey'),
                               opacity=0.9,
                               reversescale=True,
-                              colorbar=dict(title='z_deviation_cancel [min]'),
+                              colorbar=dict(title='z_deviation_cancel [hr]'),
                               colorscale='Mint'),
                   mode='markers')
 
 # Make Plotly Layout
-mylayout = go.Layout(xaxis=dict(title="z_travel_time [min]"),
+mylayout = go.Layout(xaxis=dict(title="z_travel_time [hr]"),
                      yaxis=dict(title="z_operation_cost [km]"))
 
 # Plot and save html
