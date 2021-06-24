@@ -891,7 +891,6 @@ def assignment_neighbourhood_operator(odt_priority_list_original, odt_facing_dis
                                     if p[j - 1][2] == p[j][2]:
                                         # Initialize the parameters for the capacity constraint checks
                                         k = 1
-                                        # todo: change with lower priority to boarding at current node
                                         odt_with_lower_priority_name = []
                                         odt_with_lower_priority_flow = []
                                         odt_with_lower_priority_index = []
@@ -1526,13 +1525,7 @@ def create_list_odt_facing_disruption(edges_on_closed_tracks, timetable_initial_
 
             # Check number of iteration from the previous odt_facing_capacity
             number_iteration = 0
-            # todo: takes too much time for little results...
-            # for _, odt_list_capacity in sorted(odt_facing_capacity_dict_for_iteration.items(), reverse=True):
-            #     if any(item[0][0] == extract_odt[0][0:4] for item in odt_list_capacity):
-            #         number_iteration = [item[0][3] for item in odt_list_capacity if item[0][0] == extract_odt[0][0:4]]
-            #         break
-            # If the path to keep is only the origin, needs to list
-            # as a whole
+
             if isinstance(odt_path_to_keep, str):
                 path_to_keep = [odt_path_to_keep]
             else:

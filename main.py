@@ -13,7 +13,6 @@ import helpers
 import timetable_graph
 import alns_platform
 import numpy as np
-import passenger_assignment
 
 # Viriato
 base_url = 'http://localhost:8080'  # Viriato localhost
@@ -45,7 +44,7 @@ origin_train_departure_min_time = 2     # (2 min) Minimum waiting time in minute
 origin_train_departure_max_time = 20    # (20 min)Maximum waiting time in minutes for the origin train departure [9]
 beta_transfer = 10                      # Beta for transfer edges minutes [10]
 beta_waiting = 1                        # Beta for waiting edges min/min [11]
-penalty_edge = 1000                     # Penalty edge for not assigned passengers in the system [12] todo: to modify
+penalty_edge = 1000                     # Not used, see penalty no path... [12]
 score_1 = 10                            # Score for the ALNS algorithm, accepted solution. [13]
 score_2 = 2                             # Score for the ALNS algorithm, accepted solution, yet worsened solution. [14]
 score_3 = 0                             # Score for the ALNS algorithm, rejected solution. [15]
@@ -54,9 +53,9 @@ t_start_de_reroute = 10 ** 6            # Starting temperature for Simulated Ann
 t_start_de_cancel = 10 ** 6             # Starting temperature for Simulated Annealing on the deviation objective [56]
 t_start_tt = 10 ** 6                    # Starting temperature for Simulated Annealing on the travel time objective [18]
 weight_closed_tracks = 10e9             # Weight for closed tracks edges [19]
-train_capacity = 500                   # Number of passenger per train [20]
+train_capacity = 500                    # Number of passenger per train [20]
 bus_capacity = 100                      # Number of passenger per bus in Zurich [21]
-penalty_no_path = 120                   # Penalty of no assignment equals duration in minutes [22] todo: define better
+penalty_no_path = 120                   # Penalty of no assignment equals duration in minutes [22]
 delayTime_to_consider_cancel = 30       # Delay time to consider for full cancel in minutes [23]
 delayTime_to_consider_partCancel = 10   # Delay time to consider for part cancel in minutes [24]
 commercial_stops = 1                    # Threshold for a train to be considered in the timetable [25]
@@ -208,21 +207,6 @@ if debug_mode_passenger:
 parameters.odt_as_list = odt_list
 
 # %% Run the ALNS
-
-# odt_facing_capacity_constraint, parameters, timetable_initial_graph = \
-#     passenger_assignment.capacity_constraint_1st_loop(parameters, timetable_initial_graph)
-#
-# timetable_initial_graph, assigned, unassigned, odt_facing_capacity_dict_for_iteration, odt_priority_list_original = \
-#     passenger_assignment.capacity_constraint_2nd_loop(parameters,
-#                                                       odt_facing_capacity_constraint,
-#                                                       timetable_initial_graph)
-
 set_solutions = alns_platform.start(timetable_initial_graph, infra_graph, trains_timetable, parameters)
 
-# %% Print the results
-# picked_solution = helpers.pick_best_solution(set_solutions)
-
 print('end of algorithm')
-
-
-

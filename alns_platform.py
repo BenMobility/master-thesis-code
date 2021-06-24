@@ -128,7 +128,6 @@ def used_tracks_all_trains(trains_timetable, closed_section_track_ids):
         except AttributeError:
             continue
 
-
     # sort the sequence tracks dict by arrival time from early to late
     for k, v in track_sequences_of_train_path_node.items():
         track_sequences_of_train_path_node[k] = sorted(v, key=itemgetter(1))
@@ -433,7 +432,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
-                                                                                                     initial_timetable,
                                                                                                      changed_trains,
                                                                                                      parameters)
             timetable_solution_prime_graph.deviation_cancel_timetable = deviation_cancel_timetable(trains_timetable,
@@ -528,7 +526,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             timetable_solution_prime_graph.total_dist_train = distance_travelled_all_trains(trains_timetable,
                                                                                             infra_graph, parameters)
             timetable_solution_prime_graph.deviation_reroute_timetable = deviation_reroute_timetable(trains_timetable,
-                                                                                                     initial_timetable,
                                                                                                      changed_trains,
                                                                                                      parameters)
             timetable_solution_prime_graph.deviation_cancel_timetable = deviation_cancel_timetable(trains_timetable,
@@ -747,8 +744,7 @@ def candidates_for_return_operator(changed_trains, parameters):
     return list_return_candidates
 
 
-def copy_graph_and_remove_flow(timetable_solution_graph
-                               ):
+def copy_graph_and_remove_flow(timetable_solution_graph):
     """
     method that copy the nodes and edges attributes from the current solution to a new timetable without the flow
     :param timetable_solution_graph
@@ -775,7 +771,6 @@ def copy_graph_and_remove_flow(timetable_solution_graph
 
     # Delete the current solution timetable
     del timetable_solution_graph
-
 
     # Add the nodes and edges to prime timetable
     timetable_prime_graph.add_nodes_from(nodes.keys())
@@ -1004,16 +999,13 @@ def distance_travelled_all_trains(trains_timetable, infra_graph, parameters):
     return total_distance
 
 
-def deviation_reroute_timetable(trains_timetable, timetable_initial_graph, changed_trains, parameters):
+def deviation_reroute_timetable(trains_timetable, changed_trains, parameters):
     parameters.set_of_trains_for_operator = {'Cancel': [], 'CancelFrom': [], 'Delay': [], 'DelayFrom': []}
-    fmt = "%Y-%m-%dT%H:%M:%S"
 
     # Deviation penalty
     d_rerouted = parameters.deviation_penalty_rerouted
 
     total_deviation = 0  # In minutes
-    timetable_initial = helpers.build_dict_from_viriato_object_train_id(
-        timetable_initial_graph.initial_timetable_infeasible)
 
     # timetable of the current solution
     timetable_prime = helpers.build_dict_from_viriato_object_train_id(trains_timetable)
@@ -1047,7 +1039,6 @@ def deviation_reroute_timetable(trains_timetable, timetable_initial_graph, chang
 
 def deviation_cancel_timetable(trains_timetable, timetable_initial_graph, changed_trains, parameters):
     parameters.set_of_trains_for_operator = {'Cancel': [], 'CancelFrom': [], 'Delay': [], 'DelayFrom': []}
-    fmt = "%Y-%m-%dT%H:%M:%S"
 
     # Deviation penalties for each operator
     d_cancel = parameters.deviation_penalty_cancel
@@ -1089,8 +1080,7 @@ def deviation_cancel_timetable(trains_timetable, timetable_initial_graph, change
         elif action == 'CancelFrom':
             # If it is an emergency train, the deviation penalty is compute here
             if 'EmergencyTrain' in value.keys():
-                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                             parameters)
+                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id)
                 continue
 
             # Loop through all the nodes of the train path
@@ -1155,8 +1145,7 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
         elif action == 'CancelFrom':
             # If it is an emergency train, the deviation penalty is compute here
             if 'EmergencyTrain' in value.keys():
-                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                             parameters)
+                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id)
                 continue
 
             # Loop through all the nodes of the train path
@@ -1208,15 +1197,13 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
 
                     # Add penalty for emergency train
                     total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation,
-                                                                 train_id,
-                                                                 parameters)
+                                                                 train_id)
                     continue
                 elif hasattr(timetable_prime[train_id], 'emergency_bus') \
                         and timetable_prime[train_id].emergency_bus is True:
 
                     # Add penalty for emergency bus
-                    total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id,
-                                                               parameters)
+                    total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id)
                     continue
             except KeyError:
                 print('Something went wrong with the deviation timetable and action delay or return.')
@@ -1238,8 +1225,7 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
             if hasattr(timetable_prime[train_id], 'emergency_train') \
                     and timetable_prime[train_id].emergency_train is True:
 
-                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                             parameters)
+                total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id)
                 continue
 
             max_delay_tpn, total_delay_train = deviation_delay_train(fmt, timetable_initial, timetable_prime, train_id)
@@ -1255,17 +1241,16 @@ def deviation_timetable(trains_timetable, timetable_initial_graph, changed_train
 
         # Check the action, if it is emergency train, update the deviation penalty
         elif action == 'EmergencyTrain':
-            total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id,
-                                                         parameters)
+            total_deviation += deviation_emergency_train(timetable_prime, d_emergency, total_deviation, train_id)
 
         # Check the action, if it is emergency bus, update the deviation penalty
         elif action == 'EmergencyBus':
-            total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id, parameters)
+            total_deviation += deviation_emergency_bus(timetable_prime, d_bus, total_deviation, train_id)
 
     return round(total_deviation, 1)
 
 
-def deviation_emergency_train(timetable_prime, d_e, total_deviation, train_id, parameters):
+def deviation_emergency_train(timetable_prime, d_e, total_deviation, train_id):
     # Get the departure and arrival time of the train
     dep_time_start = timetable_prime[train_id].train_path_nodes[0].departure_time
     arr_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time
@@ -1276,7 +1261,7 @@ def deviation_emergency_train(timetable_prime, d_e, total_deviation, train_id, p
     return total_deviation
 
 
-def deviation_emergency_bus(timetable_prime, d_b, total_deviation, train_id, parameters):
+def deviation_emergency_bus(timetable_prime, d_b, total_deviation, train_id):
 
     dep_time_start = timetable_prime[train_id].train_path_nodes[0].departure_time
     arr_time_end_train = timetable_prime[train_id].train_path_nodes[-1].arrival_time

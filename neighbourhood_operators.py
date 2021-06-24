@@ -14,7 +14,6 @@ import networkx as nx
 import copy
 import helpers
 import datetime
-import types
 from operator import itemgetter
 
 
@@ -1642,11 +1641,6 @@ def check_arrival_feasibility_tpn_delay_operator(arr_time_tpn, i, tpn, tpn_clear
             delta_t_for_departure = datetime.timedelta(minutes=5)
         if delta_t_for_departure < datetime.timedelta(seconds=0):
             delta_t_for_departure = succeeding_tpn[1] + delta_hw_suc - arr_time_tpn
-        # todo, double check this condition ! why is the succeeding tpn arrival so much different to tpn info ?
-        #         if suc_tpn_info.arrival_time > arr_time_tpn:
-        # 			delta_t_for_departure = suc_tpn_info.arrival_time + delta_hw_pre - arr_time_tpn
-        #         else:
-        # 			delta_t_for_departure = delta_hw_pre + arr_time_tpn - suc_tpn_info.arrival_time
         track_info.track_sequences_of_TPN[tuple_key].remove([tpn_id, arr_time_tpn_locked, train_id])
 
     elif not condition_pre and condition_suc:

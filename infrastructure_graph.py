@@ -8,8 +8,6 @@ Build infrastructure graph for the master thesis main codes.
 from networkx import MultiGraph
 import networkx as nx
 import viriato_interface
-import numpy as np
-import pickle
 
 
 def build_infrastructure_graph(time_window, save_pickle):

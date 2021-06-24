@@ -161,7 +161,7 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         return algorithm_interface.get_parallel_section_tracks(section_track_id)
 
 
-    def get_all_visited_nodes_in_time_window(time_window):  # todo: reduce to redundancy of calling time window
+    def get_all_visited_nodes_in_time_window(time_window):
         """
         method to get all the visited nodes with its code from Viriato. It gets all the trains in the given
         time window and then extract all the node ids from the trains. From the node ids, the method will
@@ -509,15 +509,6 @@ with algorithm_interface.create(base_url) as algorithm_interface:
         return algorithm_interface.calculate_run_times(train_id)
 
 
-    def clone_train(train_id):
-        """
-        method that create an identical copy of an existing Viriato train and return the copied train
-        :param train_id: The ID of the Viriato train to copy
-        :return: The copied Viriato train with different train ID and train path nodes ID
-        """
-        return algorithm_interface.clone_train(train_id)
-
-
     def get_list_update_train_times_rerouting(runtime_reroute_train_feasible):
         """
         method that update the times of an existing Viriato train and return the updated result.
@@ -701,7 +692,3 @@ def cut_trains_area_interest_time_window(trains_timetable, stations_in_area, tim
         # Keep the train in the timetable
         cut_trains_to_area_time.append(train)
     return cut_trains_to_area_time
-
-
-
-

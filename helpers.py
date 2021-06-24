@@ -181,13 +181,13 @@ class Probabilities:
         # self.rr = weights.rr / weights.sum  # Rerouting
         min_prob = 0.05
         remaining_prob = 1 - 4 * min_prob
-        self.cc = min_prob + (weights.cc / weights.sum) * remaining_prob   # complete cancel
+        self.cc = min_prob + (weights.cc / weights.sum) * remaining_prob  # complete cancel
         self.pc = min_prob + self.cc + (weights.pc / weights.sum) * remaining_prob  # partial cancel
         # self.cd = min_prob + self.pc + (weights.cd / weights.sum) * remaining_prob  # complete delay
         # self.pd = min_prob + self.cd + (weights.pd / weights.sum) * remaining_prob  # partial delay
         # self.et = min_prob + self.pd + (weights.et / weights.sum) * remaining_prob  # emergency train
         self.eb = min_prob + self.pc + (weights.eb / weights.sum) * remaining_prob  # emergency bus
-        self.ret = min_prob + self.eb + (weights.ret / weights.sum) * remaining_prob   # return to initial train
+        self.ret = min_prob + self.eb + (weights.ret / weights.sum) * remaining_prob  # return to initial train
 
 
 class EdgesOriginStationDestination:
@@ -197,13 +197,13 @@ class EdgesOriginStationDestination:
         return_edges_nodes = True
         print('Generate edges from origin to station and from station to destination.')
         origin_nodes, origin_nodes_attributes, destination_nodes, destination_nodes_attributes, edges_o_stations, \
-            edges_o_stations_attr, edges_stations_d, edges_stations_d_attr, edges_o_stations_dict, \
+        edges_o_stations_attr, edges_stations_d, edges_stations_d_attr, edges_o_stations_dict, \
         edges_stations_d_dict = timetable_graph.generate_edges_origin_station_destination(graph, parameters,
                                                                                           return_edges_nodes)
 
         # Set the values in the class
         self.edges_o_stations = edges_o_stations
-        self.edges_o_stations_dict = edges_o_stations_dict # Key origin, value edges connecting to train nodes
+        self.edges_o_stations_dict = edges_o_stations_dict  # Key origin, value edges connecting to train nodes
         self.origin_nodes_attributes = origin_nodes_attributes
         self.edges_stations_d = edges_stations_d
         self.edges_stations_d_dict = edges_stations_d_dict  # Key destination, value edges connecting to
@@ -381,6 +381,8 @@ def compute_travel_time(odt_priority_list_original, timetable_full_graph, parame
             travel_time_all[i] = parameters.penalty_no_path
 
     return sum(travel_time_all.values())
+
+
 # %% Upload centroid zones
 
 
@@ -817,7 +819,7 @@ def get_od_departure_time(parameters, demand_selected_zones):
         od_departure_time = group_passengers(od_departure_time, max_group_size, parameters.th_zone_selection)
 
     # Add the priority to od_departure_time (random priority between 0-1), for the passenger assignment
-    od_departure_time = create_priority_list(od_departure_time, parameters)
+    od_departure_time = create_priority_list(od_departure_time)
     debug = False
     if debug:
         od_departure_time = od_departure_time[0:1000]
@@ -925,7 +927,7 @@ def od_with_departure_time(parameters, demand_selected_zones, time_discretizatio
         if debug:
             if debug_n > 1000:
                 break
-        t = non_homo_poisson_simulator(od, start_time, time_interval, parameters)
+        t = non_homo_poisson_simulator(od, start_time, time_interval)
         if len(t) == 0:  # Take care of od's with no simulated passengers
             continue
         timer_to_group = start_time + time_discretization
@@ -957,10 +959,9 @@ def od_with_departure_time(parameters, demand_selected_zones, time_discretizatio
     return od_departure_time
 
 
-def non_homo_poisson_simulator(od, start_time, time_interval, parameters):
+def non_homo_poisson_simulator(od, start_time, time_interval):
     """
     function that provides the time slot for each passenger.
-    :param parameters: class object with a list of parameters for the code
     :param od: od pair with all the attributes
     :param start_time: start time of the Viriato simulation time_window.from_time
     :param time_interval: equals the time window of the scenario
@@ -1029,10 +1030,9 @@ def get_correct_tph(od):
     return trips_per_hour
 
 
-def create_priority_list(od_departure_time, parameters):
+def create_priority_list(od_departure_time):
     """
     function that creates the priority list for each passenger. It will be used for the passenger assignment.
-    :param parameters: class object that contains all the main code parameters
     :param od_departure_time: record with all od, number of passenger and desired departure time
     :return: od_departure_time adds the random priority of each passenger
     """
