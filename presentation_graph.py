@@ -23,8 +23,8 @@ for i in range(len(z_pickle['z_cur_archived'])):
         symbols.append(34)
 
 # Set marker properties
-markersize = [item / 125 for item in z_pickle['z_de_reroute_acc']]
-markercolor = [item / 60 for item in z_pickle['z_de_cancel_acc']]
+markersize = [item / 100 for item in z_pickle['z_de_reroute_acc']]
+markercolor = [item / 50 for item in z_pickle['z_de_cancel_acc']]
 
 # Make Plotly figure
 fig2 = go.Scatter(x=[item/60 for item in z_pickle['z_tt_acc']],
@@ -36,13 +36,17 @@ fig2 = go.Scatter(x=[item/60 for item in z_pickle['z_tt_acc']],
                                         color='DarkSlateGrey'),
                               opacity=0.9,
                               reversescale=True,
-                              colorbar=dict(title='z_deviation_cancel [hr]'),
+                              colorbar=dict(title='z_deviation_cancel [min]'),
                               colorscale='Mint'),
                   mode='markers')
 
 # Make Plotly Layout
 mylayout = go.Layout(xaxis=dict(title="z_travel_time [hr]"),
-                     yaxis=dict(title="z_operation_cost [km]"))
+                     yaxis=dict(title="z_operation_cost [km]"),
+                     font=dict(
+                         size=27,
+                     )
+                     )
 
 # Plot and save html
 plotly.offline.plot({"data": [fig2],
