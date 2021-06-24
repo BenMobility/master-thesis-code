@@ -87,11 +87,11 @@ number_iteration_archive = 100  # Number of iteration before archiving the solut
 delay_options = [5, 10, 15, 20]  # The options for how long delaying the train for delay operator [35]
 time_delta_delayed_bus = 10  # Time added from the delayed departure time of the bus to compute its arrival time [36]
 min_headway = 120  # Minimum headway between two consecutive trains (in seconds) for succeeding and preceding head [37]
-deviation_penalty_cancel = 50  # Penalty for deviated the initial timetable with a cancellation [39]
+deviation_penalty_cancel = 1  # Penalty for deviated the initial timetable with a cancellation [39]
 deviation_penalty_delay = 1  # Penalty for deviated the initial timetable with a delay [40]
-deviation_penalty_emergency = 1000  # Penalty for deviated the initial timetable with an emergency [41]
+deviation_penalty_emergency = 1  # Penalty for deviated the initial timetable with an emergency [41]
 deviation_penalty_bus = 1.2  # Penalty for deviated the initial timetable with a bus [42]
-deviation_penalty_rerouted = 10  # Penalty for deviated the initial timetable with a rerouted train [43]
+deviation_penalty_rerouted = 1  # Penalty for deviated the initial timetable with a rerouted train [43]
 
 # Acceptance or rejection solutions
 reaction_factor_operation = 1           # Factor for acceptance probability of operation objective [44]

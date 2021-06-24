@@ -370,9 +370,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
     # Set the feasible timetable graphs to false
     feasible_timetable_graph, prime_feasible_timetable_graph = False, False
 
-    # Profiling the iterations
-    profiling = start_end_profiler(start_profiling=True)
-
     # Start the iteration
     print('Start the iteration...')
     while any(t > 0 for t in temp_i) and n_iteration < parameters.number_iteration:
@@ -587,9 +584,6 @@ def alns_algorithm(timetable_initial_graph, infra_graph, trains_timetable, track
             # Set the feasible graph and prime graph to true for next iteration
             feasible_timetable_graph = True
             prime_feasible_timetable_graph = True
-
-    # Stop the profiler
-    start_end_profiler('ALNS', end_profiling=True, pr=profiling)
 
     # Pickle the archive solutions
     pickle_archive_with_changed_trains(solution_archive)
